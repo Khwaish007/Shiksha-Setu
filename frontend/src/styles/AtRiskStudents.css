@@ -1,0 +1,209 @@
+.atrisk-container {
+  padding: 2.5rem 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.atrisk-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.atrisk-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ef4444, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.atrisk-subtitle {
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.atrisk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.atrisk-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.atrisk-card:hover {
+  border-color: #64748b;
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.1);
+  transform: translateY(-4px);
+}
+
+.atrisk-card.risk-critical {
+  border-left: 4px solid #ef4444;
+}
+
+.atrisk-card.risk-high {
+  border-left: 4px solid #f59e0b;
+}
+
+.atrisk-card.risk-medium {
+  border-left: 4px solid #eab308;
+}
+
+.atrisk-card.risk-low {
+  border-left: 4px solid #a855f7;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.student-name-risk {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.risk-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.risk-badge.critical {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.risk-badge.high {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.risk-badge.medium {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: #fef08a;
+}
+
+.risk-badge.low {
+  background-color: rgba(168, 85, 247, 0.2);
+  color: #e9d5ff;
+}
+
+.score-display {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(51, 65, 85, 0.3);
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.score-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #f59e0b;
+}
+
+.score-label {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.weak-areas {
+  margin-bottom: 1.5rem;
+}
+
+.areas-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.areas-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.area-tag {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.35rem;
+  font-size: 0.85rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.intervention-section {
+  padding: 1rem;
+  background: rgba(51, 65, 85, 0.2);
+  border-radius: 0.5rem;
+  border-left: 3px solid #f59e0b;
+  margin-bottom: 1rem;
+}
+
+.intervention-type {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fcd34d;
+  margin-bottom: 0.5rem;
+}
+
+.intervention-desc {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.study-hours {
+  padding: 0.75rem 1rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 0.4rem;
+  color: #86efac;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.action-button {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-button:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+@media (max-width: 768px) {
+  .atrisk-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .atrisk-header h2 {
+    font-size: 1.5rem;
+  }
+}

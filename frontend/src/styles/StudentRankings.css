@@ -1,0 +1,276 @@
+/* Student Rankings Styles */
+
+.rankings-container {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.rankings-header {
+  margin-bottom: 32px;
+}
+
+.rankings-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.rankings-subtitle {
+  color: rgb(203, 213, 225);
+  font-size: 0.95rem;
+}
+
+/* Rankings Table */
+.rankings-table {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 80px 1fr 100px 100px 120px;
+  gap: 16px;
+  padding: 16px 20px;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  color: rgb(203, 213, 225);
+}
+
+.table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 100px 100px 120px;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  align-items: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.table-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Performance Color Variants */
+.table-row.performance-excellent {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, transparent 100%);
+}
+
+.table-row.performance-good {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, transparent 100%);
+}
+
+.table-row.performance-average {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, transparent 100%);
+}
+
+.table-row.performance-poor {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, transparent 100%);
+}
+
+/* Hover Effect */
+.table-row:hover {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+.table-row:hover::before {
+  opacity: 1;
+}
+
+/* Special styling for top ranks */
+.table-row.rank-1 {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, transparent 100%);
+  border-left: 3px solid rgb(251, 191, 36);
+}
+
+.table-row.rank-2 {
+  background: linear-gradient(90deg, rgba(192, 192, 192, 0.1) 0%, transparent 100%);
+  border-left: 3px solid rgb(192, 192, 192);
+}
+
+.table-row.rank-3 {
+  background: linear-gradient(90deg, rgba(205, 127, 50, 0.1) 0%, transparent 100%);
+  border-left: 3px solid rgb(205, 127, 50);
+}
+
+/* Column Styles */
+.col {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.col.rank {
+  justify-content: center;
+  position: relative;
+}
+
+.medal {
+  font-size: 1.4rem;
+  margin-right: 4px;
+}
+
+.rank-number {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.col.student {
+  padding: 0 12px;
+}
+
+.student-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  word-break: break-word;
+}
+
+.col.score {
+  justify-content: center;
+}
+
+.score-display {
+  text-align: center;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  min-width: 80px;
+}
+
+.score-value {
+  font-weight: 700;
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.col.mistakes {
+  justify-content: center;
+  font-weight: 600;
+}
+
+.mistake-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  font-weight: 700;
+  color: rgb(239, 68, 68);
+}
+
+.col.status {
+  justify-content: center;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.status-badge.status-success {
+  background: rgba(16, 185, 129, 0.2);
+  color: rgb(16, 185, 129);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.status-manual-review-required {
+  background: rgba(245, 158, 11, 0.2);
+  color: rgb(245, 158, 11);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.status-needs-review {
+  background: rgba(239, 68, 68, 0.2);
+  color: rgb(239, 68, 68);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 60px 1fr 80px 80px 100px;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .rank-number {
+    font-size: 0.95rem;
+  }
+
+  .student-name {
+    font-size: 0.85rem;
+  }
+
+  .score-value {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 50px 1fr 60px 60px 80px;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 0.7rem;
+  }
+
+  .table-header {
+    font-size: 0.7rem;
+  }
+
+  .student-name {
+    font-size: 0.8rem;
+  }
+
+  .score-display {
+    min-width: 60px;
+    padding: 6px 8px;
+  }
+
+  .status-badge {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+
+  .mistake-count {
+    min-width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+}

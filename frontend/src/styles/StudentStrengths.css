@@ -1,0 +1,243 @@
+.student-strengths-container {
+  padding: 2.5rem 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.strengths-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.strengths-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.strengths-subtitle {
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.students-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+.student-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.student-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.student-card.strength-risk-critical {
+  border-left: 4px solid #ef4444;
+}
+
+.student-card.strength-risk-high {
+  border-left: 4px solid #f59e0b;
+}
+
+.student-card.strength-risk-medium {
+  border-left: 4px solid #eab308;
+}
+
+.student-card.strength-risk-low {
+  border-left: 4px solid #10b981;
+}
+
+.student-card:hover {
+  border-color: #64748b;
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.15);
+  transform: translateY(-6px);
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.student-header {
+  flex: 1;
+}
+
+.student-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 0.5rem 0;
+}
+
+.strength-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.strength-badge.critical {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.strength-badge.high {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.strength-badge.medium {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: #fef08a;
+}
+
+.strength-badge.low {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+.score-ring {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-left: 1rem;
+}
+
+.score-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: #334155;
+  stroke-width: 3;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: url(#gradient);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.8s ease;
+}
+
+.score-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.message-box {
+  padding: 1rem;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.personalized-msg {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-style: italic;
+  margin: 0;
+}
+
+.strengths-section,
+.weaknesses-section {
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0 0 0.75rem 0;
+}
+
+.areas-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.area-tag {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.area-tag.strength {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.area-tag.weakness {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.area-tag.placeholder {
+  background-color: rgba(107, 114, 128, 0.1);
+  color: #9ca3af;
+  border-color: rgba(107, 114, 128, 0.3);
+}
+
+@media (max-width: 768px) {
+  .students-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .strengths-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .card-top {
+    flex-direction: column;
+  }
+
+  .score-ring {
+    margin-left: 0;
+    margin-top: 1rem;
+  }
+}

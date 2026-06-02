@@ -1,0 +1,161 @@
+/* Performance Chart Styles */
+
+.chart-container {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.chart-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.legend-item.excellent {
+  color: rgb(16, 185, 129);
+}
+
+.legend-item.good {
+  color: rgb(245, 158, 11);
+}
+
+.legend-item.average {
+  color: rgb(239, 68, 68);
+}
+
+.legend-item.poor {
+  color: rgb(107, 114, 128);
+}
+
+/* Bars Container */
+.bars-container {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 20px;
+  height: 300px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  max-width: 100px;
+}
+
+.bar-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bar-wrapper {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+}
+
+.bar-fill {
+  width: 60%;
+  max-width: 80px;
+  min-height: 4px;
+  background: linear-gradient(180deg, rgb(59, 130, 246) 0%, rgb(139, 92, 246) 100%);
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.bar-fill:hover {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+  transform: scaleY(1.05);
+}
+
+.bar-value {
+  position: absolute;
+  bottom: -25px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+@keyframes slideUp {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: 100%;
+    opacity: 1;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .bars-container {
+    gap: 10px;
+    height: 250px;
+    padding: 15px;
+  }
+
+  .bar-item {
+    gap: 8px;
+    max-width: 60px;
+  }
+
+  .bar-wrapper {
+    height: 150px;
+  }
+
+  .bar-fill {
+    max-width: 50px;
+  }
+
+  .bar-label {
+    font-size: 0.8rem;
+  }
+
+  .chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

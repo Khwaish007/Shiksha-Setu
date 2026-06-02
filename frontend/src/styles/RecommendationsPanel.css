@@ -1,0 +1,307 @@
+/* Recommendations Panel Styles */
+
+.recommendations-container {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.recommendations-header {
+  margin-bottom: 32px;
+}
+
+.recommendations-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.recommendations-subtitle {
+  color: rgb(203, 213, 225);
+  font-size: 0.95rem;
+}
+
+/* Recommendations List */
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recommendation-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.recommendation-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent);
+  transition: width 0.3s ease;
+}
+
+/* Priority Levels */
+.recommendation-card.priority-high {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.02) 100%);
+}
+
+.recommendation-card.priority-high::before {
+  background: rgb(239, 68, 68);
+}
+
+.recommendation-card.priority-medium {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(245, 158, 11, 0.02) 100%);
+}
+
+.recommendation-card.priority-medium::before {
+  background: rgb(245, 158, 11);
+}
+
+.recommendation-card.priority-low {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%);
+}
+
+.recommendation-card.priority-low::before {
+  background: rgb(16, 185, 129);
+}
+
+.recommendation-card.priority-very_high {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.03) 100%);
+}
+
+.recommendation-card.priority-very_high::before {
+  background: linear-gradient(180deg, rgb(245, 158, 11), rgb(251, 191, 36));
+}
+
+/* Hover Effect */
+.recommendation-card:hover {
+  transform: translateX(4px);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+}
+
+.recommendation-card:hover::before {
+  width: 8px;
+}
+
+.rec-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.priority-icon {
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  min-width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.priority-icon-very_high {
+  color: rgb(251, 191, 36);
+  text-shadow: 0 0 14px rgba(251, 191, 36, 0.6);
+}
+
+.priority-icon-high {
+  color: rgb(249, 115, 22);
+}
+
+.priority-icon-medium {
+  color: rgb(245, 158, 11);
+}
+
+.priority-icon-low {
+  color: rgb(16, 185, 129);
+}
+
+.rec-topic {
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex: 1;
+  margin: 0;
+}
+
+.priority-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.priority-badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+.recommendation-card.priority-high .priority-badge {
+  background: rgba(239, 68, 68, 0.2);
+  color: rgb(239, 68, 68);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.recommendation-card.priority-medium .priority-badge {
+  background: rgba(245, 158, 11, 0.2);
+  color: rgb(245, 158, 11);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.recommendation-card.priority-low .priority-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: rgb(16, 185, 129);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.recommendation-card.priority-very_high .priority-badge {
+  background: rgba(251, 191, 36, 0.2);
+  color: rgb(251, 191, 36);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+}
+
+/* Stats */
+.rec-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: rgb(203, 213, 225);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.rec-action {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.recommendation-text {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+.practice-test-btn {
+  background: linear-gradient(135deg, rgb(59, 130, 246) 0%, rgb(139, 92, 246) 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.practice-test-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.practice-test-btn:active {
+  transform: translateY(0);
+}
+
+/* Progress Bar */
+.rec-progress {
+  margin-top: 16px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgb(59, 130, 246), rgb(139, 92, 246));
+  border-radius: 3px;
+  animation: fillProgress 0.8s ease-out;
+}
+
+@keyframes fillProgress {
+  from {
+    width: 0;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .recommendation-card {
+    padding: 16px;
+  }
+
+  .rec-header {
+    gap: 8px;
+  }
+
+  .rec-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .rec-topic {
+    font-size: 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+  }
+}

@@ -1,0 +1,306 @@
+:root {
+  --primary-bg: #060816;
+  --secondary-bg: rgba(16, 21, 40, 0.72);
+  --tertiary-bg: rgba(26, 33, 58, 0.8);
+  --accent-primary: #7dd3fc;
+  --accent-secondary: #a78bfa;
+  --accent-tertiary: #fb7185;
+  --accent-gold: #fbbf24;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --success-color: #34d399;
+  --warning-color: #fbbf24;
+  --danger-color: #fb7185;
+  --glass-surface: rgba(15, 23, 42, 0.6);
+  --glass-strong: rgba(15, 23, 42, 0.82);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(125, 211, 252, 0.15), transparent 34%),
+    radial-gradient(circle at 85% 10%, rgba(167, 139, 250, 0.16), transparent 28%),
+    radial-gradient(circle at 50% 85%, rgba(251, 113, 133, 0.08), transparent 30%),
+    linear-gradient(180deg, #050816 0%, #0b1022 100%);
+  color: var(--text-primary);
+  font-family: Inter, 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 400;
+  overflow-x: hidden;
+}
+
+/* App Container */
+.app-container {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  background: transparent;
+  isolation: isolate;
+}
+
+.app-background {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.bg-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(24px);
+  opacity: 0.7;
+  animation: floatOrb 18s ease-in-out infinite;
+}
+
+.orb-one {
+  width: 420px;
+  height: 420px;
+  top: -120px;
+  left: -120px;
+  background: radial-gradient(circle, rgba(125, 211, 252, 0.35), transparent 68%);
+}
+
+.orb-two {
+  width: 360px;
+  height: 360px;
+  right: -80px;
+  top: 18%;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.32), transparent 68%);
+  animation-delay: -7s;
+}
+
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(circle at center, black 48%, transparent 100%);
+  opacity: 0.35;
+}
+
+.app-topbar {
+  position: relative;
+  z-index: 1200;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 28px;
+  margin: 16px auto 0;
+  width: min(1440px, calc(100% - 32px));
+  background: rgba(8, 12, 24, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(24px);
+  border-radius: 24px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.app-kicker {
+  display: inline-flex;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  color: rgba(248, 250, 252, 0.62);
+}
+
+.app-topbar h1 {
+  font-size: clamp(1.2rem, 2.5vw, 2rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  max-width: 12ch;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.topbar-chip {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  padding: 11px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.topbar-chip:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.topbar-chip.active {
+  background: linear-gradient(135deg, rgba(125, 211, 252, 0.18), rgba(167, 139, 250, 0.18));
+  border-color: rgba(125, 211, 252, 0.3);
+  color: var(--text-primary);
+}
+
+/* Upload View */
+.upload-view {
+  min-height: calc(100vh - 112px);
+  padding: 28px 0 60px;
+}
+
+.view-stage {
+  width: min(1440px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.glass-panel {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.78), rgba(8, 12, 24, 0.66));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(24px);
+}
+
+/* Floating Action Button */
+.fab-button {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  min-width: 134px;
+  padding: 0 18px;
+  height: 58px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(125, 211, 252, 0.95) 0%, rgba(167, 139, 250, 0.96) 100%);
+  border: none;
+  color: white;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  backdrop-filter: blur(16px);
+}
+
+.fab-button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+}
+
+.fab-button:active {
+  transform: translateY(-2px);
+}
+
+.fab-icon {
+  font-size: 1.1rem;
+}
+
+.fab-copy {
+  letter-spacing: -0.01em;
+}
+
+/* Global Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatOrb {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, 18px, 0) scale(1.04);
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.6);
+}
+
+/* Selection Styling */
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .fab-button {
+    min-width: 112px;
+    height: 50px;
+    bottom: 20px;
+    right: 20px;
+    font-size: 0.9rem;
+  }
+
+  .app-topbar {
+    padding: 16px;
+    width: min(100% - 20px, 1440px);
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .upload-view {
+    padding-top: 18px;
+  }
+
+  .topbar-actions {
+    width: 100%;
+  }
+
+  .topbar-chip {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .view-stage {
+    width: min(100% - 20px, 1440px);
+  }
+}
