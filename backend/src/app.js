@@ -15,19 +15,35 @@ const allowedOrigins = [
   'http://localhost:4173',
 ].filter(Boolean);
 
-app.use(cors({
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  if (/^https:\/\/[\w-]+(?:-[\w-]+)*\.vercel\.app$/.test(origin)) return true;
+  return false;
+};
+
+const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    if (origin.endsWith('.vercel.app')) return callback(null, true);
-    callback(new Error('Not allowed by CORS'));
+    if (isAllowedOrigin(origin)) {
+      callback(null, origin || true);
+    } else {
+      callback(null, false);
+    }
   },
-  credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: false,
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 app.use(express.json({ limit: '10mb' }));
 
 app.use(async (req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
   try {
     await connectDatabase();
     next();
@@ -55,5 +71,13 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/v1/grading', gradingRouter);
 app.use('/api/students', studentRouter);
+
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.message);
+  if (res.headersSent) return next(err);
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error',
+  });
+});
 
 export default app;
