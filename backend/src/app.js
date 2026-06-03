@@ -37,6 +37,18 @@ app.use(async (req, res, next) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Shiksha-Setu API is running',
+    status: 'ok',
+    endpoints: {
+      health: '/api/health',
+      grading: '/api/v1/grading',
+      students: '/api/students',
+    },
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
