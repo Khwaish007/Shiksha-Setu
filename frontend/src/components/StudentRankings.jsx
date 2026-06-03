@@ -1,6 +1,26 @@
+import React, { useState, useEffect } from 'react';
+import { analyticsAPI } from '../api/analyticsAPI';
 import '../styles/StudentRankings.css';
 
 const StudentRankings = ({ rankings }) => {
+  const [filter, setFilter] = useState('all');
+  const [riskMap, setRiskMap] = useState({});
+
+  useEffect(() => {
+    const fetchRiskTiers = async () => {
+      try {
+        const students = await analyticsAPI.getAllStudents();
+        const map = {};
+        students.forEach(s => {
+          map[s.studentName] = s.riskTier;
+        });
+        setRiskMap(map);
+      } catch (err) {
+        console.error("Failed to fetch student risk tiers", err);
+      }
+    };
+    fetchRiskTiers();
+  }, []);
   const getMedalIcon = (rank) => {
     if (rank === 1) return '🥇';
     if (rank === 2) return '🥈';
@@ -17,9 +37,29 @@ const StudentRankings = ({ rankings }) => {
 
   return (
     <div className="rankings-container">
-      <div className="rankings-header">
-        <h2>Student Performance Rankings</h2>
-        <p className="rankings-subtitle">Top performers in your class</p>
+      <div className="rankings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h2>Student Performance Rankings</h2>
+          <p className="rankings-subtitle">Top performers in your class</p>
+        </div>
+        <div>
+          <select 
+            value={filter} 
+            onChange={(e) => setFilter(e.target.value)}
+            style={{
+              padding: '0.5rem',
+              borderRadius: '6px',
+              background: 'rgba(30, 41, 59, 0.8)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              outline: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            <option value="all">Show: All</option>
+            <option value="atRisk">Show: At Risk Only (High/Med)</option>
+          </select>
+        </div>
       </div>
 
       <div className="rankings-table">
@@ -32,7 +72,11 @@ const StudentRankings = ({ rankings }) => {
         </div>
 
         <div className="table-body">
-          {rankings.map((student, idx) => (
+          {rankings.filter(s => {
+            if (filter === 'all') return true;
+            const tier = riskMap[s.studentName];
+            return tier === 'high' || tier === 'medium';
+          }).map((student, idx) => (
             <div
               key={idx}
               className={`table-row rank-${student.rank} performance-${getPerformanceColor(student.totalScore)}`}

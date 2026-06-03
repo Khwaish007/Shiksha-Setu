@@ -1,0 +1,155 @@
+.forecast-panel {
+  margin-top: 2rem;
+  background-color: #1e293b;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+}
+
+.forecast-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 1rem;
+}
+
+.forecast-header h2 {
+  margin: 0 0 0.5rem 0;
+  color: #f8fafc;
+  font-size: 1.5rem;
+}
+
+.forecast-subtitle {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
+.attention-count {
+  color: #fbbf24;
+  font-weight: bold;
+}
+
+.run-assessment-btn {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.run-assessment-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.run-assessment-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.forecast-columns {
+  display: flex;
+  gap: 1rem;
+}
+
+.forecast-col {
+  flex: 1;
+  background-color: rgba(15, 23, 42, 0.4);
+  border-radius: 12px;
+  padding: 1rem;
+  min-height: 200px;
+}
+
+.col-header {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.col-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.high-risk-col .col-header h3 { color: #fca5a5; }
+.medium-risk-col .col-header h3 { color: #fde047; }
+.low-risk-col .col-header h3 { color: #86efac; }
+
+.student-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.student-risk-card {
+  background-color: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  position: relative;
+  cursor: help;
+}
+
+.high-risk-card {
+  border-left: 4px solid #ef4444;
+}
+
+.medium-risk-card {
+  border-left: 4px solid #eab308;
+}
+
+.low-risk-card {
+  border-left: 4px solid #22c55e;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-name {
+  color: #f8fafc;
+  font-weight: 500;
+}
+
+.trend-arrow {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.recommended-action {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.5rem;
+  border-top: 1px dashed rgba(255,255,255,0.1);
+  padding-top: 0.5rem;
+}
+
+.unassessed-alert {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+/* Subtle pulse animation for high risk */
+.high-risk-card {
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0% { border-color: rgba(239, 68, 68, 0.2); }
+  50% { border-color: rgba(239, 68, 68, 0.8); box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+  100% { border-color: rgba(239, 68, 68, 0.2); }
+}

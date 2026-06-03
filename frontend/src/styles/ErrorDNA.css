@@ -1,0 +1,129 @@
+.error-dna-empty {
+  text-align: center;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  color: #9ca3af;
+}
+
+.error-dna-empty .dna-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.error-dna-container {
+  position: relative;
+  padding-left: 20px;
+  margin-top: 1.5rem;
+}
+
+.dna-strand-line {
+  position: absolute;
+  left: 6px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  border-radius: 4px;
+  opacity: 0.7;
+}
+
+.dna-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dna-card {
+  position: relative;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-left: 10px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.dna-card:hover {
+  transform: translateX(4px);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+.dna-node {
+  position: absolute;
+  left: -20px;
+  top: 20px;
+  width: 16px;
+  height: 16px;
+  background-color: #1e293b;
+  border: 4px solid #8b5cf6;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 0 10px #8b5cf6;
+}
+
+.severity-major .dna-node {
+  border-color: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+.dna-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.dna-concept {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.dna-badge {
+  background: rgba(139, 92, 246, 0.2);
+  color: #c4b5fd;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.severity-major .dna-badge {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.dna-misconception {
+  margin: 0 0 1rem 0;
+  color: #cbd5e1;
+  font-size: 1rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.dna-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.dna-dates {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.dna-severity-tag {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}

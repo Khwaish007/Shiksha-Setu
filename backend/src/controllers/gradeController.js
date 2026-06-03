@@ -201,6 +201,10 @@ CRITICAL RULES:
       "conceptMissed": "One of: 'Linear Equations', 'Area Calculation', 'Trigonometry', 'Quadratic Factorization', 'Pythagorean Theorem', 'Calculus Differentiation', 'Probability', 'System of Linear Equations', 'Calculus Integration'"
     }
   ],
+  "annotations": [
+    { "step": 1, "description": "What the student did", "status": "correct|wrong|consequence" }
+  ],
+  "errorSummary": "Overall summary of student's misconceptions",
   "status": "Success"
 }
 
@@ -209,6 +213,8 @@ If the image is unreadable:
   "studentName": "Unknown",
   "totalScore": 0,
   "mistakes": [],
+  "annotations": [],
+  "errorSummary": "Unreadable",
   "status": "Manual Review Required"
 }`;
 
@@ -252,6 +258,9 @@ If the image is unreadable:
             studentName: cleanName,
             totalScore: Number(parsedGradingPayload.totalScore),
             mistakes: parsedGradingPayload.mistakes,
+            annotations: parsedGradingPayload.annotations || [],
+            errorSummary: parsedGradingPayload.errorSummary || "",
+            imageBase64: file.buffer.toString("base64"),
             status: parsedGradingPayload.status,
             createdAt: new Date()
           };

@@ -62,6 +62,13 @@ CRITICAL RULES:
       "conceptMissed": "One of: 'Linear Equations', 'Area Calculation', 'Trigonometry', 'Quadratic Factorization', 'Pythagorean Theorem', 'Calculus Differentiation', 'Probability', 'System of Linear Equations', 'Calculus Integration'"
     }
   ],
+  "annotations": [
+    { "step": 1, "description": "What the student did in this step", "status": "correct|wrong|consequence" }
+  ],
+  "misconception_patterns": [
+    { "concept": "Fractions", "misconception": "inverts fraction before multiplying instead of after", "severity": "major" }
+  ],
+  "errorSummary": "Overall summary of student's misconceptions, if any",
   "status": "Success"
 }
 
@@ -70,6 +77,9 @@ If the image is unreadable:
   "studentName": "Unknown",
   "totalScore": 0,
   "mistakes": [],
+  "annotations": [],
+  "misconception_patterns": [],
+  "errorSummary": "Unreadable",
   "status": "Manual Review Required"
 }`;
 
@@ -89,6 +99,11 @@ export const getAllStudents = async (req, res) => {
       avatarColor: s.avatarColor,
       averageScore: s.averageScore,
       totalTests: s.totalTests,
+      tests: s.tests,
+      riskTier: s.riskTier,
+      riskReason: s.riskReason,
+      riskRecommendedAction: s.riskRecommendedAction,
+      riskUpdatedAt: s.riskUpdatedAt,
       createdAt: s.createdAt
     }));
     res.status(200).json(response);
@@ -201,11 +216,36 @@ export const gradeStudentTest = async (req, res) => {
       mistakes: (parsed.mistakes || []).map(m => ({
         questionNumber: m.questionNumber,
         conceptMissed: m.conceptMissed
-      }))
+      })),
+      annotations: parsed.annotations || [],
+      errorSummary: parsed.errorSummary || "",
+      imageBase64: file.buffer.toString("base64")
     };
 
     // Push test into student's tests array
     student.tests.push(testRecord);
+    // Upsert into errorDNA
+    const patterns = parsed.misconception_patterns || [];
+    patterns.forEach(p => {
+      const existing = student.errorDNA.find(dna => 
+        dna.concept === p.concept && 
+        dna.misconception.toLowerCase() === p.misconception.toLowerCase()
+      );
+      if (existing) {
+        existing.occurrences += 1;
+        existing.lastSeen = new Date();
+      } else {
+        student.errorDNA.push({
+          concept: p.concept,
+          misconception: p.misconception,
+          severity: p.severity || 'minor',
+          occurrences: 1,
+          firstSeen: new Date(),
+          lastSeen: new Date()
+        });
+      }
+    });
+
     await student.save();
 
     // Dual-write to Submission collection so classroom heatmap includes this test
@@ -214,6 +254,9 @@ export const gradeStudentTest = async (req, res) => {
       studentName: student.studentName.trim(),
       totalScore: testRecord.score,
       mistakes: testRecord.mistakes,
+      annotations: testRecord.annotations,
+      errorSummary: testRecord.errorSummary,
+      imageBase64: testRecord.imageBase64,
       status: parsed.status || 'Success',
       createdAt: new Date()
     };
@@ -232,5 +275,225 @@ export const gradeStudentTest = async (req, res) => {
   } catch (error) {
     console.error('Grade Student Test Error:', error);
     res.status(500).json({ error: 'Failed to grade test. Please try again.' });
+  }
+};
+
+/**
+ * GET /api/students/:studentId/tests/:testId/replay
+ * Returns the test image and AI annotations for frontend canvas replay
+ */
+export const getTestReplay = async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.studentId);
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found.' });
+    }
+
+    const test = student.tests.id(req.params.testId) || student.tests.find(t => t.testId === req.params.testId);
+    if (!test) {
+      return res.status(404).json({ error: 'Test not found.' });
+    }
+
+    if (!test.imageBase64) {
+      return res.status(404).json({ error: 'Image not available for this test.' });
+    }
+
+    res.status(200).json({
+      imageBase64: test.imageBase64,
+      annotations: test.annotations || [],
+      errorSummary: test.errorSummary || ""
+    });
+  } catch (error) {
+    console.error('Get Test Replay Error:', error);
+    res.status(500).json({ error: 'Failed to fetch test replay.' });
+  }
+};
+
+/**
+ * GET /api/students/class-misconceptions
+ * Returns top 5 misconceptions across the whole class
+ */
+export const getClassMisconceptions = async (req, res) => {
+  try {
+    const students = await Student.find();
+    const allMisconceptions = {};
+    
+    students.forEach(student => {
+      (student.errorDNA || []).forEach(dna => {
+        const key = `${dna.concept}|${dna.misconception.toLowerCase()}`;
+        if (!allMisconceptions[key]) {
+          allMisconceptions[key] = {
+            concept: dna.concept,
+            misconception: dna.misconception,
+            severity: dna.severity || 'minor',
+            occurrences: 0,
+            studentsAffected: new Set()
+          };
+        }
+        allMisconceptions[key].occurrences += dna.occurrences;
+        allMisconceptions[key].studentsAffected.add(student.studentName);
+      });
+    });
+
+    const sorted = Object.values(allMisconceptions)
+      .map(item => ({
+        ...item,
+        studentsAffectedCount: Array.from(item.studentsAffected).length
+      }))
+      .sort((a, b) => b.studentsAffectedCount - a.studentsAffectedCount || b.occurrences - a.occurrences)
+      .slice(0, 5);
+
+    res.status(200).json(sorted);
+  } catch (error) {
+    console.error('Class Misconceptions Error:', error);
+    res.status(500).json({ error: 'Failed to fetch class misconceptions.' });
+  }
+};
+
+/**
+ * POST /api/students/risk-assessment
+ * Re-evaluates risk tier for all students in the cohort via Claude
+ */
+export const assessCohortRisk = async (req, res) => {
+  try {
+    const students = await Student.find();
+    
+    // Build payload for Claude
+    const cohortData = students.map(s => {
+      const recentTests = [...s.tests].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-3);
+      const recentScores = recentTests.map(t => t.score);
+      
+      let trend = "flat";
+      if (recentScores.length >= 2) {
+        const diff = recentScores[recentScores.length - 1] - recentScores[0];
+        if (diff > 5) trend = "improving";
+        else if (diff < -5) trend = "declining";
+      }
+
+      const weakConcepts = s.errorDNA.slice(0, 3).map(dna => dna.concept);
+
+      return {
+        studentId: s._id.toString(),
+        studentName: s.studentName,
+        recentScores,
+        scoreTrend: trend,
+        weakConcepts
+      };
+    });
+
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    
+    const prompt = `You are an AI educational analyst.
+I will provide a JSON array of students with their recent scores, score trend, and weak concepts.
+For each student, assess their risk of underperforming on the next assessment.
+Return ONLY a valid JSON array of objects with EXACTLY this structure:
+[
+  {
+    "studentId": "id-from-input",
+    "riskTier": "high" | "medium" | "low",
+    "primaryReason": "One sentence explaining the risk",
+    "recommendedAction": "One concrete teacher action"
+  }
+]
+Do not include any markdown or other text.`;
+
+    const response = await client.messages.create({
+      model: "claude-opus-4-1-20250805",
+      max_tokens: 4000,
+      system: prompt,
+      messages: [{ role: "user", content: JSON.stringify(cohortData) }]
+    });
+
+    let responseText = response.content[0].text;
+    const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      responseText = jsonMatch[0];
+    }
+    
+    const assessments = JSON.parse(responseText);
+
+    for (const assessment of assessments) {
+      await Student.findByIdAndUpdate(assessment.studentId, {
+        riskTier: assessment.riskTier.toLowerCase(),
+        riskReason: assessment.primaryReason,
+        riskRecommendedAction: assessment.recommendedAction,
+        riskUpdatedAt: new Date()
+      });
+    }
+
+    res.status(200).json({ message: "Cohort risk assessed successfully.", assessments });
+  } catch (error) {
+    console.error("Risk Assessment Error:", error);
+    res.status(500).json({ error: "Failed to assess cohort risk." });
+  }
+};
+
+/**
+ * POST /api/students/:id/parent-message
+ * Generates a ready-to-send bilingual parent message via Claude
+ */
+export const generateParentMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { language = 'both', tone = 'friendly' } = req.body;
+
+    const student = await Student.findById(id);
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    const recentTests = [...student.tests].sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-3);
+    const recentScores = recentTests.map(t => t.score);
+    const weakConcepts = student.errorDNA.slice(0, 3).map(dna => dna.concept);
+
+    const studentData = {
+      studentName: student.studentName,
+      averageScore: student.averageScore,
+      recentScores,
+      weakConcepts,
+      riskTier: student.riskTier
+    };
+
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    
+    const prompt = `Generate a parent communication message for the following student performance data.
+Tone: ${tone} and encouraging, avoid jargon.
+Language requirement: ${language === 'both' ? 'Hindi (Devanagari script) with English translation below' : language === 'hindi' ? 'Hindi (Devanagari script) only' : 'English only'}.
+Include:
+1) One-line overall progress summary.
+2) One specific concept to practice at home (give a concrete example activity).
+3) One genuine positive observation.
+Keep total length under 100 words per language.
+
+Student data:
+${JSON.stringify(studentData)}
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "hindi": "Hindi text here (or empty string if English only)",
+  "english": "English text here (or empty string if Hindi only)",
+  "whatsappText": "A merged, emoji-friendly version ready to be sent on WhatsApp"
+}
+Do not include any markdown or other text.`;
+
+    const response = await client.messages.create({
+      model: "claude-opus-4-1-20250805",
+      max_tokens: 1500,
+      system: prompt,
+      messages: [{ role: "user", content: "Generate the message." }]
+    });
+
+    let responseText = response.content[0].text;
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      responseText = jsonMatch[0];
+    }
+    
+    const parsed = JSON.parse(responseText);
+
+    res.status(200).json(parsed);
+  } catch (error) {
+    console.error("Generate Parent Message Error:", error);
+    res.status(500).json({ error: "Failed to generate parent message." });
   }
 };

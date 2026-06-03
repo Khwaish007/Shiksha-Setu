@@ -12,6 +12,22 @@ const studentMistakeSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+const annotationSchema = new mongoose.Schema({
+  step: { type: Number },
+  description: { type: String },
+  status: { type: String }
+}, { _id: false });
+
+const errorDNASchema = new mongoose.Schema({
+  concept: { type: String, required: true },
+  misconception: { type: String, required: true },
+  severity: { type: String, enum: ['minor', 'major'] },
+  occurrences: { type: Number, default: 1 },
+  firstSeen: { type: Date, default: Date.now },
+  lastSeen: { type: Date, default: Date.now }
+}, { _id: false });
+
+
 const testRecordSchema = new mongoose.Schema({
   testId: {
     type: String,
@@ -29,7 +45,14 @@ const testRecordSchema = new mongoose.Schema({
     type: Number,
     default: 10
   },
-  mistakes: [studentMistakeSchema]
+  mistakes: [studentMistakeSchema],
+  annotations: [annotationSchema],
+  errorSummary: {
+    type: String
+  },
+  imageBase64: {
+    type: String
+  }
 });
 
 const studentSchema = new mongoose.Schema({
@@ -50,7 +73,12 @@ const studentSchema = new mongoose.Schema({
       return palette[Math.floor(Math.random() * palette.length)];
     }
   },
-  tests: [testRecordSchema]
+  tests: [testRecordSchema],
+  errorDNA: [errorDNASchema],
+  riskTier: { type: String, enum: ['high', 'medium', 'low', 'unassessed'], default: 'unassessed' },
+  riskReason: { type: String },
+  riskRecommendedAction: { type: String },
+  riskUpdatedAt: { type: Date }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

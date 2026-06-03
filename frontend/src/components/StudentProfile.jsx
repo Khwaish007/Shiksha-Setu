@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
+import AnswerReplay from './AnswerReplay';
+import ErrorDNA from './ErrorDNA';
 import '../styles/StudentProfile.css';
 
 const StudentProfile = () => {
@@ -13,6 +15,7 @@ const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [expandedTests, setExpandedTests] = useState({});
+  const [replayTestId, setReplayTestId] = useState(null);
 
   const fetchStudent = async () => {
     try {
@@ -55,7 +58,7 @@ const StudentProfile = () => {
     };
   }, [student]);
 
-  // Struggle Cloud — top recurring mistakes across all tests
+  // Struggle Cloud (Legacy) - Kept for fallback if needed
   const struggleCloud = useMemo(() => {
     if (!student?.tests?.length) return [];
     const conceptCounts = {};
@@ -69,6 +72,8 @@ const StudentProfile = () => {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
   }, [student]);
+
+  const errorDNA = student?.errorDNA || [];
 
   // ── Handlers ─────────────────────────────────────────────────────
 
@@ -142,6 +147,13 @@ const StudentProfile = () => {
 
   return (
     <div className="sp-container">
+      {replayTestId && (
+        <AnswerReplay
+          studentId={id}
+          testId={replayTestId}
+          onClose={() => setReplayTestId(null)}
+        />
+      )}
       {/* Back Navigation */}
       <motion.button
         className="sp-back-btn"
@@ -243,75 +255,48 @@ const StudentProfile = () => {
         </motion.button>
       </section>
 
-      {/* ═══════ SECTION 3: Struggle Cloud ═══════ */}
-      {struggleCloud.length > 0 && (
+      {/* ═══════ SECTION 3: Error DNA Profile ═══════ */}
+      {(errorDNA.length > 0 || struggleCloud.length > 0) && (
         <section className="sp-struggle-section">
           <div className="sp-section-header">
-            <span className="sp-section-eyebrow">Pattern Analysis</span>
-            <h2 className="sp-section-title">Struggle Cloud</h2>
+            <span className="sp-section-eyebrow">Cumulative Profile</span>
+            <h2 className="sp-section-title">Error DNA Profile</h2>
             <p className="sp-section-desc">
-              Recurring weak areas identified across all tests — focus intervention here.
+              Tracks specific misconceptions and their persistence across all submissions.
             </p>
           </div>
 
-          <div className="sp-struggle-cloud">
-            {struggleCloud.map((item, i) => (
-              <motion.div
-                key={item.concept}
-                className={`sp-struggle-pill ${i === 0 ? 'sp-struggle-top' : ''}`}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.08 }}
-              >
-                <span className="sp-struggle-rank">#{i + 1}</span>
-                <span className="sp-struggle-concept">{item.concept}</span>
-                <span className="sp-struggle-count">
-                  missed {item.count} {item.count === 1 ? 'time' : 'times'}
-                </span>
-              </motion.div>
-            ))}
-          </div>
+          <ErrorDNA errorDNA={errorDNA} />
 
-          <div className="sp-practice-tests-section">
-            <h3 className="sp-practice-tests-title">🎯 Targeted Practice Tests</h3>
-            <div className="sp-practice-tests-grid">
-              {struggleCloud.slice(0, 3).map((item, i) => {
-                const formattedTopic = item.concept.toLowerCase().replace(/\s+/g, '_');
-                const pdfUrl = `/practice_tests_pdf/${formattedTopic}_practice_test.pdf`;
-                return (
-                  <div key={item.concept} className="sp-practice-card">
-                    <div className="sp-practice-card-left">
-                      <span className="sp-practice-rank">#{i + 1}</span>
-                      <div>
-                        <div className="sp-practice-concept">{item.concept}</div>
-                        <div className="sp-practice-desc">Based on {item.count} recurring {item.count === 1 ? 'mistake' : 'mistakes'}</div>
+          {struggleCloud.length > 0 && (
+            <div className="sp-practice-tests-section" style={{ marginTop: '2rem' }}>
+              <h3 className="sp-practice-tests-title">🎯 Targeted Practice Tests</h3>
+              <div className="sp-practice-tests-grid">
+                {struggleCloud.slice(0, 3).map((item, i) => {
+                  const formattedTopic = item.concept.toLowerCase().replace(/\s+/g, '_');
+                  const pdfUrl = `/practice_tests_pdf/${formattedTopic}_practice_test.pdf`;
+                  return (
+                    <div key={item.concept} className="sp-practice-card">
+                      <div className="sp-practice-card-left">
+                        <span className="sp-practice-rank">#{i + 1}</span>
+                        <div>
+                          <div className="sp-practice-concept">{item.concept}</div>
+                          <div className="sp-practice-desc">Based on {item.count} recurring {item.count === 1 ? 'mistake' : 'mistakes'}</div>
+                        </div>
                       </div>
+                      <button 
+                        className="sp-practice-btn"
+                        onClick={() => window.open(pdfUrl, '_blank')}
+                      >
+                        <span className="sp-practice-btn-icon">📥</span>
+                        <span>Download Test</span>
+                      </button>
                     </div>
-                    <button 
-                      className="sp-practice-btn"
-                      onClick={() => window.open(pdfUrl, '_blank')}
-                    >
-                      <span className="sp-practice-btn-icon">📥</span>
-                      <span>Download Test</span>
-                    </button>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-
-          <div className="sp-struggle-summary">
-            <span className="sp-struggle-summary-icon">💡</span>
-            <span>
-              <strong>{student.studentName.split(/[\s_]+/)[0]}</strong> frequently struggles with:{' '}
-              {struggleCloud.slice(0, 3).map((item, i) => (
-                <span key={item.concept}>
-                  <strong>{item.concept}</strong> (missed {item.count}×)
-                  {i < Math.min(struggleCloud.length, 3) - 1 ? ', ' : ''}
-                </span>
-              ))}
-            </span>
-          </div>
+          )}
         </section>
       )}
 
@@ -361,6 +346,13 @@ const StudentProfile = () => {
                       </div>
 
                       <div className="sp-test-card-right">
+                        <button
+                          className="sp-test-expand-btn replay-btn"
+                          style={{ marginRight: '8px', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa' }}
+                          onClick={() => setReplayTestId(testKey)}
+                        >
+                          ▶ AI Replay
+                        </button>
                         {test.mistakes.length > 0 ? (
                           <button
                             className={`sp-test-expand-btn ${isExpanded ? 'expanded' : ''}`}

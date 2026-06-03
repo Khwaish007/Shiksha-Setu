@@ -11,6 +11,8 @@ import StudentStrengths from './StudentStrengths';
 import ClassInsights from './ClassInsights';
 import PeerBenchmarking from './PeerBenchmarking';
 import PerformanceStats from './PerformanceStats';
+import ClassMisconceptions from './ClassMisconceptions';
+import RiskForecast from './RiskForecast';
 import { analyticsAPI } from '../api/analyticsAPI';
 
 const Dashboard = () => {
@@ -26,13 +28,14 @@ const Dashboard = () => {
   const [classStrengths, setClassStrengths] = useState(null);
   const [peerBenchmarking, setPeerBenchmarking] = useState(null);
   const [performanceDistribution, setPerformanceDistribution] = useState(null);
+  const [classMisconceptions, setClassMisconceptions] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const [analyticsData, heatmap, recs, ranks, concepts, atRisk, strengths, classStr, peers, perfDist] = await Promise.all([
+        const [analyticsData, heatmap, recs, ranks, concepts, atRisk, strengths, classStr, peers, perfDist, misconceptions] = await Promise.all([
           analyticsAPI.getClassAnalytics(),
           analyticsAPI.getHeatmapData(),
           analyticsAPI.getTopicRecommendations(),
@@ -42,7 +45,8 @@ const Dashboard = () => {
           analyticsAPI.getStudentStrengths(),
           analyticsAPI.getClassStrengths(),
           analyticsAPI.getPeerBenchmarking(),
-          analyticsAPI.getPerformanceDistribution()
+          analyticsAPI.getPerformanceDistribution(),
+          analyticsAPI.getClassMisconceptions()
         ]);
 
         setAnalytics(analyticsData);
@@ -57,6 +61,7 @@ const Dashboard = () => {
         setClassStrengths(classStr);
         setPeerBenchmarking(peers);
         setPerformanceDistribution(perfDist);
+        setClassMisconceptions(misconceptions);
         setLoading(false);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
@@ -91,13 +96,13 @@ const Dashboard = () => {
       {/* Navigation Tabs */}
       <nav className="dashboard-nav">
         <div className="nav-tabs">
-          {['overview', 'heatmap', 'recommendations', 'rankings', 'at-risk', 'strengths', 'class', 'peers', 'stats'].map(tab => (
+          {['overview', 'heatmap', 'recommendations', 'rankings', 'at-risk', 'strengths', 'class', 'peers', 'stats', 'misconceptions'].map(tab => (
             <button
               key={tab}
               className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
               onClick={() => setActiveTab(tab)}
             >
-              {tab === 'at-risk' ? 'At-Risk' : tab === 'class' ? 'Class Insights' : tab === 'learning' ? 'Learning Paths' : tab === 'peers' ? 'Peer Compare' : tab === 'stats' ? 'Statistics' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'at-risk' ? 'At-Risk' : tab === 'class' ? 'Class Insights' : tab === 'learning' ? 'Learning Paths' : tab === 'peers' ? 'Peer Compare' : tab === 'stats' ? 'Statistics' : tab === 'misconceptions' ? 'Misconceptions' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
@@ -143,6 +148,9 @@ const Dashboard = () => {
                 metrics={analytics.performanceMetrics}
               />
             </section>
+
+            {/* Predictive Risk Forecast */}
+            <RiskForecast />
           </div>
         )}
 
@@ -164,6 +172,7 @@ const Dashboard = () => {
         {activeTab === 'class' && classStrengths && <ClassInsights classData={classStrengths} />}
         {activeTab === 'peers' && peerBenchmarking && <PeerBenchmarking benchmarks={peerBenchmarking} />}
         {activeTab === 'stats' && performanceDistribution && <PerformanceStats distribution={performanceDistribution} />}
+        {activeTab === 'misconceptions' && classMisconceptions && <ClassMisconceptions misconceptions={classMisconceptions} />}
       </main>
     </div>
   );

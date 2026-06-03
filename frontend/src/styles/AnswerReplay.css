@@ -1,0 +1,197 @@
+.replay-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.replay-modal-container {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  width: 90vw;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.replay-modal-content {
+  background-color: #1a1a1a;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+}
+
+.replay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #333;
+  background-color: #222;
+}
+
+.replay-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #f3f4f6;
+}
+
+.replay-close-icon, .replay-close-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.replay-close-icon:hover, .replay-close-btn:hover {
+  color: white;
+}
+
+.replay-close-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #374151;
+  border-radius: 6px;
+}
+
+.replay-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.replay-image-section {
+  flex: 2;
+  background-color: #111;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  overflow: auto;
+}
+
+.replay-canvas-wrapper {
+  position: relative;
+  max-width: 100%;
+  max-height: 100%;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  background-color: white; /* assuming worksheet is white */
+  border-radius: 4px;
+}
+
+.replay-image {
+  max-width: 100%;
+  max-height: 80vh;
+  display: block;
+  object-fit: contain;
+}
+
+.replay-marker {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 0 5px rgba(255,255,255,0.3);
+  transform: translate(-50%, -50%); /* center on the point */
+  z-index: 10;
+  border: 2px solid white;
+}
+
+.replay-sidebar {
+  flex: 1;
+  background-color: #222;
+  padding: 1.5rem;
+  border-left: 1px solid #333;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.replay-sidebar h3, .replay-sidebar h4 {
+  margin: 0 0 0.5rem 0;
+  color: #e5e7eb;
+}
+
+.error-summary-text {
+  color: #d1d5db;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  background-color: rgba(255,255,255,0.05);
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 0;
+}
+
+.annotation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.annotation-card {
+  background-color: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.annotation-card:hover {
+  background-color: rgba(255,255,255,0.08);
+}
+
+.annotation-card.active-card {
+  border-color: rgba(255,255,255,0.3);
+  background-color: rgba(255,255,255,0.1);
+}
+
+.annotation-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.step-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+}
+
+.status-text {
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  color: #9ca3af;
+}
+
+.annotation-description {
+  font-size: 0.9rem;
+  color: #f3f4f6;
+  line-height: 1.4;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
