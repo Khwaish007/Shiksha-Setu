@@ -79,9 +79,7 @@ export const analyticsAPI = {
   gradeStudentTest: async (id, file) => {
     const formData = new FormData();
     formData.append('worksheet', file);
-    const { data } = await axios.post(`${STUDENTS_BASE}/${id}/grade`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const { data } = await axios.post(`${STUDENTS_BASE}/${id}/grade`, formData);
     return data;
   }
 };

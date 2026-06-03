@@ -51,8 +51,7 @@ function UploadSection({ onGradingExecutionComplete }) {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/api/v1/grading/evaluate`,
-        multipartFormPayload, 
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        multipartFormPayload
       );
       onGradingExecutionComplete(response.data);
       window.alert('Processing complete. Results are ready in the dashboard.');
