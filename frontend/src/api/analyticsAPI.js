@@ -1,7 +1,5 @@
 import axios from 'axios';
-
-const API_BASE = 'http://localhost:5000/api/v1/grading';
-const STUDENTS_BASE = 'http://localhost:5000/api/students';
+import { API_BASE, STUDENTS_BASE } from '../config/api.js';
 
 export const analyticsAPI = {
   getClassAnalytics: async () => {
@@ -87,4 +85,3 @@ export const analyticsAPI = {
     return data;
   }
 };
-
