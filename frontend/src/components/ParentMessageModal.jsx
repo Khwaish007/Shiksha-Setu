@@ -53,12 +53,13 @@ const ParentMessageModal = ({ student, onClose }) => {
   };
 
   return (
-    <div className="pm-modal-overlay">
+    <div className="pm-modal-overlay" onClick={onClose}>
       <motion.div 
         className="pm-modal"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="pm-modal-header">
           <h2>Notify Parent: {student.studentName}</h2>

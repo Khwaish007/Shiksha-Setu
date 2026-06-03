@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
 import AnswerReplay from './AnswerReplay';
 import ErrorDNA from './ErrorDNA';
+import ParentMessageModal from './ParentMessageModal';
 import '../styles/StudentProfile.css';
 
 const StudentProfile = () => {
@@ -16,6 +17,7 @@ const StudentProfile = () => {
   const [uploading, setUploading] = useState(false);
   const [expandedTests, setExpandedTests] = useState({});
   const [replayTestId, setReplayTestId] = useState(null);
+  const [showParentModal, setShowParentModal] = useState(false);
 
   const fetchStudent = async () => {
     try {
@@ -162,6 +164,14 @@ const StudentProfile = () => {
           onClose={() => setReplayTestId(null)}
         />
       )}
+      <AnimatePresence>
+        {showParentModal && (
+          <ParentMessageModal
+            student={student}
+            onClose={() => setShowParentModal(false)}
+          />
+        )}
+      </AnimatePresence>
       {/* Back Navigation */}
       <motion.button
         className="sp-back-btn"
@@ -232,7 +242,7 @@ const StudentProfile = () => {
         </div>
       </section>
 
-      {/* ═══════ SECTION 2: Action Button ═══════ */}
+      {/* ═══════ SECTION 2: Action Buttons ═══════ */}
       <section className="sp-action-section">
         <input
           ref={fileInputRef}
@@ -242,25 +252,39 @@ const StudentProfile = () => {
           style={{ display: 'none' }}
           id="sp-test-upload"
         />
-        <motion.button
-          className="sp-upload-btn"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          whileHover={{ scale: uploading ? 1 : 1.02, y: uploading ? 0 : -2 }}
-          whileTap={{ scale: uploading ? 1 : 0.98 }}
-        >
-          {uploading ? (
-            <>
-              <span className="sp-upload-spinner" />
-              <span>AI is grading… please wait</span>
-            </>
-          ) : (
-            <>
-              <span className="sp-upload-icon">📄</span>
-              <span>Upload New Test</span>
-            </>
-          )}
-        </motion.button>
+        <div className="sp-action-row">
+          <motion.button
+            className="sp-upload-btn"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            whileHover={{ scale: uploading ? 1 : 1.02, y: uploading ? 0 : -2 }}
+            whileTap={{ scale: uploading ? 1 : 0.98 }}
+          >
+            {uploading ? (
+              <>
+                <span className="sp-upload-spinner" />
+                <span>AI is grading… please wait</span>
+              </>
+            ) : (
+              <>
+                <span className="sp-upload-icon">📄</span>
+                <span>Upload New Test</span>
+              </>
+            )}
+          </motion.button>
+
+          <motion.button
+            className="sp-notify-parent-btn"
+            onClick={() => setShowParentModal(true)}
+            disabled={!student.tests?.length}
+            title={student.tests?.length ? 'Generate a bilingual parent update' : 'Upload at least one test first'}
+            whileHover={{ scale: student.tests?.length ? 1.02 : 1, y: student.tests?.length ? -2 : 0 }}
+            whileTap={{ scale: student.tests?.length ? 0.98 : 1 }}
+          >
+            <span className="sp-upload-icon">💬</span>
+            <span>Notify Parent</span>
+          </motion.button>
+        </div>
       </section>
 
       {/* ═══════ SECTION 3: Error DNA Profile ═══════ */}

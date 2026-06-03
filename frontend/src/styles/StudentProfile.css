@@ -190,6 +190,12 @@
   margin-bottom: 24px;
 }
 
+.sp-action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
 .sp-upload-btn {
   width: 100%;
   display: flex;
@@ -216,6 +222,34 @@
 .sp-upload-btn:disabled {
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+.sp-notify-parent-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-radius: 18px;
+  border: 2px dashed rgba(37, 211, 102, 0.35);
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.08), rgba(52, 211, 153, 0.06));
+  color: #f8fafc;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sp-notify-parent-btn:hover:not(:disabled) {
+  border-color: rgba(37, 211, 102, 0.55);
+  background: linear-gradient(135deg, rgba(37, 211, 102, 0.14), rgba(52, 211, 153, 0.1));
+  box-shadow: 0 8px 32px rgba(37, 211, 102, 0.12);
+}
+
+.sp-notify-parent-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .sp-upload-icon {
@@ -669,6 +703,10 @@
   .sp-vital-right {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .sp-action-row {
+    grid-template-columns: 1fr;
   }
 
   .sp-score-ring-wrap {
