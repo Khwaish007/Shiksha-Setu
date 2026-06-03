@@ -1,6 +1,9 @@
-// Vercel serverless: ~4.5 MB request body limit — use 1 file per request for reliability
+// Vercel serverless: ~4.5 MB request body limit
 export const VERCEL_MAX_PAYLOAD_BYTES = 3_500_000;
-export const MAX_FILES_PER_BATCH = 1;
+// Small batches: faster than 1-at-a-time, safe under Vercel payload cap (override via VITE_UPLOAD_BATCH_SIZE)
+export const MAX_FILES_PER_BATCH = Number(import.meta.env.VITE_UPLOAD_BATCH_SIZE) || 2;
+// Keep each compressed file smaller when batching so N files fit in one request
+export const COMPRESS_TARGET_BYTES = Math.floor(VERCEL_MAX_PAYLOAD_BYTES / MAX_FILES_PER_BATCH * 0.85);
 
 export const formatFileSize = (bytes) => {
   if (bytes < 1024) return `${bytes} B`;
@@ -9,7 +12,7 @@ export const formatFileSize = (bytes) => {
 };
 
 /** Compress large images so uploads stay under Vercel limits and grade faster */
-export const compressImageIfNeeded = async (file, maxBytes = 1_500_000) => {
+export const compressImageIfNeeded = async (file, maxBytes = COMPRESS_TARGET_BYTES) => {
   if (!file.type.startsWith('image/') || file.size <= maxBytes) {
     return file;
   }

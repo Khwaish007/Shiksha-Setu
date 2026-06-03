@@ -70,7 +70,7 @@ function UploadSection({ onGradingExecutionComplete }) {
       onGradingExecutionComplete(allResults);
       window.alert(
         batches.length > 1
-          ? `Processing complete. ${fileList.length} worksheets graded one at a time. Results are ready in the dashboard.`
+          ? `Processing complete. ${fileList.length} worksheets graded in ${batches.length} batches. Results are ready in the dashboard.`
           : 'Processing complete. Results are ready in the dashboard.'
       );
     } catch (networkError) {
@@ -136,7 +136,7 @@ function UploadSection({ onGradingExecutionComplete }) {
                 <span className="upload-badge">Drag & Drop Ready</span>
                 <h3>{isDragActive ? 'Release to stage your worksheets' : 'Drop files here or browse from your device'}</h3>
                 <p>
-                  Upload any number of worksheets. Each file is graded individually to work within server limits.
+                  Upload any number of worksheets. Files are sent in small batches of 2 and graded in parallel.
                 </p>
               </div>
               <div className="dropzone-actions">
@@ -198,7 +198,7 @@ function UploadSection({ onGradingExecutionComplete }) {
       >
         <span>
           {isProcessing && uploadProgress
-            ? `Grading file ${uploadProgress.current} of ${uploadProgress.total}…`
+            ? `Grading batch ${uploadProgress.current} of ${uploadProgress.total}…`
             : isProcessing
               ? 'Preparing upload…'
               : `Process ${fileList.length || 'selected'} worksheets`}

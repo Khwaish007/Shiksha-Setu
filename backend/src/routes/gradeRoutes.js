@@ -25,8 +25,10 @@ const uploadConfiguration = multer({
   limits: { fileSize: 4 * 1024 * 1024 },
 });
 
+const MAX_FILES_PER_REQUEST = Number(process.env.UPLOAD_BATCH_SIZE) || 2;
+
 router.post('/evaluate', (req, res, next) => {
-  uploadConfiguration.array('worksheets', 1)(req, res, (err) => {
+  uploadConfiguration.array('worksheets', MAX_FILES_PER_REQUEST)(req, res, (err) => {
     if (err) {
       if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
         return res.status(413).json({ error: 'File too large. Maximum size is 4 MB per file.' });
