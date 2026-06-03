@@ -88,7 +88,15 @@ const StudentProfile = () => {
       await fetchStudent();
     } catch (error) {
       console.error('Failed to grade test:', error);
-      alert('Failed to process the test. Please try again.');
+      const message = error.response?.data?.error
+        || (error.response?.status === 429
+          ? 'AI service is busy. Please wait and try again.'
+          : error.response?.status === 413
+            ? 'File too large. Try a smaller image.'
+            : error.code === 'ECONNABORTED'
+              ? 'Grading timed out. Try a smaller image.'
+              : 'Failed to process the test. Please try again.');
+      alert(message);
     } finally {
       setUploading(false);
       // Reset file input

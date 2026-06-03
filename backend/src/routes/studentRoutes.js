@@ -13,8 +13,10 @@ import {
 
 const router = express.Router();
 
-// Multer: store upload in memory for immediate processing
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 4 * 1024 * 1024 },
+});
 
 // GET  /api/students        → list all students
 router.get('/', getAllStudents);
@@ -35,7 +37,17 @@ router.get('/:id', getStudentById);
 router.post('/:id/parent-message', generateParentMessage);
 
 // POST /api/students/:id/grade → upload test image, AI grade, save to student
-router.post('/:id/grade', upload.single('worksheet'), gradeStudentTest);
+router.post('/:id/grade', (req, res, next) => {
+  upload.single('worksheet')(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'File too large. Maximum size is 4 MB.' });
+      }
+      return next(err);
+    }
+    gradeStudentTest(req, res, next);
+  });
+});
 
 // GET /api/students/:studentId/tests/:testId/replay → get test image and annotations
 router.get('/:studentId/tests/:testId/replay', getTestReplay);

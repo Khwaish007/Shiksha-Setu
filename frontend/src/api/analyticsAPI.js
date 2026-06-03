@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_BASE, STUDENTS_BASE } from '../config/api.js';
+import { compressImageIfNeeded } from '../utils/uploadBatches.js';
 
 export const analyticsAPI = {
   getClassAnalytics: async () => {
@@ -77,9 +78,12 @@ export const analyticsAPI = {
   },
 
   gradeStudentTest: async (id, file) => {
+    const compressedFile = await compressImageIfNeeded(file);
     const formData = new FormData();
-    formData.append('worksheet', file);
-    const { data } = await axios.post(`${STUDENTS_BASE}/${id}/grade`, formData);
+    formData.append('worksheet', compressedFile);
+    const { data } = await axios.post(`${STUDENTS_BASE}/${id}/grade`, formData, {
+      timeout: 120000,
+    });
     return data;
   },
 

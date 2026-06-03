@@ -20,10 +20,22 @@ import { getPracticeTest } from '../controllers/practiceTestController.js';
 const router = express.Router();
 
 // Store incoming files directly in memory buffers for swift execution processing
-const storageConfig = multer.memoryStorage();
-const uploadConfiguration = multer({ storage: storageConfig });
+const uploadConfiguration = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 4 * 1024 * 1024 },
+});
 
-router.post('/evaluate', uploadConfiguration.array('worksheets', 50), processWorksheets);
+router.post('/evaluate', (req, res, next) => {
+  uploadConfiguration.array('worksheets', 1)(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'File too large. Maximum size is 4 MB per file.' });
+      }
+      return next(err);
+    }
+    processWorksheets(req, res, next);
+  });
+});
 router.get('/heatmap-report', fetchClassroomHeatmap);
 router.get('/analytics', fetchClassAnalytics);
 router.get('/recommendations', fetchTopicRecommendations);

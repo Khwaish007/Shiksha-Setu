@@ -175,6 +175,10 @@ export const getStudentById = async (req, res) => {
  */
 export const gradeStudentTest = async (req, res) => {
   try {
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'AI grading is not configured. Missing API key.' });
+    }
+
     const student = await Student.findById(req.params.id);
     if (!student) {
       return res.status(404).json({ error: 'Student not found.' });
@@ -185,17 +189,12 @@ export const gradeStudentTest = async (req, res) => {
       return res.status(400).json({ error: 'No image file uploaded.' });
     }
 
-    // Initialize Claude client
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-    // Format the image for Claude
     const imagePart = formatBufferToClaudePart(file.buffer, file.mimetype);
 
-    // Run AI grading
     const gradingResult = await generateWithRetry(client, GRADING_SYSTEM_PROMPT, imagePart);
 
-    // Parse response
-    const responseText = gradingResult.content[0].text;
+    const responseText = gradingResult.content?.[0]?.text || '';
     let cleansedText = responseText
       .replace(/```json/g, '')
       .replace(/```/g, '')
@@ -206,30 +205,53 @@ export const gradeStudentTest = async (req, res) => {
       cleansedText = jsonMatch[0];
     }
 
-    const parsed = JSON.parse(cleansedText);
+    let parsed;
+    try {
+      parsed = JSON.parse(cleansedText);
+    } catch (parseError) {
+      console.error('Grade Student Test JSON parse error:', parseError.message);
+      parsed = {
+        totalScore: 0,
+        mistakes: [],
+        annotations: [],
+        misconception_patterns: [],
+        errorSummary: 'AI response could not be parsed',
+        status: 'Manual Review Required',
+      };
+    }
 
-    // Build the test record
+    const mistakes = (parsed.mistakes || [])
+      .filter((m) => m?.questionNumber && m?.conceptMissed)
+      .map((m) => ({
+        questionNumber: String(m.questionNumber),
+        conceptMissed: String(m.conceptMissed),
+      }));
+
     const testRecord = {
       date: new Date(),
-      score: Number(parsed.totalScore),
+      score: Number(parsed.totalScore) || 0,
       totalQuestions: 10,
-      mistakes: (parsed.mistakes || []).map(m => ({
-        questionNumber: m.questionNumber,
-        conceptMissed: m.conceptMissed
-      })),
+      mistakes,
       annotations: parsed.annotations || [],
-      errorSummary: parsed.errorSummary || "",
-      imageBase64: file.buffer.toString("base64")
+      errorSummary: parsed.errorSummary || '',
+      imageBase64: file.buffer.toString('base64'),
     };
 
-    // Push test into student's tests array
     student.tests.push(testRecord);
-    // Upsert into errorDNA
-    const patterns = parsed.misconception_patterns || [];
-    patterns.forEach(p => {
-      const existing = student.errorDNA.find(dna => 
-        dna.concept === p.concept && 
-        dna.misconception.toLowerCase() === p.misconception.toLowerCase()
+
+    if (!student.errorDNA) {
+      student.errorDNA = [];
+    }
+
+    const patterns = (parsed.misconception_patterns || []).filter(
+      (p) => p?.concept && p?.misconception
+    );
+
+    patterns.forEach((p) => {
+      const existing = student.errorDNA.find(
+        (dna) =>
+          dna.concept === p.concept &&
+          dna.misconception.toLowerCase() === p.misconception.toLowerCase()
       );
       if (existing) {
         existing.occurrences += 1;
@@ -238,18 +260,19 @@ export const gradeStudentTest = async (req, res) => {
         student.errorDNA.push({
           concept: p.concept,
           misconception: p.misconception,
-          severity: p.severity || 'minor',
+          severity: p.severity === 'major' ? 'major' : 'minor',
           occurrences: 1,
           firstSeen: new Date(),
-          lastSeen: new Date()
+          lastSeen: new Date(),
         });
       }
     });
 
     await student.save();
 
-    // Dual-write to Submission collection so classroom heatmap includes this test
-    const submissionFilter = { studentName: { $regex: new RegExp(`^${student.studentName.trim()}$`, 'i') } };
+    const submissionFilter = {
+      studentName: { $regex: new RegExp(`^${student.studentName.trim()}$`, 'i') },
+    };
     const submissionUpdate = {
       studentName: student.studentName.trim(),
       totalScore: testRecord.score,
@@ -258,11 +281,14 @@ export const gradeStudentTest = async (req, res) => {
       errorSummary: testRecord.errorSummary,
       imageBase64: testRecord.imageBase64,
       status: parsed.status || 'Success',
-      createdAt: new Date()
+      createdAt: new Date(),
     };
-    await Submission.findOneAndUpdate(submissionFilter, submissionUpdate, { returnDocument: 'after', upsert: true });
 
-    // Return the saved test record (last in array)
+    await Submission.findOneAndUpdate(submissionFilter, submissionUpdate, {
+      returnDocument: 'after',
+      upsert: true,
+    });
+
     const savedTest = student.tests[student.tests.length - 1];
 
     res.status(200).json({
@@ -270,11 +296,17 @@ export const gradeStudentTest = async (req, res) => {
       test: savedTest,
       studentName: student.studentName,
       averageScore: student.averageScore,
-      totalTests: student.totalTests
+      totalTests: student.totalTests,
     });
   } catch (error) {
     console.error('Grade Student Test Error:', error);
-    res.status(500).json({ error: 'Failed to grade test. Please try again.' });
+    const status = error.status === 429 ? 429 : 500;
+    res.status(status).json({
+      error:
+        error.status === 429
+          ? 'AI service is busy. Please wait a moment and try again.'
+          : 'Failed to grade test. Please try again.',
+    });
   }
 };
 

@@ -221,7 +221,7 @@ If the image is unreadable:
     // Process files in parallel batches
     const consolidatedGradingLogs = [];
 
-    const batchSize = Number(process.env.CLAUDE_BATCH_SIZE) || 5;
+    const batchSize = Number(process.env.CLAUDE_BATCH_SIZE) || (process.env.VERCEL ? 1 : 5);
     const batchDelayMs = Number(process.env.CLAUDE_BATCH_DELAY_MS) || 1000;
 
     const gradedResults = await processInBatches(
