@@ -1,7 +1,8 @@
 import express from 'express';
 import multer from 'multer';
 import { 
-  processWorksheets, 
+  processWorksheets,
+  clearSubmissions,
   fetchClassroomHeatmap,
   fetchClassAnalytics,
   fetchTopicRecommendations,
@@ -25,7 +26,9 @@ const uploadConfiguration = multer({
   limits: { fileSize: 4 * 1024 * 1024 },
 });
 
-const MAX_FILES_PER_REQUEST = Number(process.env.UPLOAD_BATCH_SIZE) || 2;
+const MAX_FILES_PER_REQUEST = Number(process.env.UPLOAD_BATCH_SIZE) || 10;
+
+router.post('/clear-submissions', clearSubmissions);
 
 router.post('/evaluate', (req, res, next) => {
   uploadConfiguration.array('worksheets', MAX_FILES_PER_REQUEST)(req, res, (err) => {

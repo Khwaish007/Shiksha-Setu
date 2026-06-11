@@ -137,6 +137,16 @@ const generateMockGrading = () => {
   };
 };
 
+export const clearSubmissions = async (req, res) => {
+  try {
+    await Submission.deleteMany({});
+    res.status(200).json({ message: 'All submissions cleared.' });
+  } catch (err) {
+    console.error('Clear Submissions Error:', err);
+    res.status(500).json({ error: 'Failed to clear submissions.' });
+  }
+};
+
 export const processWorksheets = async (req, res) => {
   try {
     const files = req.files;
@@ -144,8 +154,8 @@ export const processWorksheets = async (req, res) => {
       return res.status(400).json({ error: "No image files uploaded." });
     }
 
-    // Clear entire database of old submissions to update it with the latest batch
-    await Submission.deleteMany({});
+    // NOTE: DB is NOT wiped here. The frontend calls /clear-submissions once
+    // before the first batch so subsequent batches accumulate correctly.
 
     // Use mock mode for development (set USE_MOCK_AI=true in .env)
     const useMockAI = false; // FORCED TO FALSE TO GUARANTEE CLAUDE USE
@@ -254,8 +264,12 @@ If the image is unreadable:
 
           const parsedGradingPayload = JSON.parse(cleansedText);
 
-          // Save entry block directly to MongoDB Atlas - Overwriting old records to keep only the latest
-          const cleanName = parsedGradingPayload.studentName.trim();
+          // Fix: if Claude returned 'Unknown', make the name unique so multiple
+          // unreadable sheets don't overwrite each other in the DB.
+          let cleanName = parsedGradingPayload.studentName.trim();
+          if (!cleanName || cleanName.toLowerCase() === 'unknown') {
+            cleanName = `Unknown_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+          }
           const filter = { studentName: { $regex: new RegExp(`^${cleanName}$`, 'i') } };
           const update = {
             studentName: cleanName,

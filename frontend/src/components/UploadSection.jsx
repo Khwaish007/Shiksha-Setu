@@ -7,6 +7,10 @@ import '../styles/UploadSection.css';
 
 const MAX_UPLOADS = 50;
 
+const clearPreviousSubmissions = async () => {
+  await axios.post(`${API_BASE_URL}/api/v1/grading/clear-submissions`);
+};
+
 const uploadFileBatch = async (files) => {
   const formData = new FormData();
   for (const file of files) {
@@ -58,6 +62,10 @@ function UploadSection({ onGradingExecutionComplete }) {
     try {
       const batches = await prepareFilesForUpload(fileList);
       const allResults = [];
+
+      // Wipe old submissions exactly ONCE before the first batch,
+      // so all subsequent batches accumulate into a clean DB.
+      await clearPreviousSubmissions();
 
       for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
         setUploadProgress({ current: batchIndex + 1, total: batches.length });
