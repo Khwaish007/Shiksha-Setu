@@ -144,6 +144,9 @@ export const processWorksheets = async (req, res) => {
       return res.status(400).json({ error: "No image files uploaded." });
     }
 
+    // Clear entire database of old submissions to update it with the latest batch
+    await Submission.deleteMany({});
+
     // Use mock mode for development (set USE_MOCK_AI=true in .env)
     const useMockAI = false; // FORCED TO FALSE TO GUARANTEE CLAUDE USE
 

@@ -270,25 +270,6 @@ export const gradeStudentTest = async (req, res) => {
 
     await student.save();
 
-    const submissionFilter = {
-      studentName: { $regex: new RegExp(`^${student.studentName.trim()}$`, 'i') },
-    };
-    const submissionUpdate = {
-      studentName: student.studentName.trim(),
-      totalScore: testRecord.score,
-      mistakes: testRecord.mistakes,
-      annotations: testRecord.annotations,
-      errorSummary: testRecord.errorSummary,
-      imageBase64: testRecord.imageBase64,
-      status: parsed.status || 'Success',
-      createdAt: new Date(),
-    };
-
-    await Submission.findOneAndUpdate(submissionFilter, submissionUpdate, {
-      returnDocument: 'after',
-      upsert: true,
-    });
-
     const savedTest = student.tests[student.tests.length - 1];
 
     res.status(200).json({
