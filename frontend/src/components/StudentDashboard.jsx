@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
 import CreateStudentModal from './CreateStudentModal';
+import RiskForecast from './RiskForecast';
 import '../styles/StudentDashboard.css';
 
 const StudentDashboard = () => {
@@ -99,6 +100,9 @@ const StudentDashboard = () => {
           <span className="sd-stats-label">Students</span>
         </div>
       </div>
+
+      {/* AI Risk Forecast — shown at the top of the students page */}
+      <RiskForecast />
 
       {/* Student Cards Grid */}
       {filteredStudents.length === 0 ? (

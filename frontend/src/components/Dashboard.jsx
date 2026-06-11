@@ -12,7 +12,6 @@ import ClassInsights from './ClassInsights';
 import PeerBenchmarking from './PeerBenchmarking';
 import PerformanceStats from './PerformanceStats';
 import ClassMisconceptions from './ClassMisconceptions';
-import RiskForecast from './RiskForecast';
 import { analyticsAPI } from '../api/analyticsAPI';
 
 const Dashboard = () => {
@@ -148,10 +147,7 @@ const Dashboard = () => {
                 metrics={analytics.performanceMetrics}
               />
             </section>
-
-            {/* Predictive Risk Forecast */}
-            <RiskForecast />
-          </div>
+        </div>
         )}
 
         {activeTab === 'heatmap' && heatmapData && (
