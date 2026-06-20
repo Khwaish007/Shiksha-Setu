@@ -60,12 +60,24 @@ function UploadSection({ onGradingExecutionComplete }) {
     setUploadProgress(null);
 
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/v1/grading/evaluate`,
-        multipartFormPayload
-      );
-      onGradingExecutionComplete(response.data);
-      window.alert('Processing complete. Results are ready in the dashboard.');
+      const batches = await prepareFilesForUpload(fileList);
+      const consolidatedResults = [];
+
+      await clearPreviousSubmissions();
+
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        setUploadProgress({ current: batchIndex + 1, total: batches.length });
+        const batchResults = await uploadFileBatch(batches[batchIndex]);
+        consolidatedResults.push(...batchResults);
+      }
+
+      onGradingExecutionComplete(consolidatedResults);
+      const manualReviewCount = consolidatedResults.filter(
+        item => item.status === 'Manual Review Required'
+      ).length;
+      window.alert(manualReviewCount > 0
+        ? `Processing complete. ${manualReviewCount} submission(s) require manual grading.`
+        : 'Processing complete. Results are ready in the dashboard.');
     } catch (networkError) {
       console.error('API Upload Pipeline Failure:', networkError);
       const status = networkError.response?.status;
