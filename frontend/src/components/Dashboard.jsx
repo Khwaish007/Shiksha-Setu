@@ -14,6 +14,19 @@ import PerformanceStats from './PerformanceStats';
 import ClassMisconceptions from './ClassMisconceptions';
 import { analyticsAPI } from '../api/analyticsAPI';
 
+const dashboardTabs = [
+  { key: 'overview', label: 'Overview' },
+  { key: 'stats', label: 'Statistics' },
+  { key: 'heatmap', label: 'Heatmap' },
+  { key: 'misconceptions', label: 'Misconceptions' },
+  { key: 'class', label: 'Class Insights' },
+  { key: 'recommendations', label: 'Recommendations' },
+  { key: 'at-risk', label: 'At-Risk' },
+  { key: 'strengths', label: 'Strengths' },
+  { key: 'rankings', label: 'Rankings' },
+  { key: 'peers', label: 'Peer Compare' }
+];
+
 const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [heatmapData, setHeatmapData] = useState(null);
@@ -95,13 +108,13 @@ const Dashboard = () => {
       {/* Navigation Tabs */}
       <nav className="dashboard-nav">
         <div className="nav-tabs">
-          {['overview', 'heatmap', 'recommendations', 'rankings', 'at-risk', 'strengths', 'class', 'peers', 'stats', 'misconceptions'].map(tab => (
+          {dashboardTabs.map(tab => (
             <button
-              key={tab}
-              className={`nav-tab ${activeTab === tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab)}
+              key={tab.key}
+              className={`nav-tab ${activeTab === tab.key ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.key)}
             >
-              {tab === 'at-risk' ? 'At-Risk' : tab === 'class' ? 'Class Insights' : tab === 'learning' ? 'Learning Paths' : tab === 'peers' ? 'Peer Compare' : tab === 'stats' ? 'Statistics' : tab === 'misconceptions' ? 'Misconceptions' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab.label}
             </button>
           ))}
         </div>
