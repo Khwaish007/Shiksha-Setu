@@ -77,7 +77,6 @@ function UploadSection({ onGradingExecutionComplete }) {
         consolidatedResults.push(...batchResults);
       }
 
-      onGradingExecutionComplete(consolidatedResults);
       const manualReviewCount = consolidatedResults.filter(
         item => item.status === 'Manual Review Required'
       ).length;
@@ -85,11 +84,15 @@ function UploadSection({ onGradingExecutionComplete }) {
         ? {
             type: 'manual',
             count: manualReviewCount,
-            detail: 'These files were not graded. They may be unclear, non-mathematical, incomplete, or outside the expected worksheet format.'
+            detail: 'These files were not graded. They may be unclear, non-mathematical, incomplete, or outside the expected worksheet format.',
+            complete: true,
+            results: consolidatedResults
           }
         : {
             type: 'success',
-            message: 'All selected worksheets were graded successfully and the dashboard has been refreshed.'
+            message: 'All selected worksheets were graded successfully. Click Got it to view the refreshed dashboard.',
+            complete: true,
+            results: consolidatedResults
           });
     } catch (networkError) {
       console.error('API Upload Pipeline Failure:', networkError);
@@ -122,6 +125,15 @@ function UploadSection({ onGradingExecutionComplete }) {
     } finally {
       setIsProcessing(false);
       setUploadProgress(null);
+    }
+  };
+
+  const closeNotice = () => {
+    const shouldComplete = notice?.complete;
+    const results = notice?.results;
+    setNotice(null);
+    if (shouldComplete) {
+      onGradingExecutionComplete(results);
     }
   };
 
@@ -243,7 +255,7 @@ function UploadSection({ onGradingExecutionComplete }) {
         {notice && (
           <GradingNoticeModal
             {...notice}
-            onClose={() => setNotice(null)}
+            onClose={closeNotice}
           />
         )}
       </AnimatePresence>
