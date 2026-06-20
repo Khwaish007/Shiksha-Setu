@@ -159,7 +159,7 @@ export const gradeStudentTest = async (req, res) => {
 
     const imageValidation = validateUploadedImage(file);
     if (!imageValidation.ok) {
-      return res.status(422).json({
+      return res.status(200).json({
         status: 'Manual Review Required',
         message: imageValidation.reason || MANUAL_REVIEW_MESSAGE,
         errorSummary: imageValidation.reason || MANUAL_REVIEW_MESSAGE
@@ -175,7 +175,7 @@ export const gradeStudentTest = async (req, res) => {
     const parsed = parseAndNormalizeGradingResponse(responseText);
 
     if (parsed.status === 'Manual Review Required') {
-      return res.status(422).json({
+      return res.status(200).json({
         status: parsed.status,
         message: parsed.errorSummary || MANUAL_REVIEW_MESSAGE,
         errorSummary: parsed.errorSummary || MANUAL_REVIEW_MESSAGE

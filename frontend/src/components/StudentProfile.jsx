@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
 import ErrorDNA from './ErrorDNA';
+import GradingNoticeModal from './GradingNoticeModal.jsx';
 import ParentMessageModal from './ParentMessageModal';
 import '../styles/StudentProfile.css';
 
@@ -16,6 +17,7 @@ const StudentProfile = () => {
   const [uploading, setUploading] = useState(false);
   const [expandedTests, setExpandedTests] = useState({});
   const [showParentModal, setShowParentModal] = useState(false);
+  const [gradingNotice, setGradingNotice] = useState(null);
 
   const fetchStudent = async () => {
     try {
@@ -83,13 +85,35 @@ const StudentProfile = () => {
 
     setUploading(true);
     try {
-      await analyticsAPI.gradeStudentTest(id, file);
+      const result = await analyticsAPI.gradeStudentTest(id, file);
+      if (result.status === 'Manual Review Required') {
+        setGradingNotice({
+          type: 'manual',
+          detail: result.message || result.errorSummary
+        });
+        return;
+      }
       // Refresh student data to show new test
       await fetchStudent();
+      setGradingNotice({
+        type: 'success',
+        message: 'This test was graded successfully and added to the student timeline.'
+      });
     } catch (error) {
-      console.error('Failed to grade test:', error);
       const message = error.response?.data?.message || error.response?.data?.error || 'Failed to process the test. Please try again.';
-      alert(message);
+      if (error.response?.status === 422 || error.response?.data?.status === 'Manual Review Required') {
+        setGradingNotice({
+          type: 'manual',
+          detail: message
+        });
+      } else {
+        console.error('Failed to grade test:', error);
+        setGradingNotice({
+          type: 'error',
+          title: 'Grading failed',
+          message
+        });
+      }
     } finally {
       setUploading(false);
       // Reset file input
@@ -153,6 +177,12 @@ const StudentProfile = () => {
           <ParentMessageModal
             student={student}
             onClose={() => setShowParentModal(false)}
+          />
+        )}
+        {gradingNotice && (
+          <GradingNoticeModal
+            {...gradingNotice}
+            onClose={() => setGradingNotice(null)}
           />
         )}
       </AnimatePresence>

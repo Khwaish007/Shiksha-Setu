@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import axios from 'axios';
 import API_BASE_URL from '../config/api.js';
 import { formatFileSize, prepareFilesForUpload } from '../utils/uploadBatches.js';
+import GradingNoticeModal from './GradingNoticeModal.jsx';
 import '../styles/UploadSection.css';
 
 const MAX_UPLOADS = 50;
@@ -29,6 +30,7 @@ function UploadSection({ onGradingExecutionComplete }) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [notice, setNotice] = useState(null);
 
   const fileList = useMemo(() => Array.from(selectedFiles), [selectedFiles]);
   const previewFiles = fileList.slice(0, 6);
@@ -52,7 +54,11 @@ function UploadSection({ onGradingExecutionComplete }) {
 
   const dispatchBatchUploadPipeline = async () => {
     if (fileList.length === 0) {
-      window.alert('Please add at least one worksheet image before processing.');
+      setNotice({
+        type: 'error',
+        title: 'No worksheets selected',
+        message: 'Please add at least one worksheet image before processing.'
+      });
       return;
     }
 
@@ -75,20 +81,43 @@ function UploadSection({ onGradingExecutionComplete }) {
       const manualReviewCount = consolidatedResults.filter(
         item => item.status === 'Manual Review Required'
       ).length;
-      window.alert(manualReviewCount > 0
-        ? `Processing complete. ${manualReviewCount} submission(s) require manual grading.`
-        : 'Processing complete. Results are ready in the dashboard.');
+      setNotice(manualReviewCount > 0
+        ? {
+            type: 'manual',
+            count: manualReviewCount,
+            detail: 'These files were not graded. They may be unclear, non-mathematical, incomplete, or outside the expected worksheet format.'
+          }
+        : {
+            type: 'success',
+            message: 'All selected worksheets were graded successfully and the dashboard has been refreshed.'
+          });
     } catch (networkError) {
       console.error('API Upload Pipeline Failure:', networkError);
       const status = networkError.response?.status;
       if (status === 413) {
-        window.alert('File too large. Try a smaller image or take a photo at lower resolution.');
+        setNotice({
+          type: 'error',
+          title: 'File too large',
+          message: 'Try a smaller image or take a photo at lower resolution.'
+        });
       } else if (status === 504 || networkError.code === 'ECONNABORTED') {
-        window.alert('Grading timed out. Try again with a smaller image.');
+        setNotice({
+          type: 'error',
+          title: 'Grading timed out',
+          message: 'Try again with a smaller image or fewer worksheets.'
+        });
       } else if (networkError.message?.includes('must be under') || networkError.message?.includes('Could not')) {
-        window.alert(networkError.message);
+        setNotice({
+          type: 'error',
+          title: 'Upload could not be prepared',
+          message: networkError.message
+        });
       } else {
-        window.alert('Upload failed. Please try again.');
+        setNotice({
+          type: 'error',
+          title: 'Upload failed',
+          message: 'Please try again with clear worksheet images.'
+        });
       }
     } finally {
       setIsProcessing(false);
@@ -210,6 +239,14 @@ function UploadSection({ onGradingExecutionComplete }) {
         </span>
         <span className="button-chevron">→</span>
       </motion.button>
+      <AnimatePresence>
+        {notice && (
+          <GradingNoticeModal
+            {...notice}
+            onClose={() => setNotice(null)}
+          />
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 }
