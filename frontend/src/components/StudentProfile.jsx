@@ -7,7 +7,7 @@ import GradingNoticeModal from './GradingNoticeModal.jsx';
 import ParentMessageModal from './ParentMessageModal';
 import '../styles/StudentProfile.css';
 
-const StudentProfile = () => {
+const StudentProfile = ({ sessionId, onSessionUpdated }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -85,7 +85,7 @@ const StudentProfile = () => {
 
     setUploading(true);
     try {
-      const result = await analyticsAPI.gradeStudentTest(id, file);
+      const result = await analyticsAPI.gradeStudentTest(id, file, sessionId);
       if (result.status === 'Manual Review Required') {
         setGradingNotice({
           type: 'manual',
@@ -95,6 +95,7 @@ const StudentProfile = () => {
       }
       // Refresh student data to show new test
       await fetchStudent();
+      onSessionUpdated?.();
       setGradingNotice({
         type: 'success',
         message: 'This test was graded successfully and added to the student timeline.'

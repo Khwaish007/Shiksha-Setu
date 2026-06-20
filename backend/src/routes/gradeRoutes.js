@@ -13,10 +13,19 @@ import {
   fetchAtRiskStudents,
   fetchClassStrengthsAndWeaknesses,
   fetchPeerBenchmarking,
-  fetchPerformanceDistribution
+  fetchPerformanceDistribution,
+  fetchClassMisconceptions
 } from '../controllers/gradeController.js';
 
 import { getPracticeTest } from '../controllers/practiceTestController.js';
+import {
+  clearSessionSubmissions,
+  createGradingSession,
+  deleteGradingSession,
+  getGradingSession,
+  listGradingSessions,
+  resumeGradingSession
+} from '../controllers/sessionController.js';
 
 const router = express.Router();
 
@@ -29,8 +38,14 @@ const uploadConfiguration = multer({
 const MAX_FILES_PER_REQUEST = Number(process.env.UPLOAD_BATCH_SIZE) || 10;
 
 router.post('/clear-submissions', clearSubmissions);
+router.post('/sessions', createGradingSession);
+router.get('/sessions', listGradingSessions);
+router.get('/sessions/:sessionId', getGradingSession);
+router.patch('/sessions/:sessionId/resume', resumeGradingSession);
+router.delete('/sessions/:sessionId', deleteGradingSession);
+router.delete('/sessions/:sessionId/submissions', clearSessionSubmissions);
 
-router.post('/evaluate', (req, res, next) => {
+const runWorksheetUpload = (req, res, next) => {
   uploadConfiguration.array('worksheets', MAX_FILES_PER_REQUEST)(req, res, (err) => {
     if (err) {
       if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
@@ -40,7 +55,10 @@ router.post('/evaluate', (req, res, next) => {
     }
     processWorksheets(req, res, next);
   });
-});
+};
+
+router.post('/evaluate', runWorksheetUpload);
+router.post('/sessions/:sessionId/evaluate', runWorksheetUpload);
 router.get('/heatmap-report', fetchClassroomHeatmap);
 router.get('/analytics', fetchClassAnalytics);
 router.get('/recommendations', fetchTopicRecommendations);
@@ -52,6 +70,7 @@ router.get('/at-risk-students', fetchAtRiskStudents);
 router.get('/class-strengths', fetchClassStrengthsAndWeaknesses);
 router.get('/peer-benchmarking', fetchPeerBenchmarking);
 router.get('/performance-distribution', fetchPerformanceDistribution);
+router.get('/class-misconceptions', fetchClassMisconceptions);
 router.get('/practice-test/:concept', getPracticeTest);
 
 export default router;

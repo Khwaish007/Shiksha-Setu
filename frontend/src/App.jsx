@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import './index.css';
@@ -6,19 +6,109 @@ import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
 import StudentDashboard from './components/StudentDashboard';
 import StudentProfile from './components/StudentProfile';
+import SessionHistoryModal from './components/SessionHistoryModal';
+import { analyticsAPI } from './api/analyticsAPI';
 
 function App() {
-  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' or 'upload'
+  const [activeView, setActiveView] = useState('dashboard');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [activeSession, setActiveSession] = useState(null);
+  const [sessions, setSessions] = useState([]);
+  const [sessionLoading, setSessionLoading] = useState(true);
+  const [showSessionHistory, setShowSessionHistory] = useState(false);
+  const bootstrappedRef = useRef(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleGradingComplete = () => {
-    // Trigger dashboard refresh
+  const refreshSessions = async () => {
+    const nextSessions = await analyticsAPI.listGradingSessions();
+    setSessions(nextSessions);
+    return nextSessions;
+  };
+
+  const refreshActiveSession = async (sessionId = activeSession?.sessionId) => {
+    if (!sessionId) return null;
+    const refreshed = await analyticsAPI.getGradingSession(sessionId);
+    setActiveSession(refreshed);
+    await refreshSessions();
+    return refreshed;
+  };
+
+  const createFreshSession = async () => {
+    setSessionLoading(true);
+    try {
+      const session = await analyticsAPI.createGradingSession();
+      setActiveSession(session);
+      await refreshSessions();
+      setRefreshTrigger(prev => prev + 1);
+      return session;
+    } finally {
+      setSessionLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (bootstrappedRef.current) return;
+    bootstrappedRef.current = true;
+
+    const bootstrapSession = async () => {
+      setSessionLoading(true);
+      try {
+        const session = await analyticsAPI.createGradingSession();
+        setActiveSession(session);
+        await refreshSessions();
+        setRefreshTrigger(prev => prev + 1);
+      } catch (error) {
+        console.error('Failed to create grading session:', error);
+      } finally {
+        setSessionLoading(false);
+      }
+    };
+
+    bootstrapSession();
+  }, []);
+
+  const handleGradingComplete = async () => {
+    await refreshActiveSession();
     setRefreshTrigger(prev => prev + 1);
   };
 
-  // Determine which topbar chip is active based on route + state
+  const handleResumeSession = async (sessionId) => {
+    setSessionLoading(true);
+    try {
+      const session = await analyticsAPI.resumeGradingSession(sessionId);
+      setActiveSession(session);
+      await refreshSessions();
+      setRefreshTrigger(prev => prev + 1);
+      setShowSessionHistory(false);
+      navigate('/');
+      setActiveView('dashboard');
+    } finally {
+      setSessionLoading(false);
+    }
+  };
+
+  const handleNewSession = async () => {
+    await createFreshSession();
+    setShowSessionHistory(false);
+    navigate('/');
+    setActiveView('upload');
+  };
+
+  const handleDeleteSession = async (sessionId) => {
+    await analyticsAPI.deleteGradingSession(sessionId);
+    const nextSessions = await refreshSessions();
+
+    if (activeSession?.sessionId === sessionId) {
+      const fallback = nextSessions.find(item => item.sessionId !== sessionId);
+      if (fallback) {
+        await handleResumeSession(fallback.sessionId);
+      } else {
+        await createFreshSession();
+      }
+    }
+  };
+
   const isStudentsRoute = location.pathname.startsWith('/students');
   const isHomeRoute = location.pathname === '/';
 
@@ -36,6 +126,15 @@ function App() {
           <h1>Premium classroom analytics and batch grading</h1>
         </div>
         <div className="topbar-actions">
+          <span className="session-chip" title={activeSession?.sessionId || 'Preparing session'}>
+            {sessionLoading ? 'Preparing session' : activeSession?.title || 'Fresh session'}
+          </span>
+          <button
+            className="topbar-chip"
+            onClick={() => setShowSessionHistory(true)}
+          >
+            History
+          </button>
           <button
             className={`topbar-chip ${isHomeRoute && activeView === 'dashboard' ? 'active' : ''}`}
             onClick={() => { navigate('/'); setActiveView('dashboard'); }}
@@ -52,13 +151,12 @@ function App() {
             className={`topbar-chip ${isStudentsRoute ? 'active' : ''}`}
             onClick={() => navigate('/students')}
           >
-            👤 Students
+            Students
           </button>
         </div>
       </header>
 
       <Routes>
-        {/* Home Route — original Dashboard / Upload toggle */}
         <Route path="/" element={
           <AnimatePresence mode="wait">
             {activeView === 'dashboard' && (
@@ -70,7 +168,7 @@ function App() {
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
-                <Dashboard />
+                <Dashboard session={activeSession} />
               </motion.div>
             )}
 
@@ -83,16 +181,18 @@ function App() {
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
-                <UploadSection onGradingExecutionComplete={() => {
-                  handleGradingComplete();
-                  setActiveView('dashboard');
-                }} />
+                <UploadSection
+                  sessionId={activeSession?.sessionId}
+                  onGradingExecutionComplete={async () => {
+                    await handleGradingComplete();
+                    setActiveView('dashboard');
+                  }}
+                />
               </motion.div>
             )}
           </AnimatePresence>
         } />
 
-        {/* Student Dashboard — grid of all students */}
         <Route path="/students" element={
           <motion.div
             className="view-stage"
@@ -104,7 +204,6 @@ function App() {
           </motion.div>
         } />
 
-        {/* Individual Student Profile */}
         <Route path="/students/:id" element={
           <motion.div
             className="view-stage"
@@ -112,12 +211,29 @@ function App() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
           >
-            <StudentProfile />
+            <StudentProfile
+              sessionId={activeSession?.sessionId}
+              onSessionUpdated={() => {
+                handleGradingComplete();
+              }}
+            />
           </motion.div>
         } />
       </Routes>
 
-      {/* FAB — only visible on home route */}
+      <AnimatePresence>
+        {showSessionHistory && (
+          <SessionHistoryModal
+            sessions={sessions}
+            activeSessionId={activeSession?.sessionId}
+            onClose={() => setShowSessionHistory(false)}
+            onResume={handleResumeSession}
+            onNewSession={handleNewSession}
+            onDelete={handleDeleteSession}
+          />
+        )}
+      </AnimatePresence>
+
       {isHomeRoute && (
         <motion.button
           className="fab-button"
@@ -126,7 +242,7 @@ function App() {
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.98 }}
         >
-          <span className="fab-icon">{activeView === 'dashboard' ? '📤' : '📊'}</span>
+          <span className="fab-icon">{activeView === 'dashboard' ? '+' : 'A'}</span>
           <span className="fab-copy">{activeView === 'dashboard' ? 'Upload' : 'Analytics'}</span>
         </motion.button>
       )}

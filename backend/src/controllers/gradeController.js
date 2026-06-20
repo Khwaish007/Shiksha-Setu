@@ -1,5 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
+import GradingSession from '../models/GradingSession.js';
 import Submission from '../models/Submission.js';
+import { refreshSessionStats } from '../utils/sessionStats.js';
 import {
   buildManualReviewPayload,
   escapeRegExp,
@@ -54,6 +56,22 @@ const generateWithRetry = async (client, systemPrompt, imageData, maxRetries = 3
 };
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const getRequestSessionId = (req) => (
+  req.params?.sessionId ||
+  req.query?.sessionId ||
+  req.body?.sessionId ||
+  null
+);
+
+const ensureSessionExists = async (sessionId) => {
+  if (!sessionId) return null;
+  return GradingSession.findOneAndUpdate(
+    { sessionId },
+    { lastAccessedAt: new Date() },
+    { new: true }
+  );
+};
 
 const processInBatches = async (items, batchSize, processor, delayBetweenBatchesMs = 0) => {
   const results = [];
@@ -147,8 +165,14 @@ const generateMockGrading = () => {
 
 export const clearSubmissions = async (req, res) => {
   try {
-    await Submission.deleteMany({});
-    res.status(200).json({ message: 'All submissions cleared.' });
+    const sessionId = getRequestSessionId(req);
+    if (!sessionId) {
+      return res.status(400).json({ error: 'sessionId is required. Global clearing is disabled.' });
+    }
+
+    await Submission.deleteMany({ sessionId });
+    const session = await refreshSessionStats(sessionId);
+    res.status(200).json({ message: 'Session submissions cleared.', session });
   } catch (err) {
     console.error('Clear Submissions Error:', err);
     res.status(500).json({ error: 'Failed to clear submissions.' });
@@ -157,13 +181,22 @@ export const clearSubmissions = async (req, res) => {
 
 export const processWorksheets = async (req, res) => {
   try {
+    const sessionId = getRequestSessionId(req);
+    if (!sessionId) {
+      return res.status(400).json({ error: "sessionId is required for grading." });
+    }
+
+    const session = await ensureSessionExists(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: "Grading session not found." });
+    }
+
     const files = req.files;
     if (!files || files.length === 0) {
       return res.status(400).json({ error: "No image files uploaded." });
     }
 
-    // NOTE: DB is NOT wiped here. The frontend calls /clear-submissions once
-    // before the first batch so subsequent batches accumulate correctly.
+    // Each upload is scoped to the active session. No global data is deleted.
 
     // Use mock mode for development (set USE_MOCK_AI=true in .env)
     const useMockAI = false; // FORCED TO FALSE TO GUARANTEE CLAUDE USE
@@ -176,6 +209,7 @@ export const processWorksheets = async (req, res) => {
         try {
           const mockGrade = generateMockGrading();
           const savedDocument = new Submission({
+            sessionId,
             studentName: mockGrade.studentName,
             totalScore: mockGrade.totalScore,
             mistakes: mockGrade.mistakes,
@@ -198,6 +232,7 @@ export const processWorksheets = async (req, res) => {
         }
       }
       
+      await refreshSessionStats(sessionId, 'batch');
       return res.status(200).json(consolidatedGradingLogs);
     }
 
@@ -218,6 +253,7 @@ export const processWorksheets = async (req, res) => {
           if (!imageValidation.ok) {
             const manualPayload = buildManualReviewPayload(imageValidation.reason, file.originalname || 'Unknown');
             const savedManualDocument = new Submission({
+              sessionId,
               studentName: manualPayload.studentName,
               totalScore: manualPayload.totalScore,
               mistakes: manualPayload.mistakes,
@@ -239,8 +275,8 @@ export const processWorksheets = async (req, res) => {
 
           // Save entry block directly to MongoDB Atlas - Overwriting old records to keep only the latest
           const cleanName = parsedGradingPayload.studentName.trim();
-          const filter = { studentName: { $regex: new RegExp(`^${cleanName}$`, 'i') } };
           const update = {
+            sessionId,
             studentName: cleanName,
             totalScore: Number(parsedGradingPayload.totalScore),
             mistakes: parsedGradingPayload.mistakes,
@@ -251,7 +287,7 @@ export const processWorksheets = async (req, res) => {
 
           const savedDocument = parsedGradingPayload.status === 'Success'
             ? await Submission.findOneAndUpdate(
-                { studentName: { $regex: new RegExp(`^${escapeRegExp(cleanName)}$`, 'i') } },
+                { sessionId, studentName: { $regex: new RegExp(`^${escapeRegExp(cleanName)}$`, 'i') } },
                 update,
                 { returnDocument: 'after', upsert: true }
               )
@@ -262,6 +298,7 @@ export const processWorksheets = async (req, res) => {
           console.error("Individual File Processing Error:", innerTaskError);
           return {
             studentName: "Error File",
+            sessionId,
             totalScore: 0,
             mistakes: [],
             errorSummary: MANUAL_REVIEW_MESSAGE,
@@ -276,6 +313,7 @@ export const processWorksheets = async (req, res) => {
       consolidatedGradingLogs.push(
         result.status === 'fulfilled' ? result.value : {
           studentName: "Error File",
+          sessionId,
           totalScore: 0,
           mistakes: [],
           status: "Manual Review Required"
@@ -283,6 +321,7 @@ export const processWorksheets = async (req, res) => {
       );
     }
 
+    await refreshSessionStats(sessionId, 'batch');
     res.status(200).json(consolidatedGradingLogs);
 
   } catch (globalControllerError) {
@@ -293,7 +332,7 @@ export const processWorksheets = async (req, res) => {
 
 export const fetchClassroomHeatmap = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents();
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
     const studentsSet = {};
     const questionsSet = {};
 
@@ -314,7 +353,7 @@ export const fetchClassroomHeatmap = async (req, res) => {
       questionReferences: Array.from(questionsSet[concept])
     })).sort((a, b) => b.totalStudentsAffected - a.totalStudentsAffected);
 
-    const totalSubmissions = (await getAggregatedStudents()).length;
+    const totalSubmissions = allSubmissions.length;
 
     // Attach percentage of class affected for each concept to provide a stable
     // metric that matches how recommendations compute priority.
@@ -338,8 +377,10 @@ export const fetchClassroomHeatmap = async (req, res) => {
 
 // HELPER: Merge multiple test submissions for the exact same student.
 // This properly maps multiple tests back into 20 unique students instead of duplicating them.
-const getAggregatedStudents = async () => {
-  const allSubmissions = await Submission.find({ status: 'Success' }).sort({ createdAt: 1 });
+const getAggregatedStudents = async (sessionId) => {
+  if (!sessionId) return [];
+
+  const allSubmissions = await Submission.find({ sessionId, status: 'Success' }).sort({ createdAt: 1 });
   const studentMap = {};
   
   for (const s of allSubmissions) {
@@ -360,7 +401,7 @@ const getAggregatedStudents = async () => {
 
 export const fetchClassAnalytics = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents();
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
     
     if (!allSubmissions.length) {
       return res.status(200).json({
@@ -370,7 +411,12 @@ export const fetchClassAnalytics = async (req, res) => {
         lowestScore: 0,
         studentsAboveAverage: 0,
         scoreDistribution: [],
-        performanceMetrics: {}
+        performanceMetrics: {
+          excellent: 0,
+          good: 0,
+          average: 0,
+          needsImprovement: 0
+        }
       });
     }
 
@@ -418,7 +464,7 @@ export const fetchClassAnalytics = async (req, res) => {
 
 export const fetchTopicRecommendations = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents();
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
     const studentsSet = {};
     
     allSubmissions.forEach(s => {
@@ -434,7 +480,7 @@ export const fetchTopicRecommendations = async (req, res) => {
       totalStudentsAffected: studentsSet[concept].size
     })).sort((a, b) => b.totalStudentsAffected - a.totalStudentsAffected);
 
-    const totalSubmissions = (await getAggregatedStudents()).length;
+    const totalSubmissions = allSubmissions.length;
 
     const withPct = heatmapData.map(item => ({
       topic: item._id,
@@ -527,7 +573,7 @@ export const fetchTopicRecommendations = async (req, res) => {
 
 export const fetchStudentRankings = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents();
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
     const rankings = allSubmissions.sort((a,b) => b.totalScore - a.totalScore).slice(0, 20);
 
     const withRank = rankings.map((student, index) => ({
@@ -547,7 +593,7 @@ export const fetchStudentRankings = async (req, res) => {
 
 export const fetchConceptAnalysis = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents();
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
     const conceptData = {};
     
     allSubmissions.forEach(s => {
@@ -575,7 +621,7 @@ export const fetchConceptAnalysis = async (req, res) => {
       };
     }).sort((a, b) => b.frequency - a.frequency);
 
-    const totalSubmissions = (await getAggregatedStudents()).length;
+    const totalSubmissions = allSubmissions.length;
 
     const withPct = aggregated.map(item => ({
       topic: item._id,
@@ -607,7 +653,7 @@ export const fetchConceptAnalysis = async (req, res) => {
 // NEW INSIGHT: Student-Centric Performance (each student's weak/strong concepts)
 export const fetchStudentWeakAndStrengths = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents();
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
     
     const studentAnalysis = allSubmissions.map(student => {
       const weakConcepts = [...new Set(student.mistakes.map(m => m.conceptMissed))];
@@ -651,7 +697,11 @@ export const fetchStudentWeakAndStrengths = async (req, res) => {
 // NEW INSIGHT: At-Risk Students Identification
 export const fetchAtRiskStudents = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents();
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
+    if (!allSubmissions.length) {
+      return res.status(200).json([]);
+    }
+
     const scores = allSubmissions.map(s => s.totalScore);
     const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
     const stdDev = Math.sqrt(scores.reduce((sq, n) => sq + Math.pow(n - avgScore, 2), 0) / scores.length);
@@ -681,7 +731,7 @@ export const fetchAtRiskStudents = async (req, res) => {
 // NEW INSIGHT: Class Strengths & Collective Performance
 export const fetchClassStrengthsAndWeaknesses = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents();
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
     const allConcepts = [
       'Linear Equations', 'Area Calculation', 'Trigonometry',
       'Quadratic Factorization', 'Pythagorean Theorem',
@@ -714,7 +764,11 @@ export const fetchClassStrengthsAndWeaknesses = async (req, res) => {
 // NEW INSIGHT: Peer Benchmarking (how each student compares to peers)
 export const fetchPeerBenchmarking = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents();
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
+    if (!allSubmissions.length) {
+      return res.status(200).json([]);
+    }
+
     allSubmissions.sort((a, b) => b.totalScore - a.totalScore);
     const avgScore = allSubmissions.reduce((a, b) => a + b.totalScore, 0) / allSubmissions.length;
     
@@ -744,7 +798,7 @@ export const fetchPeerBenchmarking = async (req, res) => {
 // NEW INSIGHT: Performance Distribution Analysis
 export const fetchPerformanceDistribution = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents();
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
     const scores = allSubmissions.map(s => s.totalScore);
     
     if (scores.length === 0) {
@@ -824,17 +878,65 @@ export const fetchPerformanceDistribution = async (req, res) => {
   }
 };
 
+export const fetchClassMisconceptions = async (req, res) => {
+  try {
+    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
+    const misconceptionMap = {};
+
+    allSubmissions.forEach(student => {
+      (student.mistakes || []).forEach(mistake => {
+        const concept = mistake.conceptMissed || 'Unknown Concept';
+        const key = concept.toLowerCase();
+
+        if (!misconceptionMap[key]) {
+          misconceptionMap[key] = {
+            concept,
+            misconception: `Repeated difficulty with ${concept}`,
+            severity: 'minor',
+            occurrences: 0,
+            studentsAffected: new Set()
+          };
+        }
+
+        misconceptionMap[key].occurrences += 1;
+        misconceptionMap[key].studentsAffected.add(student.studentName);
+      });
+    });
+
+    const misconceptions = Object.values(misconceptionMap)
+      .map(item => {
+        const studentsAffectedCount = item.studentsAffected.size;
+        return {
+          concept: item.concept,
+          misconception: item.misconception,
+          severity: studentsAffectedCount >= 3 || item.occurrences >= 5 ? 'major' : item.severity,
+          occurrences: item.occurrences,
+          studentsAffectedCount
+        };
+      })
+      .sort((a, b) => b.studentsAffectedCount - a.studentsAffectedCount || b.occurrences - a.occurrences)
+      .slice(0, 5);
+
+    res.status(200).json(misconceptions);
+  } catch (error) {
+    console.error('Session Misconceptions Error:', error);
+    res.status(500).json({ error: 'Failed to fetch session misconceptions.' });
+  }
+};
+
 // Debug endpoint: return merged heatmap items and recommendations side-by-side
 export const fetchRecommendationsDebug = async (req, res) => {
   try {
+    const sessionId = getRequestSessionId(req);
     const heatmapData = await Submission.aggregate([
+      { $match: { sessionId, status: 'Success' } },
       { $unwind: "$mistakes" },
       { $group: { _id: "$mistakes.conceptMissed", studentsSet: { $addToSet: { $toLower: "$studentName" } } } },
       { $addFields: { totalStudentsAffected: { $size: "$studentsSet" } } },
       { $sort: { totalStudentsAffected: -1 } }
     ]);
 
-    const totalSubmissions = (await getAggregatedStudents()).length;
+    const totalSubmissions = (await getAggregatedStudents(sessionId)).length;
 
     const withPct = heatmapData.map(item => ({
       topic: item._id,

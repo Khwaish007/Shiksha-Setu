@@ -1,31 +1,27 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import axios from 'axios';
-import API_BASE_URL from '../config/api.js';
+import { API_BASE } from '../config/api.js';
 import { formatFileSize, prepareFilesForUpload } from '../utils/uploadBatches.js';
 import GradingNoticeModal from './GradingNoticeModal.jsx';
 import '../styles/UploadSection.css';
 
 const MAX_UPLOADS = 50;
 
-const clearPreviousSubmissions = async () => {
-  await axios.post(`${API_BASE_URL}/api/v1/grading/clear-submissions`);
-};
-
-const uploadFileBatch = async (files) => {
+const uploadFileBatch = async (files, sessionId) => {
   const formData = new FormData();
   for (const file of files) {
     formData.append('worksheets', file);
   }
   const { data } = await axios.post(
-    `${API_BASE_URL}/api/v1/grading/evaluate`,
+    `${API_BASE}/sessions/${sessionId}/evaluate`,
     formData,
     { timeout: 120000 }
   );
   return data;
 };
 
-function UploadSection({ onGradingExecutionComplete }) {
+function UploadSection({ sessionId, onGradingExecutionComplete }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
@@ -62,6 +58,15 @@ function UploadSection({ onGradingExecutionComplete }) {
       return;
     }
 
+    if (!sessionId) {
+      setNotice({
+        type: 'error',
+        title: 'Session still loading',
+        message: 'Please wait a moment while your fresh grading session is prepared.'
+      });
+      return;
+    }
+
     setIsProcessing(true);
     setUploadProgress(null);
 
@@ -69,11 +74,9 @@ function UploadSection({ onGradingExecutionComplete }) {
       const batches = await prepareFilesForUpload(fileList);
       const consolidatedResults = [];
 
-      await clearPreviousSubmissions();
-
       for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
         setUploadProgress({ current: batchIndex + 1, total: batches.length });
-        const batchResults = await uploadFileBatch(batches[batchIndex]);
+        const batchResults = await uploadFileBatch(batches[batchIndex], sessionId);
         consolidatedResults.push(...batchResults);
       }
 

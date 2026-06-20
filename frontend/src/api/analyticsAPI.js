@@ -2,54 +2,83 @@ import axios from 'axios';
 import { API_BASE, STUDENTS_BASE } from '../config/api.js';
 import { compressImageIfNeeded } from '../utils/uploadBatches.js';
 
+const sessionParams = (sessionId) => (
+  sessionId ? { params: { sessionId } } : {}
+);
+
 export const analyticsAPI = {
-  getClassAnalytics: async () => {
-    const { data } = await axios.get(`${API_BASE}/analytics`);
+  createGradingSession: async (title) => {
+    const { data } = await axios.post(`${API_BASE}/sessions`, title ? { title } : {});
     return data;
   },
 
-  getHeatmapData: async () => {
-    const { data } = await axios.get(`${API_BASE}/heatmap-report`);
+  listGradingSessions: async () => {
+    const { data } = await axios.get(`${API_BASE}/sessions`);
     return data;
   },
 
-  getTopicRecommendations: async () => {
-    const { data } = await axios.get(`${API_BASE}/recommendations`);
+  getGradingSession: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/sessions/${sessionId}`);
     return data;
   },
 
-  getStudentRankings: async () => {
-    const { data } = await axios.get(`${API_BASE}/student-rankings`);
+  resumeGradingSession: async (sessionId) => {
+    const { data } = await axios.patch(`${API_BASE}/sessions/${sessionId}/resume`);
     return data;
   },
 
-  getConceptAnalysis: async () => {
-    const { data } = await axios.get(`${API_BASE}/concept-analysis`);
+  deleteGradingSession: async (sessionId) => {
+    const { data } = await axios.delete(`${API_BASE}/sessions/${sessionId}`);
     return data;
   },
 
-  getAtRiskStudents: async () => {
-    const { data } = await axios.get(`${API_BASE}/at-risk-students`);
+  getClassAnalytics: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/analytics`, sessionParams(sessionId));
     return data;
   },
 
-  getStudentStrengths: async () => {
-    const { data } = await axios.get(`${API_BASE}/student-strengths`);
+  getHeatmapData: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/heatmap-report`, sessionParams(sessionId));
     return data;
   },
 
-  getClassStrengths: async () => {
-    const { data } = await axios.get(`${API_BASE}/class-strengths`);
+  getTopicRecommendations: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/recommendations`, sessionParams(sessionId));
     return data;
   },
 
-  getPeerBenchmarking: async () => {
-    const { data } = await axios.get(`${API_BASE}/peer-benchmarking`);
+  getStudentRankings: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/student-rankings`, sessionParams(sessionId));
     return data;
   },
 
-  getPerformanceDistribution: async () => {
-    const { data } = await axios.get(`${API_BASE}/performance-distribution`);
+  getConceptAnalysis: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/concept-analysis`, sessionParams(sessionId));
+    return data;
+  },
+
+  getAtRiskStudents: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/at-risk-students`, sessionParams(sessionId));
+    return data;
+  },
+
+  getStudentStrengths: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/student-strengths`, sessionParams(sessionId));
+    return data;
+  },
+
+  getClassStrengths: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/class-strengths`, sessionParams(sessionId));
+    return data;
+  },
+
+  getPeerBenchmarking: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/peer-benchmarking`, sessionParams(sessionId));
+    return data;
+  },
+
+  getPerformanceDistribution: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/performance-distribution`, sessionParams(sessionId));
     return data;
   },
 
@@ -77,18 +106,19 @@ export const analyticsAPI = {
     return data;
   },
 
-  gradeStudentTest: async (id, file) => {
+  gradeStudentTest: async (id, file, sessionId) => {
     const compressedFile = await compressImageIfNeeded(file);
     const formData = new FormData();
     formData.append('worksheet', compressedFile);
     const { data } = await axios.post(`${STUDENTS_BASE}/${id}/grade`, formData, {
       timeout: 120000,
+      ...sessionParams(sessionId),
     });
     return data;
   },
 
-  getClassMisconceptions: async () => {
-    const { data } = await axios.get(`${STUDENTS_BASE}/class-misconceptions`);
+  getClassMisconceptions: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/class-misconceptions`, sessionParams(sessionId));
     return data;
   },
 

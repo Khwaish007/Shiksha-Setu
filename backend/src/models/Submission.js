@@ -12,6 +12,11 @@ const mistakeSchema = new mongoose.Schema({
 });
 
 const submissionSchema = new mongoose.Schema({
+  sessionId: {
+    type: String,
+    index: true,
+    required: true
+  },
   studentName: {
     type: String,
     default: "Unknown"
@@ -33,5 +38,8 @@ const submissionSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+submissionSchema.index({ sessionId: 1, studentName: 1 });
+submissionSchema.index({ sessionId: 1, createdAt: -1 });
 
 export default mongoose.model('Submission', submissionSchema);

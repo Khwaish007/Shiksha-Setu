@@ -27,14 +27,14 @@ const dashboardTabs = [
   { key: 'peers', label: 'Peer Compare' }
 ];
 
-const Dashboard = () => {
+const Dashboard = ({ session }) => {
+  const sessionId = session?.sessionId;
   const [analytics, setAnalytics] = useState(null);
   const [heatmapData, setHeatmapData] = useState(null);
   const [heatmapThresholds, setHeatmapThresholds] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
   const [recommendationThresholds, setRecommendationThresholds] = useState(null);
   const [rankings, setRankings] = useState(null);
-  const [conceptAnalysis, setConceptAnalysis] = useState(null);
   const [atRiskStudents, setAtRiskStudents] = useState(null);
   const [studentStrengths, setStudentStrengths] = useState(null);
   const [classStrengths, setClassStrengths] = useState(null);
@@ -46,19 +46,21 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchAllData = async () => {
+      if (!sessionId) return;
+
+      setLoading(true);
       try {
-        const [analyticsData, heatmap, recs, ranks, concepts, atRisk, strengths, classStr, peers, perfDist, misconceptions] = await Promise.all([
-          analyticsAPI.getClassAnalytics(),
-          analyticsAPI.getHeatmapData(),
-          analyticsAPI.getTopicRecommendations(),
-          analyticsAPI.getStudentRankings(),
-          analyticsAPI.getConceptAnalysis(),
-          analyticsAPI.getAtRiskStudents(),
-          analyticsAPI.getStudentStrengths(),
-          analyticsAPI.getClassStrengths(),
-          analyticsAPI.getPeerBenchmarking(),
-          analyticsAPI.getPerformanceDistribution(),
-          analyticsAPI.getClassMisconceptions()
+        const [analyticsData, heatmap, recs, ranks, atRisk, strengths, classStr, peers, perfDist, misconceptions] = await Promise.all([
+          analyticsAPI.getClassAnalytics(sessionId),
+          analyticsAPI.getHeatmapData(sessionId),
+          analyticsAPI.getTopicRecommendations(sessionId),
+          analyticsAPI.getStudentRankings(sessionId),
+          analyticsAPI.getAtRiskStudents(sessionId),
+          analyticsAPI.getStudentStrengths(sessionId),
+          analyticsAPI.getClassStrengths(sessionId),
+          analyticsAPI.getPeerBenchmarking(sessionId),
+          analyticsAPI.getPerformanceDistribution(sessionId),
+          analyticsAPI.getClassMisconceptions(sessionId)
         ]);
 
         setAnalytics(analyticsData);
@@ -67,7 +69,6 @@ const Dashboard = () => {
         setRecommendations(recs && recs.recommendations ? recs.recommendations : recs);
         setRecommendationThresholds(recs && recs.thresholds ? recs.thresholds : null);
         setRankings(ranks);
-        setConceptAnalysis(concepts && concepts.analysis ? concepts.analysis : concepts);
         setAtRiskStudents(atRisk);
         setStudentStrengths(strengths);
         setClassStrengths(classStr);
@@ -82,16 +83,20 @@ const Dashboard = () => {
     };
 
     fetchAllData();
-  }, []);
+  }, [sessionId]);
 
-  if (loading) {
+  if (loading || !sessionId) {
     return (
       <div className="dashboard-loading">
         <div className="loading-spinner"></div>
-        <p>Loading classroom insights...</p>
+        <p>Loading classroom session...</p>
       </div>
     );
   }
+
+  const excellenceRate = analytics?.totalStudents
+    ? Math.round((analytics.performanceMetrics.excellent / analytics.totalStudents) * 100)
+    : 0;
 
   return (
     <div className="dashboard-container">
@@ -102,6 +107,11 @@ const Dashboard = () => {
             <span className="gradient-text">Classroom Intelligence</span>
           </h1>
           <p className="header-subtitle">AI-powered educational insights dashboard</p>
+          {session && (
+            <p className="header-subtitle">
+              Current session: {session.title || 'Untitled session'}
+            </p>
+          )}
         </div>
       </header>
 
@@ -146,7 +156,7 @@ const Dashboard = () => {
               />
               <MetricsCard
                 title="Excellence Rate"
-                value={`${Math.round((analytics.performanceMetrics.excellent / analytics.totalStudents) * 100)}%`}
+                value={`${excellenceRate}%`}
                 icon="🎯"
                 color="green"
               />

@@ -1,6 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import Student from '../models/Student.js';
 import Submission from '../models/Submission.js';
+import GradingSession from '../models/GradingSession.js';
+import { refreshSessionStats } from '../utils/sessionStats.js';
 import {
   escapeRegExp,
   GRADING_SYSTEM_PROMPT,
@@ -50,6 +52,13 @@ const generateWithRetry = async (client, systemPrompt, imageData, maxRetries = 3
     }
   }
 };
+
+const getRequestSessionId = (req) => (
+  req.params?.sessionId ||
+  req.query?.sessionId ||
+  req.body?.sessionId ||
+  null
+);
 
 // ─── Controller Handlers ────────────────────────────────────────────────────
 
@@ -152,6 +161,33 @@ export const gradeStudentTest = async (req, res) => {
       return res.status(404).json({ error: 'Student not found.' });
     }
 
+    const sessionId = getRequestSessionId(req);
+    const activeSession = sessionId
+      ? await GradingSession.findOneAndUpdate(
+          { sessionId },
+          { lastAccessedAt: new Date() },
+          { new: true }
+        )
+      : null;
+
+    if (sessionId && !activeSession) {
+      return res.status(404).json({ error: 'Grading session not found.' });
+    }
+
+    const recordManualReviewForSession = async (reason) => {
+      if (!sessionId) return;
+      await new Submission({
+        sessionId,
+        studentName: student.studentName.trim(),
+        totalScore: 0,
+        mistakes: [],
+        errorSummary: reason || MANUAL_REVIEW_MESSAGE,
+        status: 'Manual Review Required',
+        createdAt: new Date()
+      }).save();
+      await refreshSessionStats(sessionId, 'student');
+    };
+
     const file = req.file;
     if (!file) {
       return res.status(400).json({ error: 'No image file uploaded.' });
@@ -159,6 +195,7 @@ export const gradeStudentTest = async (req, res) => {
 
     const imageValidation = validateUploadedImage(file);
     if (!imageValidation.ok) {
+      await recordManualReviewForSession(imageValidation.reason);
       return res.status(200).json({
         status: 'Manual Review Required',
         message: imageValidation.reason || MANUAL_REVIEW_MESSAGE,
@@ -175,6 +212,7 @@ export const gradeStudentTest = async (req, res) => {
     const parsed = parseAndNormalizeGradingResponse(responseText);
 
     if (parsed.status === 'Manual Review Required') {
+      await recordManualReviewForSession(parsed.errorSummary);
       return res.status(200).json({
         status: parsed.status,
         message: parsed.errorSummary || MANUAL_REVIEW_MESSAGE,
@@ -224,17 +262,24 @@ export const gradeStudentTest = async (req, res) => {
 
     await student.save();
 
-    // Dual-write to Submission collection so classroom heatmap includes this test
-    const submissionFilter = { studentName: { $regex: new RegExp(`^${escapeRegExp(student.studentName.trim())}$`, 'i') } };
-    const submissionUpdate = {
-      studentName: student.studentName.trim(),
-      totalScore: testRecord.score,
-      mistakes: testRecord.mistakes,
-      errorSummary: testRecord.errorSummary,
-      status: parsed.status || 'Success',
-      createdAt: new Date()
-    };
-    await Submission.findOneAndUpdate(submissionFilter, submissionUpdate, { returnDocument: 'after', upsert: true });
+    // If this student upload belongs to the active classroom session, include it in session analytics.
+    if (sessionId) {
+      const submissionFilter = {
+        sessionId,
+        studentName: { $regex: new RegExp(`^${escapeRegExp(student.studentName.trim())}$`, 'i') }
+      };
+      const submissionUpdate = {
+        sessionId,
+        studentName: student.studentName.trim(),
+        totalScore: testRecord.score,
+        mistakes: testRecord.mistakes,
+        errorSummary: testRecord.errorSummary,
+        status: parsed.status || 'Success',
+        createdAt: new Date()
+      };
+      await Submission.findOneAndUpdate(submissionFilter, submissionUpdate, { returnDocument: 'after', upsert: true });
+      await refreshSessionStats(sessionId, 'student');
+    }
 
     // Return the saved test record (last in array)
     const savedTest = student.tests[student.tests.length - 1];
