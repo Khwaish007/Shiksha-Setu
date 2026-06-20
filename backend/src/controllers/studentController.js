@@ -171,26 +171,23 @@ export const gradeStudentTest = async (req, res) => {
 
     const gradingResult = await generateWithRetry(client, GRADING_SYSTEM_PROMPT, imagePart);
 
-    // Parse response
-    const responseText = gradingResult.content[0].text;
-    let cleansedText = responseText
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
-      .trim();
+    const responseText = gradingResult.content?.[0]?.text || '';
+    const parsed = parseAndNormalizeGradingResponse(responseText);
 
-    const jsonMatch = cleansedText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      cleansedText = jsonMatch[0];
+    if (parsed.status === 'Manual Review Required') {
+      return res.status(422).json({
+        status: parsed.status,
+        message: parsed.errorSummary || MANUAL_REVIEW_MESSAGE,
+        errorSummary: parsed.errorSummary || MANUAL_REVIEW_MESSAGE
+      });
     }
-
-    const parsed = JSON.parse(cleansedText);
 
     // Build the test record
     const testRecord = {
       date: new Date(),
       score: Number(parsed.totalScore) || 0,
       totalQuestions: 10,
-      mistakes,
+      mistakes: parsed.mistakes || [],
       errorSummary: parsed.errorSummary || '',
     };
 
@@ -228,7 +225,7 @@ export const gradeStudentTest = async (req, res) => {
     await student.save();
 
     // Dual-write to Submission collection so classroom heatmap includes this test
-    const submissionFilter = { studentName: { $regex: new RegExp(`^${student.studentName.trim()}$`, 'i') } };
+    const submissionFilter = { studentName: { $regex: new RegExp(`^${escapeRegExp(student.studentName.trim())}$`, 'i') } };
     const submissionUpdate = {
       studentName: student.studentName.trim(),
       totalScore: testRecord.score,

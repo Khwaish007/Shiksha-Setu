@@ -88,7 +88,8 @@ const StudentProfile = () => {
       await fetchStudent();
     } catch (error) {
       console.error('Failed to grade test:', error);
-      alert('Failed to process the test. Please try again.');
+      const message = error.response?.data?.message || error.response?.data?.error || 'Failed to process the test. Please try again.';
+      alert(message);
     } finally {
       setUploading(false);
       // Reset file input
