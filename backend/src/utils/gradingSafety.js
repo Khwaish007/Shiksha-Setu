@@ -37,7 +37,7 @@ CRITICAL RULES:
 2. The JSON must be parseable by JSON.parse() in JavaScript.
 3. There are 10 questions total. Each question is worth 10 points.
 4. If and only if the submission is clearly a gradable mathematics test, calculate the score based on correct answers.
-5. For every ungradable upload, use "gradingDecision": "manual_review", "status": "Manual Review Required", "totalScore": 0, empty mistake/annotation arrays, and the teacher-facing error message in "errorSummary".
+5. For every ungradable upload, use "gradingDecision": "manual_review", "status": "Manual Review Required", "totalScore": 0, an empty mistakes array, and the teacher-facing error message in "errorSummary".
 6. Never invent a score, student name, question, or math work for an ungradable upload.
 
 Return EXACTLY this structure for a gradable mathematics test:
@@ -50,9 +50,6 @@ Return EXACTLY this structure for a gradable mathematics test:
       "questionNumber": "Q1",
       "conceptMissed": "One of: 'Linear Equations', 'Area Calculation', 'Trigonometry', 'Quadratic Factorization', 'Pythagorean Theorem', 'Calculus Differentiation', 'Probability', 'System of Linear Equations', 'Calculus Integration'"
     }
-  ],
-  "annotations": [
-    { "step": 1, "description": "What the student did", "status": "correct|wrong|consequence" }
   ],
   "misconception_patterns": [
     { "concept": "Fractions", "misconception": "short description", "severity": "minor|major" }
@@ -67,7 +64,6 @@ Return EXACTLY this structure for unreadable, non-mathematics, incomplete, or ga
   "studentName": "Unknown",
   "totalScore": 0,
   "mistakes": [],
-  "annotations": [],
   "misconception_patterns": [],
   "errorSummary": "${MANUAL_REVIEW_MESSAGE}",
   "status": "Manual Review Required"
@@ -80,7 +76,6 @@ export const buildManualReviewPayload = (reason = MANUAL_REVIEW_MESSAGE, student
   studentName,
   totalScore: 0,
   mistakes: [],
-  annotations: [],
   misconception_patterns: [],
   errorSummary: reason || MANUAL_REVIEW_MESSAGE,
   status: MANUAL_REVIEW_STATUS
@@ -178,7 +173,6 @@ export const normalizeGradingPayload = (payload) => {
 
   const totalScore = Number(payload.totalScore);
   const mistakes = Array.isArray(payload.mistakes) ? payload.mistakes : [];
-  const annotations = Array.isArray(payload.annotations) ? payload.annotations : [];
   const misconceptionPatterns = Array.isArray(payload.misconception_patterns)
     ? payload.misconception_patterns
     : [];
@@ -207,7 +201,6 @@ export const normalizeGradingPayload = (payload) => {
         : `Q${mistake.questionNumber.trim()}`,
       conceptMissed: mistake.conceptMissed
     })),
-    annotations,
     misconception_patterns: misconceptionPatterns,
     errorSummary: typeof payload.errorSummary === 'string' ? payload.errorSummary : '',
     status: 'Success'

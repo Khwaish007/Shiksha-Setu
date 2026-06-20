@@ -191,9 +191,7 @@ export const gradeStudentTest = async (req, res) => {
       score: Number(parsed.totalScore) || 0,
       totalQuestions: 10,
       mistakes,
-      annotations: parsed.annotations || [],
       errorSummary: parsed.errorSummary || '',
-      imageBase64: file.buffer.toString('base64'),
     };
 
     student.tests.push(testRecord);
@@ -235,9 +233,7 @@ export const gradeStudentTest = async (req, res) => {
       studentName: student.studentName.trim(),
       totalScore: testRecord.score,
       mistakes: testRecord.mistakes,
-      annotations: testRecord.annotations,
       errorSummary: testRecord.errorSummary,
-      imageBase64: testRecord.imageBase64,
       status: parsed.status || 'Success',
       createdAt: new Date()
     };
@@ -262,37 +258,6 @@ export const gradeStudentTest = async (req, res) => {
           ? 'AI service is busy. Please wait a moment and try again.'
           : 'Failed to grade test. Please try again.',
     });
-  }
-};
-
-/**
- * GET /api/students/:studentId/tests/:testId/replay
- * Returns the test image and AI annotations for frontend canvas replay
- */
-export const getTestReplay = async (req, res) => {
-  try {
-    const student = await Student.findById(req.params.studentId);
-    if (!student) {
-      return res.status(404).json({ error: 'Student not found.' });
-    }
-
-    const test = student.tests.id(req.params.testId) || student.tests.find(t => t.testId === req.params.testId);
-    if (!test) {
-      return res.status(404).json({ error: 'Test not found.' });
-    }
-
-    if (!test.imageBase64) {
-      return res.status(404).json({ error: 'Image not available for this test.' });
-    }
-
-    res.status(200).json({
-      imageBase64: test.imageBase64,
-      annotations: test.annotations || [],
-      errorSummary: test.errorSummary || ""
-    });
-  } catch (error) {
-    console.error('Get Test Replay Error:', error);
-    res.status(500).json({ error: 'Failed to fetch test replay.' });
   }
 };
 

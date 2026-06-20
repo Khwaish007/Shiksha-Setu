@@ -87,11 +87,6 @@ export const analyticsAPI = {
     return data;
   },
 
-  getTestReplay: async (studentId, testId) => {
-    const { data } = await axios.get(`${STUDENTS_BASE}/${studentId}/tests/${testId}/replay`);
-    return data;
-  },
-
   getClassMisconceptions: async () => {
     const { data } = await axios.get(`${STUDENTS_BASE}/class-misconceptions`);
     return data;

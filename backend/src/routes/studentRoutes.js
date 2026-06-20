@@ -7,8 +7,7 @@ import {
   assessCohortRisk,
   getStudentById,
   generateParentMessage,
-  gradeStudentTest,
-  getTestReplay
+  gradeStudentTest
 } from '../controllers/studentController.js';
 
 const router = express.Router();
@@ -49,7 +48,5 @@ router.post('/:id/grade', (req, res, next) => {
   });
 });
 
-// GET /api/students/:studentId/tests/:testId/replay → get test image and annotations
-router.get('/:studentId/tests/:testId/replay', getTestReplay);
 
 export default router;

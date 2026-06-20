@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
-import AnswerReplay from './AnswerReplay';
 import ErrorDNA from './ErrorDNA';
 import ParentMessageModal from './ParentMessageModal';
 import '../styles/StudentProfile.css';
@@ -16,7 +15,6 @@ const StudentProfile = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [expandedTests, setExpandedTests] = useState({});
-  const [replayTestId, setReplayTestId] = useState(null);
   const [showParentModal, setShowParentModal] = useState(false);
 
   const fetchStudent = async () => {
@@ -98,8 +96,8 @@ const StudentProfile = () => {
     }
   };
 
-  const toggleTestExpand = (testId) => {
-    setExpandedTests(prev => ({ ...prev, [testId]: !prev[testId] }));
+  const toggleTestExpand = (testKey) => {
+    setExpandedTests(prev => ({ ...prev, [testKey]: !prev[testKey] }));
   };
 
   const formatDate = (dateStr) => {
@@ -149,13 +147,6 @@ const StudentProfile = () => {
 
   return (
     <div className="sp-container">
-      {replayTestId && (
-        <AnswerReplay
-          studentId={id}
-          testId={replayTestId}
-          onClose={() => setReplayTestId(null)}
-        />
-      )}
       <AnimatePresence>
         {showParentModal && (
           <ParentMessageModal
@@ -343,7 +334,7 @@ const StudentProfile = () => {
           <div className="sp-timeline-grid">
             <AnimatePresence>
               {sortedTests.map((test, i) => {
-                const testKey = test._id || test.testId || i;
+                const testKey = test._id || i;
                 const isExpanded = expandedTests[testKey];
 
                 return (
@@ -369,14 +360,7 @@ const StudentProfile = () => {
                         </div>
                       </div>
 
-                      <div className="sp-test-card-right">
-                        <button
-                          className="sp-test-expand-btn replay-btn"
-                          style={{ marginRight: '8px', backgroundColor: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa' }}
-                          onClick={() => setReplayTestId(testKey)}
-                        >
-                          ▶ AI Replay
-                        </button>
+                      <div className="sp-test-card-right">
                         {test.mistakes.length > 0 ? (
                           <button
                             className={`sp-test-expand-btn ${isExpanded ? 'expanded' : ''}`}

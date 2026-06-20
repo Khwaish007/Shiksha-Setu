@@ -221,9 +221,7 @@ export const processWorksheets = async (req, res) => {
               studentName: manualPayload.studentName,
               totalScore: manualPayload.totalScore,
               mistakes: manualPayload.mistakes,
-              annotations: manualPayload.annotations,
               errorSummary: manualPayload.errorSummary,
-              imageBase64: file.buffer?.toString("base64") || "",
               status: manualPayload.status
             });
             await savedManualDocument.save();
@@ -246,9 +244,7 @@ export const processWorksheets = async (req, res) => {
             studentName: cleanName,
             totalScore: Number(parsedGradingPayload.totalScore),
             mistakes: parsedGradingPayload.mistakes,
-            annotations: parsedGradingPayload.annotations || [],
             errorSummary: parsedGradingPayload.errorSummary || "",
-            imageBase64: file.buffer.toString("base64"),
             status: parsedGradingPayload.status,
             createdAt: new Date()
           };
@@ -268,7 +264,6 @@ export const processWorksheets = async (req, res) => {
             studentName: "Error File",
             totalScore: 0,
             mistakes: [],
-            annotations: [],
             errorSummary: MANUAL_REVIEW_MESSAGE,
             status: "Manual Review Required"
           };

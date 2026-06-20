@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import crypto from 'crypto';
 
 const studentMistakeSchema = new mongoose.Schema({
   questionNumber: {
@@ -10,12 +9,6 @@ const studentMistakeSchema = new mongoose.Schema({
     type: String,
     required: true
   }
-}, { _id: false });
-
-const annotationSchema = new mongoose.Schema({
-  step: { type: Number },
-  description: { type: String },
-  status: { type: String }
 }, { _id: false });
 
 const errorDNASchema = new mongoose.Schema({
@@ -29,10 +22,6 @@ const errorDNASchema = new mongoose.Schema({
 
 
 const testRecordSchema = new mongoose.Schema({
-  testId: {
-    type: String,
-    default: () => crypto.randomUUID()
-  },
   date: {
     type: Date,
     default: Date.now
@@ -46,11 +35,7 @@ const testRecordSchema = new mongoose.Schema({
     default: 10
   },
   mistakes: [studentMistakeSchema],
-  annotations: [annotationSchema],
   errorSummary: {
-    type: String
-  },
-  imageBase64: {
     type: String
   }
 });
