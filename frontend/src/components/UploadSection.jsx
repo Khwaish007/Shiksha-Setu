@@ -80,20 +80,17 @@ function UploadSection({ onGradingExecutionComplete }) {
       const manualReviewCount = consolidatedResults.filter(
         item => item.status === 'Manual Review Required'
       ).length;
-      setNotice(manualReviewCount > 0
+      const completionNotice = manualReviewCount > 0
         ? {
             type: 'manual',
             count: manualReviewCount,
-            detail: 'These files were not graded. They may be unclear, non-mathematical, incomplete, or outside the expected worksheet format.',
-            complete: true,
-            results: consolidatedResults
+            detail: 'These files were not graded. They may be unclear, non-mathematical, incomplete, or outside the expected worksheet format.'
           }
         : {
             type: 'success',
-            message: 'All selected worksheets were graded successfully. Click Got it to view the refreshed dashboard.',
-            complete: true,
-            results: consolidatedResults
-          });
+            message: 'All selected worksheets were graded successfully and the dashboard has been refreshed.'
+          };
+      onGradingExecutionComplete(consolidatedResults, completionNotice);
     } catch (networkError) {
       console.error('API Upload Pipeline Failure:', networkError);
       const status = networkError.response?.status;
@@ -128,14 +125,7 @@ function UploadSection({ onGradingExecutionComplete }) {
     }
   };
 
-  const closeNotice = () => {
-    const shouldComplete = notice?.complete;
-    const results = notice?.results;
-    setNotice(null);
-    if (shouldComplete) {
-      onGradingExecutionComplete(results);
-    }
-  };
+  const closeNotice = () => setNotice(null);
 
   return (
     <motion.section

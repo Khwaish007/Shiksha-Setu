@@ -4,18 +4,23 @@ import { AnimatePresence, motion } from 'framer-motion';
 import './index.css';
 import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
+import GradingNoticeModal from './components/GradingNoticeModal';
 import StudentDashboard from './components/StudentDashboard';
 import StudentProfile from './components/StudentProfile';
 
 function App() {
   const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' or 'upload'
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [batchNotice, setBatchNotice] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleGradingComplete = () => {
+  const handleGradingComplete = (notice) => {
     // Trigger dashboard refresh
     setRefreshTrigger(prev => prev + 1);
+    if (notice) {
+      setBatchNotice(notice);
+    }
   };
 
   // Determine which topbar chip is active based on route + state
@@ -83,8 +88,8 @@ function App() {
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.35, ease: 'easeOut' }}
               >
-                <UploadSection onGradingExecutionComplete={() => {
-                  handleGradingComplete();
+                <UploadSection onGradingExecutionComplete={(results, notice) => {
+                  handleGradingComplete(notice);
                   setActiveView('dashboard');
                 }} />
               </motion.div>
@@ -130,6 +135,14 @@ function App() {
           <span className="fab-copy">{activeView === 'dashboard' ? 'Upload' : 'Analytics'}</span>
         </motion.button>
       )}
+      <AnimatePresence>
+        {batchNotice && (
+          <GradingNoticeModal
+            {...batchNotice}
+            onClose={() => setBatchNotice(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
