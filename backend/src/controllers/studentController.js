@@ -1,6 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
 import Student from '../models/Student.js';
 import Submission from '../models/Submission.js';
+import {
+  escapeRegExp,
+  GRADING_SYSTEM_PROMPT,
+  MANUAL_REVIEW_MESSAGE,
+  parseAndNormalizeGradingResponse,
+  validateUploadedImage
+} from '../utils/gradingSafety.js';
 
 // ─── Reused helpers from gradeController.js ─────────────────────────────────
 
@@ -43,45 +50,6 @@ const generateWithRetry = async (client, systemPrompt, imageData, maxRetries = 3
     }
   }
 };
-
-const GRADING_SYSTEM_PROMPT = `You are an expert school teacher evaluating handwritten student quizzes. Your ONLY task is to return valid JSON, nothing else.
-
-CRITICAL RULES:
-1. You MUST return ONLY a valid JSON object. Do NOT include any text, explanation, or narrative.
-2. Do NOT use markdown code blocks like \`\`\`json.
-3. The JSON must be parseable by JSON.parse() in JavaScript.
-4. There are 10 questions total. Each question is worth 10 points (100 points total).
-5. Calculate the score based on how many questions are answered correctly. Deduct 10 points per incorrect answer.
-6. Return EXACTLY this structure with no additional text before or after:
-{
-  "studentName": "Extract the exact name written (e.g. 'Student_12'), otherwise 'Unknown'",
-  "totalScore": <number between 0-100, where each correct answer = 10 points>,
-  "mistakes": [
-    {
-      "questionNumber": "Q1",
-      "conceptMissed": "One of: 'Linear Equations', 'Area Calculation', 'Trigonometry', 'Quadratic Factorization', 'Pythagorean Theorem', 'Calculus Differentiation', 'Probability', 'System of Linear Equations', 'Calculus Integration'"
-    }
-  ],
-  "annotations": [
-    { "step": 1, "description": "What the student did in this step", "status": "correct|wrong|consequence" }
-  ],
-  "misconception_patterns": [
-    { "concept": "Fractions", "misconception": "inverts fraction before multiplying instead of after", "severity": "major" }
-  ],
-  "errorSummary": "Overall summary of student's misconceptions, if any",
-  "status": "Success"
-}
-
-If the image is unreadable:
-{
-  "studentName": "Unknown",
-  "totalScore": 0,
-  "mistakes": [],
-  "annotations": [],
-  "misconception_patterns": [],
-  "errorSummary": "Unreadable",
-  "status": "Manual Review Required"
-}`;
 
 // ─── Controller Handlers ────────────────────────────────────────────────────
 
@@ -189,12 +157,22 @@ export const gradeStudentTest = async (req, res) => {
       return res.status(400).json({ error: 'No image file uploaded.' });
     }
 
+    const imageValidation = validateUploadedImage(file);
+    if (!imageValidation.ok) {
+      return res.status(422).json({
+        status: 'Manual Review Required',
+        message: imageValidation.reason || MANUAL_REVIEW_MESSAGE,
+        errorSummary: imageValidation.reason || MANUAL_REVIEW_MESSAGE
+      });
+    }
+
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const imagePart = formatBufferToClaudePart(file.buffer, file.mimetype);
 
     const gradingResult = await generateWithRetry(client, GRADING_SYSTEM_PROMPT, imagePart);
 
-    const responseText = gradingResult.content?.[0]?.text || '';
+    // Parse response
+    const responseText = gradingResult.content[0].text;
     let cleansedText = responseText
       .replace(/```json/g, '')
       .replace(/```/g, '')
@@ -205,28 +183,9 @@ export const gradeStudentTest = async (req, res) => {
       cleansedText = jsonMatch[0];
     }
 
-    let parsed;
-    try {
-      parsed = JSON.parse(cleansedText);
-    } catch (parseError) {
-      console.error('Grade Student Test JSON parse error:', parseError.message);
-      parsed = {
-        totalScore: 0,
-        mistakes: [],
-        annotations: [],
-        misconception_patterns: [],
-        errorSummary: 'AI response could not be parsed',
-        status: 'Manual Review Required',
-      };
-    }
+    const parsed = JSON.parse(cleansedText);
 
-    const mistakes = (parsed.mistakes || [])
-      .filter((m) => m?.questionNumber && m?.conceptMissed)
-      .map((m) => ({
-        questionNumber: String(m.questionNumber),
-        conceptMissed: String(m.conceptMissed),
-      }));
-
+    // Build the test record
     const testRecord = {
       date: new Date(),
       score: Number(parsed.totalScore) || 0,
@@ -270,6 +229,21 @@ export const gradeStudentTest = async (req, res) => {
 
     await student.save();
 
+    // Dual-write to Submission collection so classroom heatmap includes this test
+    const submissionFilter = { studentName: { $regex: new RegExp(`^${student.studentName.trim()}$`, 'i') } };
+    const submissionUpdate = {
+      studentName: student.studentName.trim(),
+      totalScore: testRecord.score,
+      mistakes: testRecord.mistakes,
+      annotations: testRecord.annotations,
+      errorSummary: testRecord.errorSummary,
+      imageBase64: testRecord.imageBase64,
+      status: parsed.status || 'Success',
+      createdAt: new Date()
+    };
+    await Submission.findOneAndUpdate(submissionFilter, submissionUpdate, { returnDocument: 'after', upsert: true });
+
+    // Return the saved test record (last in array)
     const savedTest = student.tests[student.tests.length - 1];
 
     res.status(200).json({

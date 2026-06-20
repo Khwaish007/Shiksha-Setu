@@ -24,7 +24,9 @@ function GradingLog({ evaluationHistoryList }) {
                 </span>
               </td>
               <td>
-                {logItem.mistakes.length === 0 ? "None (Perfect Pass)" : (
+                {logItem.status === 'Manual Review Required' ? (
+                  logItem.errorSummary || "This submission requires manual grading."
+                ) : logItem.mistakes.length === 0 ? "None (Perfect Pass)" : (
                   logItem.mistakes.map((m, idx) => (
                     <span key={idx} style={{ display: 'block', fontSize: '0.9rem' }}>
                       • Q{m.questionNumber}: {m.conceptMissed}

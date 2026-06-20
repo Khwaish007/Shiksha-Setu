@@ -60,27 +60,12 @@ function UploadSection({ onGradingExecutionComplete }) {
     setUploadProgress(null);
 
     try {
-      const batches = await prepareFilesForUpload(fileList);
-      const allResults = [];
-
-      // Wipe old submissions exactly ONCE before the first batch,
-      // so all subsequent batches accumulate into a clean DB.
-      await clearPreviousSubmissions();
-
-      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-        setUploadProgress({ current: batchIndex + 1, total: batches.length });
-        const batchResults = await uploadFileBatch(batches[batchIndex]);
-        if (Array.isArray(batchResults)) {
-          allResults.push(...batchResults);
-        }
-      }
-
-      onGradingExecutionComplete(allResults);
-      window.alert(
-        batches.length > 1
-          ? `Processing complete. ${fileList.length} worksheets graded in ${batches.length} batches. Results are ready in the dashboard.`
-          : 'Processing complete. Results are ready in the dashboard.'
+      const response = await axios.post(
+        `${API_BASE_URL}/api/v1/grading/evaluate`,
+        multipartFormPayload
       );
+      onGradingExecutionComplete(response.data);
+      window.alert('Processing complete. Results are ready in the dashboard.');
     } catch (networkError) {
       console.error('API Upload Pipeline Failure:', networkError);
       const status = networkError.response?.status;

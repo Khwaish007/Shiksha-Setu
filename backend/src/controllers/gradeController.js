@@ -1,5 +1,13 @@
 import Anthropic from '@anthropic-ai/sdk';
 import Submission from '../models/Submission.js';
+import {
+  buildManualReviewPayload,
+  escapeRegExp,
+  GRADING_SYSTEM_PROMPT,
+  MANUAL_REVIEW_MESSAGE,
+  parseAndNormalizeGradingResponse,
+  validateUploadedImage
+} from '../utils/gradingSafety.js';
 
 // Helper function to format image buffer data into valid input for Claude SDK
 const formatBufferToClaudePart = (buffer, mimeType) => {
@@ -195,42 +203,6 @@ export const processWorksheets = async (req, res) => {
 
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-    // Single unified prompt combining OCR and grading
-    const systemPrompt = `You are an expert school teacher evaluating handwritten student quizzes. Your ONLY task is to return valid JSON, nothing else.
-
-CRITICAL RULES:
-1. You MUST return ONLY a valid JSON object. Do NOT include any text, explanation, or narrative.
-2. Do NOT use markdown code blocks like \`\`\`json.
-3. The JSON must be parseable by JSON.parse() in JavaScript.
-4. There are 10 questions total. Each question is worth 10 points (100 points total).
-5. Calculate the score based on how many questions are answered correctly. Deduct 10 points per incorrect answer.
-6. Return EXACTLY this structure with no additional text before or after:
-{
-  "studentName": "Extract the exact name written (e.g. 'Student_12'), otherwise 'Unknown'",
-  "totalScore": <number between 0-100, where each correct answer = 10 points>,
-  "mistakes": [
-    {
-      "questionNumber": "Q1",
-      "conceptMissed": "One of: 'Linear Equations', 'Area Calculation', 'Trigonometry', 'Quadratic Factorization', 'Pythagorean Theorem', 'Calculus Differentiation', 'Probability', 'System of Linear Equations', 'Calculus Integration'"
-    }
-  ],
-  "annotations": [
-    { "step": 1, "description": "What the student did", "status": "correct|wrong|consequence" }
-  ],
-  "errorSummary": "Overall summary of student's misconceptions",
-  "status": "Success"
-}
-
-If the image is unreadable:
-{
-  "studentName": "Unknown",
-  "totalScore": 0,
-  "mistakes": [],
-  "annotations": [],
-  "errorSummary": "Unreadable",
-  "status": "Manual Review Required"
-}`;
-
     // Process files in parallel batches
     const consolidatedGradingLogs = [];
 
@@ -242,34 +214,33 @@ If the image is unreadable:
       batchSize,
       async (file) => {
         try {
+          const imageValidation = validateUploadedImage(file);
+          if (!imageValidation.ok) {
+            const manualPayload = buildManualReviewPayload(imageValidation.reason, file.originalname || 'Unknown');
+            const savedManualDocument = new Submission({
+              studentName: manualPayload.studentName,
+              totalScore: manualPayload.totalScore,
+              mistakes: manualPayload.mistakes,
+              annotations: manualPayload.annotations,
+              errorSummary: manualPayload.errorSummary,
+              imageBase64: file.buffer?.toString("base64") || "",
+              status: manualPayload.status
+            });
+            await savedManualDocument.save();
+            return savedManualDocument;
+          }
+
           const imagePart = formatBufferToClaudePart(file.buffer, file.mimetype);
 
           // --- Single Step: Transcribe and Grade the image in one call ---
-          const gradingResult = await generateWithRetry(client, systemPrompt, imagePart);
+          const gradingResult = await generateWithRetry(client, GRADING_SYSTEM_PROMPT, imagePart);
 
           // Extract text from Claude response
-          const responseText = gradingResult.content[0].text;
-          
-          // Try to extract JSON from the response
-          let cleansedText = responseText
-            .replace(/```json/g, '')
-            .replace(/```/g, '')
-            .trim();
+          const responseText = gradingResult.content?.[0]?.text || '';
+          const parsedGradingPayload = parseAndNormalizeGradingResponse(responseText);
 
-          // If the response contains JSON, extract it
-          const jsonMatch = cleansedText.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            cleansedText = jsonMatch[0];
-          }
-
-          const parsedGradingPayload = JSON.parse(cleansedText);
-
-          // Fix: if Claude returned 'Unknown', make the name unique so multiple
-          // unreadable sheets don't overwrite each other in the DB.
-          let cleanName = parsedGradingPayload.studentName.trim();
-          if (!cleanName || cleanName.toLowerCase() === 'unknown') {
-            cleanName = `Unknown_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-          }
+          // Save entry block directly to MongoDB Atlas - Overwriting old records to keep only the latest
+          const cleanName = parsedGradingPayload.studentName.trim();
           const filter = { studentName: { $regex: new RegExp(`^${cleanName}$`, 'i') } };
           const update = {
             studentName: cleanName,
@@ -282,7 +253,13 @@ If the image is unreadable:
             createdAt: new Date()
           };
 
-          const savedDocument = await Submission.findOneAndUpdate(filter, update, { returnDocument: 'after', upsert: true });
+          const savedDocument = parsedGradingPayload.status === 'Success'
+            ? await Submission.findOneAndUpdate(
+                { studentName: { $regex: new RegExp(`^${escapeRegExp(cleanName)}$`, 'i') } },
+                update,
+                { returnDocument: 'after', upsert: true }
+              )
+            : await new Submission(update).save();
 
           return savedDocument;
         } catch (innerTaskError) {
@@ -291,6 +268,8 @@ If the image is unreadable:
             studentName: "Error File",
             totalScore: 0,
             mistakes: [],
+            annotations: [],
+            errorSummary: MANUAL_REVIEW_MESSAGE,
             status: "Manual Review Required"
           };
         }
@@ -365,7 +344,7 @@ export const fetchClassroomHeatmap = async (req, res) => {
 // HELPER: Merge multiple test submissions for the exact same student.
 // This properly maps multiple tests back into 20 unique students instead of duplicating them.
 const getAggregatedStudents = async () => {
-  const allSubmissions = await Submission.find().sort({ createdAt: 1 });
+  const allSubmissions = await Submission.find({ status: 'Success' }).sort({ createdAt: 1 });
   const studentMap = {};
   
   for (const s of allSubmissions) {
