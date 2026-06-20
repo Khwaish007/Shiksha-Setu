@@ -109,6 +109,16 @@ function App() {
     }
   };
 
+  const handleOpenSessionHistory = async () => {
+    try {
+      await refreshSessions();
+    } catch (error) {
+      console.error('Failed to refresh session history:', error);
+    } finally {
+      setShowSessionHistory(true);
+    }
+  };
+
   const isStudentsRoute = location.pathname.startsWith('/students');
   const isHomeRoute = location.pathname === '/';
 
@@ -131,7 +141,7 @@ function App() {
           </span>
           <button
             className="topbar-chip"
-            onClick={() => setShowSessionHistory(true)}
+            onClick={handleOpenSessionHistory}
           >
             History
           </button>

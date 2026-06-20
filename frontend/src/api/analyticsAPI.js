@@ -23,7 +23,7 @@ export const analyticsAPI = {
   },
 
   resumeGradingSession: async (sessionId) => {
-    const { data } = await axios.patch(`${API_BASE}/sessions/${sessionId}/resume`);
+    const { data } = await axios.post(`${API_BASE}/sessions/${sessionId}/resume`);
     return data;
   },
 

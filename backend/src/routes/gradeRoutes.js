@@ -41,6 +41,7 @@ router.post('/clear-submissions', clearSubmissions);
 router.post('/sessions', createGradingSession);
 router.get('/sessions', listGradingSessions);
 router.get('/sessions/:sessionId', getGradingSession);
+router.post('/sessions/:sessionId/resume', resumeGradingSession);
 router.patch('/sessions/:sessionId/resume', resumeGradingSession);
 router.delete('/sessions/:sessionId', deleteGradingSession);
 router.delete('/sessions/:sessionId/submissions', clearSessionSubmissions);
