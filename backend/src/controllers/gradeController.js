@@ -3,6 +3,7 @@ import GradingSession from '../models/GradingSession.js';
 import Submission from '../models/Submission.js';
 import Student from '../models/Student.js';
 import { refreshSessionStats } from '../utils/sessionStats.js';
+import { extractUsage, recordGradingRun } from '../utils/costTelemetry.js';
 import {
   buildManualReviewPayload,
   buildGradingSystemPrompt,
@@ -364,6 +365,11 @@ export const processWorksheets = async (req, res) => {
     const batchSize = Number(process.env.CLAUDE_BATCH_SIZE) || (process.env.VERCEL ? 2 : 5);
     const batchDelayMs = Number(process.env.CLAUDE_BATCH_DELAY_MS) || 1000;
 
+    const batchStartMs = Date.now();
+    let batchInputTokens = 0;
+    let batchOutputTokens = 0;
+    let batchSuccessCount = 0;
+
     const gradedResults = await processInBatches(
       files,
       batchSize,
@@ -383,6 +389,10 @@ export const processWorksheets = async (req, res) => {
           const gradingPrompt = buildGradingSystemPrompt(session.answerKey);
           const gradingResult = await generateWithRetry(client, gradingPrompt, imagePart);
 
+          const usage = extractUsage(gradingResult);
+          batchInputTokens += usage.inputTokens;
+          batchOutputTokens += usage.outputTokens;
+
           // Extract text from Claude response
           const responseText = gradingResult.content?.[0]?.text || '';
           const parsedGradingPayload = parseAndNormalizeGradingResponse(responseText);
@@ -400,6 +410,10 @@ export const processWorksheets = async (req, res) => {
                 { returnDocument: 'after', upsert: true }
               )
             : await new Submission(update).save();
+
+          if (parsedGradingPayload.status === 'Success') {
+            batchSuccessCount += 1;
+          }
 
           return savedDocument;
         } catch (innerTaskError) {
@@ -430,6 +444,21 @@ export const processWorksheets = async (req, res) => {
     }
 
     await refreshSessionStats(sessionId, 'batch');
+
+    const batchDurationMs = Date.now() - batchStartMs;
+    if (files.length > 0) {
+      await recordGradingRun({
+        sessionId,
+        worksheetsCount: files.length,
+        successCount: batchSuccessCount,
+        inputTokens: batchInputTokens,
+        outputTokens: batchOutputTokens,
+        durationMs: batchDurationMs,
+        batchSize,
+        source: 'batch',
+      });
+    }
+
     res.status(200).json(consolidatedGradingLogs);
 
   } catch (globalControllerError) {

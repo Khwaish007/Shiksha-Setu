@@ -13,6 +13,8 @@ import PeerBenchmarking from './PeerBenchmarking';
 import PerformanceStats from './PerformanceStats';
 import ClassMisconceptions from './ClassMisconceptions';
 import ReviewQueue from './ReviewQueue.jsx';
+import CostThroughputPanel from './CostThroughputPanel';
+import PilotScalePlan from './PilotScalePlan';
 import { analyticsAPI } from '../api/analyticsAPI';
 import { useI18n } from '../i18n.jsx';
 
@@ -27,7 +29,8 @@ const dashboardTabs = [
   { key: 'at-risk', labelKey: 'atRisk' },
   { key: 'strengths', labelKey: 'strengths' },
   { key: 'rankings', labelKey: 'rankings' },
-  { key: 'peers', labelKey: 'peerCompare' }
+  { key: 'peers', labelKey: 'peerCompare' },
+  { key: 'pilot', labelKey: 'pilotReadiness' }
 ];
 
 const Dashboard = ({ session }) => {
@@ -47,6 +50,8 @@ const Dashboard = ({ session }) => {
   const [classMisconceptions, setClassMisconceptions] = useState(null);
   const [reviewQueue, setReviewQueue] = useState([]);
   const [reteachSummary, setReteachSummary] = useState(null);
+  const [telemetry, setTelemetry] = useState(null);
+  const [pilotPlan, setPilotPlan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -55,7 +60,7 @@ const Dashboard = ({ session }) => {
 
     setLoading(true);
     try {
-      const [analyticsData, heatmap, recs, ranks, atRisk, strengths, classStr, peers, perfDist, misconceptions, reviews, reteach] = await Promise.all([
+      const [analyticsData, heatmap, recs, ranks, atRisk, strengths, classStr, peers, perfDist, misconceptions, reviews, reteach, telemetryData, planData] = await Promise.all([
         analyticsAPI.getClassAnalytics(sessionId),
         analyticsAPI.getHeatmapData(sessionId),
         analyticsAPI.getTopicRecommendations(sessionId),
@@ -67,7 +72,9 @@ const Dashboard = ({ session }) => {
         analyticsAPI.getPerformanceDistribution(sessionId),
         analyticsAPI.getClassMisconceptions(sessionId),
         analyticsAPI.getReviewQueue(sessionId),
-        analyticsAPI.getReteachTomorrowSummary(sessionId)
+        analyticsAPI.getReteachTomorrowSummary(sessionId),
+        analyticsAPI.getTelemetry(sessionId),
+        analyticsAPI.getPilotScalePlan(sessionId)
       ]);
 
       setAnalytics(analyticsData);
@@ -84,6 +91,8 @@ const Dashboard = ({ session }) => {
       setClassMisconceptions(misconceptions);
       setReviewQueue(reviews);
       setReteachSummary(reteach);
+      setTelemetry(telemetryData);
+      setPilotPlan(planData);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -144,6 +153,7 @@ const Dashboard = ({ session }) => {
       <main className="dashboard-content">
         {activeTab === 'overview' && analytics && (
           <div className="content-section">
+            <CostThroughputPanel telemetry={telemetry} compact />
             {/* Key Metrics */}
             <section className="metrics-grid">
               <MetricsCard
@@ -222,6 +232,13 @@ const Dashboard = ({ session }) => {
         {activeTab === 'peers' && peerBenchmarking && <PeerBenchmarking benchmarks={peerBenchmarking} />}
         {activeTab === 'stats' && performanceDistribution && <PerformanceStats distribution={performanceDistribution} />}
         {activeTab === 'misconceptions' && classMisconceptions && <ClassMisconceptions misconceptions={classMisconceptions} />}
+
+        {activeTab === 'pilot' && (
+          <div className="content-section">
+            <CostThroughputPanel telemetry={telemetry} />
+            <PilotScalePlan plan={pilotPlan} />
+          </div>
+        )}
       </main>
     </div>
   );

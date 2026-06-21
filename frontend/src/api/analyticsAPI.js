@@ -185,5 +185,15 @@ export const analyticsAPI = {
   updateParentPhone: async (studentId, parentPhone) => {
     const { data } = await axios.patch(`${STUDENTS_BASE}/${studentId}/parent-phone`, { parentPhone });
     return data;
+  },
+
+  getTelemetry: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/telemetry`, sessionParams(sessionId));
+    return data;
+  },
+
+  getPilotScalePlan: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/pilot-scale-plan`, sessionParams(sessionId));
+    return data;
   }
 };

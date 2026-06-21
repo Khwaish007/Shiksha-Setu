@@ -11,6 +11,7 @@ import {
   parseAndNormalizeGradingResponse,
   validateUploadedImage
 } from '../utils/gradingSafety.js';
+import { extractUsage, recordGradingRun } from '../utils/costTelemetry.js';
 
 // ─── Reused helpers from gradeController.js ─────────────────────────────────
 
@@ -240,13 +241,30 @@ export const gradeStudentTest = async (req, res) => {
     const imagePart = formatBufferToClaudePart(file.buffer, file.mimetype);
 
     const gradingPrompt = buildGradingSystemPrompt(activeSession?.answerKey);
+    const gradeStartMs = Date.now();
     const gradingResult = await generateWithRetry(client, gradingPrompt, imagePart);
+    const gradingUsage = extractUsage(gradingResult);
+
+    const recordStudentGradeTelemetry = async (successCount) => {
+      if (!sessionId) return;
+      await recordGradingRun({
+        sessionId,
+        worksheetsCount: 1,
+        successCount,
+        inputTokens: gradingUsage.inputTokens,
+        outputTokens: gradingUsage.outputTokens,
+        durationMs: Date.now() - gradeStartMs,
+        batchSize: 1,
+        source: 'student',
+      });
+    };
 
     const responseText = gradingResult.content?.[0]?.text || '';
     const parsed = parseAndNormalizeGradingResponse(responseText);
 
     if (parsed.status === 'Manual Review Required') {
       await recordManualReviewForSession(parsed.errorSummary);
+      await recordStudentGradeTelemetry(0);
       return res.status(200).json({
         status: parsed.status,
         message: parsed.errorSummary || MANUAL_REVIEW_MESSAGE,
@@ -256,6 +274,7 @@ export const gradeStudentTest = async (req, res) => {
 
     if (parsed.status === NEEDS_TEACHER_REVIEW_STATUS) {
       const reviewSubmission = await recordNeedsTeacherReviewForSession(parsed);
+      await recordStudentGradeTelemetry(0);
       return res.status(200).json({
         status: parsed.status,
         message: parsed.reviewReason || 'This grade needs teacher review before it is added to the student timeline.',
@@ -343,6 +362,8 @@ export const gradeStudentTest = async (req, res) => {
 
     // Return the saved test record (last in array)
     const savedTest = student.tests[student.tests.length - 1];
+
+    await recordStudentGradeTelemetry(1);
 
     res.status(200).json({
       message: 'Test graded successfully.',

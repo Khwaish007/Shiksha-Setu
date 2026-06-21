@@ -78,6 +78,21 @@ const gradingSessionSchema = new mongoose.Schema({
   lastAccessedAt: {
     type: Date,
     default: Date.now
+  },
+  telemetry: {
+    totalInputTokens: { type: Number, default: 0 },
+    totalOutputTokens: { type: Number, default: 0 },
+    totalWorksheetsGraded: { type: Number, default: 0 },
+    totalGradingDurationMs: { type: Number, default: 0 },
+    totalCostInr: { type: Number, default: 0 },
+    runCount: { type: Number, default: 0 },
+    lastBatchAt: { type: Date },
+    lastBatchWorksheets: { type: Number, default: 0 },
+    lastBatchDurationMs: { type: Number, default: 0 },
+    lastBatchInputTokens: { type: Number, default: 0 },
+    lastBatchOutputTokens: { type: Number, default: 0 },
+    lastBatchCostInr: { type: Number, default: 0 },
+    lastBatchThroughput: { type: Number, default: 0 },
   }
 }, {
   timestamps: true
