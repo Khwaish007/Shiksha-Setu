@@ -46,6 +46,7 @@ const Dashboard = ({ session }) => {
   const [performanceDistribution, setPerformanceDistribution] = useState(null);
   const [classMisconceptions, setClassMisconceptions] = useState(null);
   const [reviewQueue, setReviewQueue] = useState([]);
+  const [reteachSummary, setReteachSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -54,7 +55,7 @@ const Dashboard = ({ session }) => {
 
     setLoading(true);
     try {
-      const [analyticsData, heatmap, recs, ranks, atRisk, strengths, classStr, peers, perfDist, misconceptions, reviews] = await Promise.all([
+      const [analyticsData, heatmap, recs, ranks, atRisk, strengths, classStr, peers, perfDist, misconceptions, reviews, reteach] = await Promise.all([
         analyticsAPI.getClassAnalytics(sessionId),
         analyticsAPI.getHeatmapData(sessionId),
         analyticsAPI.getTopicRecommendations(sessionId),
@@ -65,7 +66,8 @@ const Dashboard = ({ session }) => {
         analyticsAPI.getPeerBenchmarking(sessionId),
         analyticsAPI.getPerformanceDistribution(sessionId),
         analyticsAPI.getClassMisconceptions(sessionId),
-        analyticsAPI.getReviewQueue(sessionId)
+        analyticsAPI.getReviewQueue(sessionId),
+        analyticsAPI.getReteachTomorrowSummary(sessionId)
       ]);
 
       setAnalytics(analyticsData);
@@ -81,6 +83,7 @@ const Dashboard = ({ session }) => {
       setPerformanceDistribution(perfDist);
       setClassMisconceptions(misconceptions);
       setReviewQueue(reviews);
+      setReteachSummary(reteach);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -207,7 +210,13 @@ const Dashboard = ({ session }) => {
         )}
 
 
-        {activeTab === 'at-risk' && atRiskStudents && <AtRiskStudents students={atRiskStudents} />}
+        {activeTab === 'at-risk' && atRiskStudents && (
+          <AtRiskStudents
+            students={atRiskStudents}
+            sessionId={sessionId}
+            reteachSummary={reteachSummary}
+          />
+        )}
         {activeTab === 'strengths' && studentStrengths && <StudentStrengths students={studentStrengths} />}
         {activeTab === 'class' && classStrengths && <ClassInsights classData={classStrengths} />}
         {activeTab === 'peers' && peerBenchmarking && <PeerBenchmarking benchmarks={peerBenchmarking} />}

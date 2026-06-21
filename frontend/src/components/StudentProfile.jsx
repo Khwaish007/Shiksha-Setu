@@ -5,6 +5,7 @@ import { analyticsAPI } from '../api/analyticsAPI';
 import ErrorDNA from './ErrorDNA';
 import GradingNoticeModal from './GradingNoticeModal.jsx';
 import ParentMessageModal from './ParentMessageModal';
+import InterventionPlanModal from './InterventionPlanModal';
 import { useI18n } from '../i18n.jsx';
 import '../styles/StudentProfile.css';
 
@@ -19,6 +20,8 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
   const [uploading, setUploading] = useState(false);
   const [expandedTests, setExpandedTests] = useState({});
   const [showParentModal, setShowParentModal] = useState(false);
+  const [interventionPlan, setInterventionPlan] = useState(null);
+  const [generatingPlan, setGeneratingPlan] = useState(false);
   const [gradingNotice, setGradingNotice] = useState(null);
 
   const fetchStudent = async () => {
@@ -83,6 +86,19 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
   }, [student]);
 
   const errorDNA = student?.errorDNA || [];
+
+  const handleGenerateInterventionPlan = async () => {
+    setGeneratingPlan(true);
+    try {
+      const plan = await analyticsAPI.generateStudentInterventionPlan(id);
+      setInterventionPlan(plan);
+    } catch (err) {
+      console.error('Failed to generate intervention plan:', err);
+      alert(t('interventionPlanFailed'));
+    } finally {
+      setGeneratingPlan(false);
+    }
+  };
 
   // ── Handlers ─────────────────────────────────────────────────────
 
@@ -193,6 +209,13 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
           <ParentMessageModal
             student={student}
             onClose={() => setShowParentModal(false)}
+          />
+        )}
+        {interventionPlan && (
+          <InterventionPlanModal
+            plan={interventionPlan}
+            onClose={() => setInterventionPlan(null)}
+            onPhoneSaved={(phone) => setStudent((s) => ({ ...s, parentPhone: phone }))}
           />
         )}
         {gradingNotice && (
@@ -314,6 +337,18 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
             <span className="sp-upload-icon">💬</span>
             <span>{t('notifyParent')}</span>
           </motion.button>
+
+          <motion.button
+            className="sp-intervention-btn"
+            onClick={handleGenerateInterventionPlan}
+            disabled={!student.tests?.length || generatingPlan}
+            title={student.tests?.length ? t('createInterventionPlan') : t('uploadAtLeastOneTestFirst')}
+            whileHover={{ scale: student.tests?.length && !generatingPlan ? 1.02 : 1, y: student.tests?.length && !generatingPlan ? -2 : 0 }}
+            whileTap={{ scale: student.tests?.length && !generatingPlan ? 0.98 : 1 }}
+          >
+            <span className="sp-upload-icon">📋</span>
+            <span>{generatingPlan ? t('generatingPlan') : t('createInterventionPlan')}</span>
+          </motion.button>
         </div>
       </section>
 
@@ -409,7 +444,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
                         </div>
                       </div>
 
-                      <div className="sp-test-card-right">
+                      <div className="sp-test-card-right">
                         {test.mistakes.length > 0 ? (
                           <button
                             className={`sp-test-expand-btn ${isExpanded ? 'expanded' : ''}`}

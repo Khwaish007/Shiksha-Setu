@@ -21,6 +21,10 @@ import {
 
 import { getPracticeTest } from '../controllers/practiceTestController.js';
 import {
+  generateSessionInterventionPlan,
+  getReteachTomorrowSummary,
+} from '../controllers/interventionController.js';
+import {
   clearAnswerKey,
   getAnswerKey,
   saveTypedAnswerKey,
@@ -97,5 +101,7 @@ router.get('/peer-benchmarking', fetchPeerBenchmarking);
 router.get('/performance-distribution', fetchPerformanceDistribution);
 router.get('/class-misconceptions', fetchClassMisconceptions);
 router.get('/practice-test/:concept', getPracticeTest);
+router.post('/intervention-plan', generateSessionInterventionPlan);
+router.get('/reteach-summary', getReteachTomorrowSummary);
 
 export default router;

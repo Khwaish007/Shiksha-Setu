@@ -165,5 +165,25 @@ export const analyticsAPI = {
   generateParentMessage: async (studentId, options) => {
     const { data } = await axios.post(`${STUDENTS_BASE}/${studentId}/parent-message`, options);
     return data;
+  },
+
+  generateSessionInterventionPlan: async (sessionId, studentName) => {
+    const { data } = await axios.post(`${API_BASE}/intervention-plan`, { studentName, sessionId });
+    return data;
+  },
+
+  generateStudentInterventionPlan: async (studentId) => {
+    const { data } = await axios.post(`${STUDENTS_BASE}/${studentId}/intervention-plan`);
+    return data;
+  },
+
+  getReteachTomorrowSummary: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/reteach-summary`, sessionParams(sessionId));
+    return data;
+  },
+
+  updateParentPhone: async (studentId, parentPhone) => {
+    const { data } = await axios.patch(`${STUDENTS_BASE}/${studentId}/parent-phone`, { parentPhone });
+    return data;
   }
 };

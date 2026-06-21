@@ -1,0 +1,270 @@
+.ip-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.ip-modal {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.ip-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem;
+  border-bottom: 1px solid #334155;
+}
+
+.ip-modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 0.25rem;
+}
+
+.ip-subtitle {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.ip-close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem;
+}
+
+.ip-close-btn:hover {
+  color: #f1f5f9;
+}
+
+.ip-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.ip-section {
+  margin-bottom: 1.5rem;
+}
+
+.ip-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin: 0 0 0.75rem;
+}
+
+.ip-action-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ip-action-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: rgba(51, 65, 85, 0.3);
+  border-radius: 0.5rem;
+  border-left: 3px solid #f59e0b;
+}
+
+.ip-concept-tag {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fcd34d;
+  text-transform: uppercase;
+}
+
+.ip-action-text {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.ip-concept-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ip-concept-card {
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 0.5rem;
+}
+
+.ip-concept-name {
+  font-weight: 600;
+  color: #fca5a5;
+  margin-bottom: 0.25rem;
+}
+
+.ip-concept-meta {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 0.5rem;
+}
+
+.ip-pdf-btn {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  color: #93c5fd;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.35rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ip-pdf-btn:hover {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+.ip-message-preview {
+  background: rgba(51, 65, 85, 0.4);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border: 1px solid #334155;
+}
+
+.ip-message-part {
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.ip-message-part.hindi-text {
+  font-family: 'Noto Sans Devanagari', sans-serif;
+}
+
+.ip-phone-section {
+  background: rgba(37, 211, 102, 0.05);
+  border: 1px solid rgba(37, 211, 102, 0.2);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.ip-phone-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #86efac;
+  margin-bottom: 0.5rem;
+}
+
+.ip-phone-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ip-phone-input {
+  flex: 1;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 0.4rem;
+  padding: 0.6rem 0.75rem;
+  color: #f1f5f9;
+  font-size: 0.9rem;
+}
+
+.ip-phone-input:focus {
+  outline: none;
+  border-color: #25D366;
+}
+
+.ip-save-phone-btn {
+  background: rgba(37, 211, 102, 0.15);
+  border: 1px solid rgba(37, 211, 102, 0.4);
+  color: #86efac;
+  padding: 0.6rem 1rem;
+  border-radius: 0.4rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ip-phone-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0.5rem 0 0;
+}
+
+.ip-modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #334155;
+}
+
+.ip-btn-secondary {
+  flex: 1;
+  padding: 0.75rem;
+  background: rgba(51, 65, 85, 0.5);
+  border: 1px solid #475569;
+  border-radius: 0.5rem;
+  color: #cbd5e1;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ip-btn-primary {
+  flex: 2;
+  padding: 0.75rem;
+  background: #25D366;
+  border: none;
+  border-radius: 0.5rem;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.ip-btn-primary:hover {
+  background: #20bd5a;
+}
+
+.ip-btn-primary:disabled,
+.ip-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .ip-phone-row {
+    flex-direction: column;
+  }
+
+  .ip-modal-footer {
+    flex-direction: column;
+  }
+}

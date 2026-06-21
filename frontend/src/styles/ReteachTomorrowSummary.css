@@ -1,0 +1,136 @@
+.reteach-summary-container {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(99, 102, 241, 0.05) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.reteach-summary-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.reteach-summary-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.reteach-summary-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #93c5fd;
+  margin: 0 0 0.35rem;
+}
+
+.reteach-summary-text {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.reteach-at-risk-badge {
+  margin-left: auto;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.reteach-focus-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.reteach-focus-item {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  border-left: 3px solid #64748b;
+}
+
+.reteach-focus-item.priority-very_high {
+  border-left-color: #ef4444;
+}
+
+.reteach-focus-item.priority-high {
+  border-left-color: #f59e0b;
+}
+
+.reteach-focus-item.priority-medium {
+  border-left-color: #eab308;
+}
+
+.reteach-focus-item.priority-low {
+  border-left-color: #22c55e;
+}
+
+.reteach-focus-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.reteach-focus-rank {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.reteach-focus-topic {
+  font-weight: 600;
+  color: #f1f5f9;
+  flex: 1;
+}
+
+.reteach-focus-pct {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #93c5fd;
+}
+
+.reteach-focus-action {
+  color: #94a3b8;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  margin: 0 0 0.5rem;
+}
+
+.reteach-focus-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.reteach-pdf-link {
+  background: none;
+  border: none;
+  color: #93c5fd;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.reteach-pdf-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .reteach-summary-header {
+    flex-wrap: wrap;
+  }
+
+  .reteach-at-risk-badge {
+    margin-left: 0;
+  }
+}

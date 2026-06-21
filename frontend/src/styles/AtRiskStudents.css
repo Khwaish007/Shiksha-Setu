@@ -198,6 +198,19 @@
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
+.action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.atrisk-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #94a3b8;
+  font-size: 1rem;
+}
+
 @media (max-width: 768px) {
   .atrisk-grid {
     grid-template-columns: 1fr;
