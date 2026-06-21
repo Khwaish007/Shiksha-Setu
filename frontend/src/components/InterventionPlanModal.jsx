@@ -4,7 +4,7 @@ import { analyticsAPI } from '../api/analyticsAPI';
 import { useI18n } from '../i18n.jsx';
 import '../styles/InterventionPlanModal.css';
 
-const InterventionPlanModal = ({ plan, sessionId, onClose, onPhoneSaved }) => {
+const InterventionPlanModal = ({ plan, onClose, onPhoneSaved }) => {
   const { t } = useI18n();
   const [parentPhone, setParentPhone] = useState(plan?.parentPhone || '');
   const [savingPhone, setSavingPhone] = useState(false);

@@ -13,6 +13,9 @@ import PeerBenchmarking from './PeerBenchmarking';
 import PerformanceStats from './PerformanceStats';
 import ClassMisconceptions from './ClassMisconceptions';
 import ReviewQueue from './ReviewQueue.jsx';
+import AccuracyReport from './AccuracyReport.jsx';
+import CostThroughputPanel from './CostThroughputPanel.jsx';
+import PilotScalePlan from './PilotScalePlan.jsx';
 import { analyticsAPI } from '../api/analyticsAPI';
 import { useI18n } from '../i18n.jsx';
 
@@ -48,6 +51,10 @@ const Dashboard = ({ session }) => {
   const [performanceDistribution, setPerformanceDistribution] = useState(null);
   const [classMisconceptions, setClassMisconceptions] = useState(null);
   const [reviewQueue, setReviewQueue] = useState([]);
+  const [accuracyReportData, setAccuracyReportData] = useState(null);
+  const [telemetry, setTelemetry] = useState(null);
+  const [pilotPlan, setPilotPlan] = useState(null);
+  const [reteachSummary, setReteachSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -56,7 +63,23 @@ const Dashboard = ({ session }) => {
 
     setLoading(true);
     try {
-      const [analyticsData, heatmap, recs, ranks, atRisk, strengths, classStr, peers, perfDist, misconceptions, reviews] = await Promise.all([
+      const [
+        analyticsData,
+        heatmap,
+        recs,
+        ranks,
+        atRisk,
+        strengths,
+        classStr,
+        peers,
+        perfDist,
+        misconceptions,
+        reviews,
+        accuracy,
+        telemetryData,
+        pilotData,
+        reteachData
+      ] = await Promise.all([
         analyticsAPI.getClassAnalytics(sessionId),
         analyticsAPI.getHeatmapData(sessionId),
         analyticsAPI.getTopicRecommendations(sessionId),
@@ -67,7 +90,11 @@ const Dashboard = ({ session }) => {
         analyticsAPI.getPeerBenchmarking(sessionId),
         analyticsAPI.getPerformanceDistribution(sessionId),
         analyticsAPI.getClassMisconceptions(sessionId),
-        analyticsAPI.getReviewQueue(sessionId)
+        analyticsAPI.getReviewQueue(sessionId),
+        analyticsAPI.getAccuracyReport(),
+        analyticsAPI.getTelemetry(sessionId),
+        analyticsAPI.getPilotScalePlan(sessionId),
+        analyticsAPI.getReteachTomorrowSummary(sessionId)
       ]);
 
       setAnalytics(analyticsData);
@@ -83,6 +110,10 @@ const Dashboard = ({ session }) => {
       setPerformanceDistribution(perfDist);
       setClassMisconceptions(misconceptions);
       setReviewQueue(reviews);
+      setAccuracyReportData(accuracy);
+      setTelemetry(telemetryData);
+      setPilotPlan(pilotData);
+      setReteachSummary(reteachData);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
