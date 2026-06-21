@@ -9,6 +9,10 @@ import {
   generateParentMessage,
   gradeStudentTest
 } from '../controllers/studentController.js';
+import {
+  generateStudentInterventionPlan,
+  updateParentPhone,
+} from '../controllers/interventionController.js';
 
 const router = express.Router();
 
@@ -34,6 +38,12 @@ router.get('/:id', getStudentById);
 
 // POST /api/students/:id/parent-message → generate Claude message
 router.post('/:id/parent-message', generateParentMessage);
+
+// POST /api/students/:id/intervention-plan → one-click intervention plan
+router.post('/:id/intervention-plan', generateStudentInterventionPlan);
+
+// PATCH /api/students/:id/parent-phone → save parent WhatsApp number
+router.patch('/:id/parent-phone', updateParentPhone);
 
 // POST /api/students/:id/grade → upload test image, AI grade, save to student
 router.post('/:id/grade', (req, res, next) => {

@@ -118,7 +118,8 @@ const studentSchema = new mongoose.Schema({
   riskTier: { type: String, enum: ['high', 'medium', 'low', 'unassessed'], default: 'unassessed' },
   riskReason: { type: String },
   riskRecommendedAction: { type: String },
-  riskUpdatedAt: { type: Date }
+  riskUpdatedAt: { type: Date },
+  parentPhone: { type: String, trim: true, default: '' }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

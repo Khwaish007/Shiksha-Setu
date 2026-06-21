@@ -1,0 +1,142 @@
+.ctp-container {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(59, 130, 246, 0.04) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.ctp-container.ctp-compact {
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ctp-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.ctp-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #6ee7b7;
+  margin: 0;
+  flex: 1;
+}
+
+.ctp-subtitle {
+  width: 100%;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  margin: 0;
+  order: 3;
+}
+
+.ctp-live-badge {
+  background: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  animation: ctp-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ctp-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.ctp-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.ctp-compact .ctp-metrics-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.ctp-metric-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  text-align: center;
+}
+
+.ctp-metric-card.highlight {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.ctp-compact .ctp-metric-card {
+  padding: 0.75rem;
+}
+
+.ctp-metric-icon {
+  font-size: 1.25rem;
+  margin-bottom: 0.35rem;
+}
+
+.ctp-metric-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1.2;
+}
+
+.ctp-compact .ctp-metric-value {
+  font-size: 1.25rem;
+}
+
+.ctp-metric-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ctp-metric-detail {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
+
+.ctp-last-batch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(51, 65, 85, 0.3);
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.ctp-last-batch-label {
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.ctp-pricing-note {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .ctp-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

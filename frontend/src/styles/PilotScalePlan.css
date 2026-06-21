@@ -1,0 +1,195 @@
+.psp-container {
+  max-width: 900px;
+}
+
+.psp-header {
+  margin-bottom: 1.5rem;
+}
+
+.psp-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #93c5fd;
+  margin: 0 0 0.35rem;
+}
+
+.psp-subtitle {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.psp-live-metrics {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.psp-live-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6ee7b7;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.psp-live-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.psp-live-item {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.psp-live-item strong {
+  display: block;
+  font-size: 1.25rem;
+  color: #f1f5f9;
+  margin-bottom: 0.15rem;
+}
+
+.psp-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.psp-section {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+
+.psp-section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0 0 1rem;
+}
+
+.psp-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.psp-list li {
+  margin-bottom: 0.35rem;
+}
+
+.psp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.psp-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  color: #cbd5e1;
+}
+
+.psp-table-label {
+  font-weight: 500;
+  color: #e2e8f0;
+  width: 40%;
+}
+
+.psp-table-value {
+  font-weight: 700;
+  color: #6ee7b7;
+  width: 15%;
+  white-space: nowrap;
+}
+
+.psp-table-note {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.psp-row-highlight .psp-table-label,
+.psp-row-highlight .psp-table-value {
+  color: #fcd34d;
+}
+
+.psp-phases {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.psp-phase-card {
+  padding: 1rem;
+  background: rgba(51, 65, 85, 0.25);
+  border-radius: 0.5rem;
+  border-left: 3px solid #6366f1;
+}
+
+.psp-phase-header {
+  font-weight: 600;
+  color: #a5b4fc;
+  margin-bottom: 0.35rem;
+}
+
+.psp-phase-schools {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+}
+
+.psp-phase-goal {
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.psp-credibility {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 0.5rem;
+}
+
+.psp-credibility p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .psp-live-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .psp-table-label,
+  .psp-table-value,
+  .psp-table-note {
+    display: block;
+    width: 100%;
+  }
+
+  .psp-table td {
+    padding: 0.5rem 0;
+    border-bottom: none;
+  }
+
+  .psp-table tr {
+    display: block;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  }
+}

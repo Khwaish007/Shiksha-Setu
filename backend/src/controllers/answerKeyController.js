@@ -4,6 +4,7 @@ import {
   ANSWER_KEY_TRANSCRIPTION_PROMPT,
   MANUAL_REVIEW_MESSAGE,
   formatBufferToClaudePart,
+  normalizeMimeType,
   parseAndNormalizeAnswerKeyResponse,
   parseTypedAnswerKey,
   validateUploadedImage
@@ -88,7 +89,10 @@ export const transcribeModelWorksheet = async (req, res) => {
         {
           role: 'user',
           content: [
-            formatBufferToClaudePart(file.buffer, file.mimetype),
+            formatBufferToClaudePart(
+              file.buffer,
+              imageValidation.mimeType || normalizeMimeType(file.mimetype)
+            ),
             {
               type: 'text',
               text: 'Transcribe this filled model worksheet into the answer-key JSON format.'

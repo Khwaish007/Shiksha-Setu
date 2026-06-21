@@ -184,10 +184,20 @@
   white-space: nowrap;
 }
 
+/* ═══════ Grading Section (answer key + upload) ═══════ */
+
+.sp-grading-section {
+  margin-bottom: 28px;
+}
+
+.sp-grading-section .answer-key-card {
+  margin-bottom: 1rem;
+}
+
 /* ═══════ Action Section ═══════ */
 
 .sp-action-section {
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 .sp-action-row {
@@ -248,6 +258,34 @@
 }
 
 .sp-notify-parent-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.sp-intervention-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-radius: 18px;
+  border: 2px dashed rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(249, 115, 22, 0.06));
+  color: #f8fafc;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sp-intervention-btn:hover:not(:disabled) {
+  border-color: rgba(245, 158, 11, 0.55);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(249, 115, 22, 0.1));
+  box-shadow: 0 8px 32px rgba(245, 158, 11, 0.12);
+}
+
+.sp-intervention-btn:disabled {
   cursor: not-allowed;
   opacity: 0.45;
 }
