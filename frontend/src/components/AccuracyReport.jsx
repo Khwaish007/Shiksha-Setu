@@ -15,6 +15,15 @@ const formatDate = (value) => {
   });
 };
 
+const getErrorMessage = (error, fallback) => {
+  const responseError = error?.response?.data?.error || error?.response?.data || error?.message;
+  if (!responseError) return fallback;
+  if (typeof responseError === 'string') return responseError;
+  if (typeof responseError.message === 'string') return responseError.message;
+  if (typeof responseError.code === 'string') return `${responseError.code}: ${fallback}`;
+  return fallback;
+};
+
 function AccuracyReport({ benchmark, report, onReportUpdated }) {
   const { t } = useI18n();
   const [isRunning, setIsRunning] = useState(false);
@@ -25,11 +34,12 @@ function AccuracyReport({ benchmark, report, onReportUpdated }) {
     setError('');
 
     try {
-      const nextReport = await analyticsAPI.runAccuracyReport({ maxCases: 12, mode });
+      const maxCases = mode === 'live' ? 4 : 12;
+      const nextReport = await analyticsAPI.runAccuracyReport({ maxCases, mode });
       await onReportUpdated?.(nextReport);
     } catch (runError) {
       console.error('Accuracy benchmark failed:', runError);
-      setError(runError.response?.data?.error || t('accuracyRunFailed'));
+      setError(getErrorMessage(runError, t('accuracyRunFailed')));
     } finally {
       setIsRunning(false);
     }

@@ -20,8 +20,11 @@ export const getLatestAccuracyReport = async (req, res) => {
 
 export const runAccuracyReport = async (req, res) => {
   try {
-    const maxCases = Number(req.body?.maxCases || req.query?.maxCases || 12);
     const mode = req.body?.mode === 'mock' || req.query?.mode === 'mock' ? 'mock' : 'live';
+    const requestedMaxCases = Number(req.body?.maxCases || req.query?.maxCases || 12);
+    const maxCases = mode === 'live'
+      ? Math.min(Math.max(1, requestedMaxCases || 4), 4)
+      : Math.min(Math.max(1, requestedMaxCases || 12), 12);
     const reportPayload = await runAccuracyBenchmark({ maxCases, mode });
     const savedReport = await AccuracyReport.create(reportPayload);
 

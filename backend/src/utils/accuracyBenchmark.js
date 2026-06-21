@@ -278,6 +278,8 @@ export const runAccuracyBenchmark = async ({ maxCases = 12, mode = 'live' } = {}
     mode,
     notes: mode === 'mock'
       ? 'Mock mode is for UI checks only. Use live mode before presenting accuracy claims.'
+      : selectedCases.length < manifest.cases.length
+      ? `Live Vercel-safe benchmark sample run through the same Claude grading prompt used by uploads (${selectedCases.length}/${manifest.cases.length} labeled cases). Run the backend CLI for the full benchmark.`
       : 'Live benchmark run through the same Claude grading prompt used by uploads.'
   });
 };
