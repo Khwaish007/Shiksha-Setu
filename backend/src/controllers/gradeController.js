@@ -1,63 +1,14 @@
-import Anthropic from '@anthropic-ai/sdk';
 import GradingSession from '../models/GradingSession.js';
 import Submission from '../models/Submission.js';
 import Student from '../models/Student.js';
 import { refreshSessionStats } from '../utils/sessionStats.js';
-import { extractUsage, recordGradingRun } from '../utils/costTelemetry.js';
+import { recordGradingRun } from '../utils/costTelemetry.js';
+import { executeWorksheetGrading } from '../utils/gradingPipeline.js';
 import {
-  buildManualReviewPayload,
-  buildGradingSystemPrompt,
   escapeRegExp,
   MANUAL_REVIEW_MESSAGE,
   NEEDS_TEACHER_REVIEW_STATUS,
-  normalizeMimeType,
-  parseAndNormalizeGradingResponse,
-  validateUploadedImage
 } from '../utils/gradingSafety.js';
-
-// Helper function to format image buffer data into valid input for Claude SDK
-const formatBufferToClaudePart = (buffer, mimeType) => {
-  return {
-    type: "image",
-    source: {
-      type: "base64",
-      media_type: mimeType,
-      data: buffer.toString("base64")
-    }
-  };
-};
-
-// Helper to automatically retry API calls when rate-limited (429 Quota Exceeded)
-const generateWithRetry = async (client, systemPrompt, imageData, maxRetries = 3) => {
-  let delayMs = 15000; // Wait 15 seconds if we hit a rate limit
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await client.messages.create({
-        model: "claude-opus-4-1-20250805",
-        max_tokens: 4096,
-        system: systemPrompt,
-        messages: [
-          {
-            role: "user",
-            content: [imageData, {
-              type: "text",
-              text: "Please analyze this worksheet image and provide the grading results in JSON format."
-            }]
-          }
-        ]
-      });
-    } catch (error) {
-      const isRateLimit = error.status === 429 || (error.message && error.message.includes('429'));
-      if (isRateLimit && i < maxRetries - 1) {
-        console.warn(`[429 Quota Exceeded] Server too busy. Retrying in ${delayMs / 1000} seconds... (Attempt ${i + 1} of ${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        delayMs += 10000; // Increase exponentially if it fails again
-        continue;
-      }
-      throw error;
-    }
-  }
-};
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -358,9 +309,6 @@ export const processWorksheets = async (req, res) => {
       return res.status(200).json(consolidatedGradingLogs);
     }
 
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-    // Process files in parallel batches
     const consolidatedGradingLogs = [];
 
     const batchSize = Number(process.env.CLAUDE_BATCH_SIZE) || (process.env.VERCEL ? 2 : 5);
@@ -376,33 +324,13 @@ export const processWorksheets = async (req, res) => {
       batchSize,
       async (file) => {
         try {
-          const imageValidation = validateUploadedImage(file);
-          if (!imageValidation.ok) {
-            const manualPayload = buildManualReviewPayload(imageValidation.reason, file.originalname || 'Unknown');
-            const savedManualDocument = new Submission(buildSubmissionUpdate(sessionId, manualPayload));
-            await savedManualDocument.save();
-            return savedManualDocument;
-          }
+          const gradeResult = await executeWorksheetGrading(file, session.answerKey);
+          const parsedGradingPayload = gradeResult.payload;
 
-          const imagePart = formatBufferToClaudePart(
-            file.buffer,
-            imageValidation.mimeType || normalizeMimeType(file.mimetype)
-          );
+          batchInputTokens += gradeResult.usage.inputTokens;
+          batchOutputTokens += gradeResult.usage.outputTokens;
 
-          // --- Single Step: Transcribe and Grade the image in one call ---
-          const gradingPrompt = buildGradingSystemPrompt(session.answerKey);
-          const gradingResult = await generateWithRetry(client, gradingPrompt, imagePart);
-
-          const usage = extractUsage(gradingResult);
-          batchInputTokens += usage.inputTokens;
-          batchOutputTokens += usage.outputTokens;
-
-          // Extract text from Claude response
-          const responseText = gradingResult.content?.[0]?.text || '';
-          const parsedGradingPayload = parseAndNormalizeGradingResponse(responseText);
-
-          // Save entry block directly to MongoDB Atlas - Overwriting old records to keep only the latest
-          const cleanName = parsedGradingPayload.studentName.trim();
+          const cleanName = (parsedGradingPayload.studentName || file.originalname || 'Unknown').trim();
           const update = buildSubmissionUpdate(sessionId, parsedGradingPayload, {
             studentName: cleanName
           });

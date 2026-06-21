@@ -6,6 +6,7 @@ import ErrorDNA from './ErrorDNA';
 import GradingNoticeModal from './GradingNoticeModal.jsx';
 import ParentMessageModal from './ParentMessageModal';
 import InterventionPlanModal from './InterventionPlanModal';
+import AnswerKeyPanel from './AnswerKeyPanel';
 import { useI18n } from '../i18n.jsx';
 import '../styles/StudentProfile.css';
 
@@ -106,51 +107,82 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!sessionId) {
+      setGradingNotice({
+        type: 'error',
+        title: t('sessionLoadingTitle'),
+        message: t('sessionLoadingMessage'),
+      });
+      return;
+    }
+
     setUploading(true);
     try {
       const result = await analyticsAPI.gradeStudentTest(id, file, sessionId);
       if (result.status === 'Manual Review Required') {
         setGradingNotice({
           type: 'manual',
-          detail: result.message || result.errorSummary
+          detail: result.message || result.errorSummary || t('batchManualDetail'),
         });
+        onSessionUpdated?.();
         return;
       }
       if (result.status === 'Needs Teacher Review') {
         onSessionUpdated?.();
         setGradingNotice({
           type: 'review',
-          detail: result.message || result.reviewReason || t('studentReviewDetail')
+          detail: result.message || result.reviewReason || t('studentReviewDetail'),
         });
         return;
       }
-      // Refresh student data to show new test
       await fetchStudent();
       onSessionUpdated?.();
       setGradingNotice({
         type: 'success',
-        message: 'This test was graded successfully and added to the student timeline.'
+        message: t('studentGradeSuccess'),
       });
     } catch (error) {
-      const message = error.response?.data?.message || error.response?.data?.error || 'Failed to process the test. Please try again.';
-      if (error.response?.status === 422 || error.response?.data?.status === 'Manual Review Required') {
+      const message = error.response?.data?.message || error.response?.data?.error || t('uploadFailed');
+      const status = error.response?.status;
+      if (status === 413) {
+        setGradingNotice({
+          type: 'error',
+          title: t('fileTooLarge'),
+          message: t('smallerImage'),
+        });
+      } else if (status === 504 || error.code === 'ECONNABORTED') {
+        setGradingNotice({
+          type: 'error',
+          title: t('gradingTimedOut'),
+          message: t('smallerBatch'),
+        });
+      } else if (status === 422 || error.response?.data?.status === 'Manual Review Required') {
         setGradingNotice({
           type: 'manual',
-          detail: message
+          detail: message,
         });
+        onSessionUpdated?.();
       } else {
         console.error('Failed to grade test:', error);
         setGradingNotice({
           type: 'error',
-          title: 'Grading failed',
-          message
+          title: t('uploadFailed'),
+          message,
         });
       }
     } finally {
       setUploading(false);
-      // Reset file input
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+
+  const handleAnswerKeyNotice = (notice) => {
+    if (!notice) return;
+    if (notice.type === 'success') {
+      setGradingNotice({ type: 'success', message: notice.message });
+      return;
+    }
+    setGradingNotice(notice);
   };
 
   const toggleTestExpand = (testKey) => {
@@ -295,8 +327,11 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
         </div>
       </section>
 
-      {/* ═══════ SECTION 2: Action Buttons ═══════ */}
-      <section className="sp-action-section">
+      {/* ═══════ SECTION 2: Answer Key + Upload ═══════ */}
+      <section className="sp-grading-section">
+        <AnswerKeyPanel sessionId={sessionId} onNotice={handleAnswerKeyNotice} compact />
+
+        <div className="sp-action-section">
         <input
           ref={fileInputRef}
           type="file"
@@ -349,6 +384,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
             <span className="sp-upload-icon">📋</span>
             <span>{generatingPlan ? t('generatingPlan') : t('createInterventionPlan')}</span>
           </motion.button>
+        </div>
         </div>
       </section>
 

@@ -308,6 +308,10 @@ const translations = {
     save: 'Save',
     saving: 'Saving...',
 
+    gradingUsesAnswerKey: 'Grading will use the saved answer key as ground truth for this session.',
+    gradingUsesLlmKnowledge: 'No answer key yet — Claude will grade using its own mathematical knowledge.',
+    studentGradeSuccess: 'Test graded successfully and added to the student timeline.',
+
     pilotReadiness: 'Pilot & Scale',
     costThroughput: 'Cost & Throughput',
     costThroughputLive: 'Live metrics from your batch grading runs',
@@ -647,6 +651,10 @@ const translations = {
     save: 'सहेजें',
     saving: 'सहेज रहे हैं...',
 
+    gradingUsesAnswerKey: 'जाँच इस सत्र की सहेजी गई उत्तर कुंजी को सही मानकर करेगी।',
+    gradingUsesLlmKnowledge: 'अभी कोई उत्तर कुंजी नहीं — Claude अपने गणित ज्ञान से जाँच करेगा।',
+    studentGradeSuccess: 'टेस्ट सफलतापूर्वक जाँची गई और छात्र टाइमलाइन में जोड़ दी गई।',
+
     pilotReadiness: 'पायलट और स्केल',
     costThroughput: 'लागत और थ्रूपुट',
     costThroughputLive: 'आपके बैच ग्रेडिंग रन से लाइव मेट्रिक्स',
@@ -981,6 +989,10 @@ const translations = {
     noAtRiskStudents: 'या सत्रात जोखम असलेले विद्यार्थी नाहीत. छान!',
     save: 'जतन करा',
     saving: 'जतन होत आहे...',
+
+    gradingUsesAnswerKey: 'या सत्रातील जतन केलेल्या उत्तरकुंजीवरून तपासणी होईल.',
+    gradingUsesLlmKnowledge: 'अद्याप उत्तरकुंजी नाही — Claude स्वतःच्या गणित ज्ञानाने तपासेल.',
+    studentGradeSuccess: 'चाचणी यशस्वीरित्या तपासली आणि विद्यार्थी टाइमलाइनमध्ये जोडली.',
 
     pilotReadiness: 'पायलट आणि स्केल',
     costThroughput: 'खर्च आणि थ्रूपुट',

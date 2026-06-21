@@ -4,57 +4,12 @@ import Submission from '../models/Submission.js';
 import GradingSession from '../models/GradingSession.js';
 import { refreshSessionStats } from '../utils/sessionStats.js';
 import {
-  buildGradingSystemPrompt,
   escapeRegExp,
   MANUAL_REVIEW_MESSAGE,
   NEEDS_TEACHER_REVIEW_STATUS,
-  normalizeMimeType,
-  parseAndNormalizeGradingResponse,
-  validateUploadedImage
 } from '../utils/gradingSafety.js';
-import { extractUsage, recordGradingRun } from '../utils/costTelemetry.js';
-
-// ─── Reused helpers from gradeController.js ─────────────────────────────────
-
-const formatBufferToClaudePart = (buffer, mimeType) => ({
-  type: "image",
-  source: {
-    type: "base64",
-    media_type: mimeType,
-    data: buffer.toString("base64")
-  }
-});
-
-const generateWithRetry = async (client, systemPrompt, imageData, maxRetries = 3) => {
-  let delayMs = 15000;
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await client.messages.create({
-        model: "claude-opus-4-1-20250805",
-        max_tokens: 4096,
-        system: systemPrompt,
-        messages: [
-          {
-            role: "user",
-            content: [imageData, {
-              type: "text",
-              text: "Please analyze this worksheet image and provide the grading results in JSON format."
-            }]
-          }
-        ]
-      });
-    } catch (error) {
-      const isRateLimit = error.status === 429 || (error.message && error.message.includes('429'));
-      if (isRateLimit && i < maxRetries - 1) {
-        console.warn(`[429] Rate limited. Retrying in ${delayMs / 1000}s... (Attempt ${i + 1}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        delayMs += 10000;
-        continue;
-      }
-      throw error;
-    }
-  }
-};
+import { recordGradingRun } from '../utils/costTelemetry.js';
+import { executeWorksheetGrading } from '../utils/gradingPipeline.js';
 
 const getRequestSessionId = (req) => (
   req.params?.sessionId ||
@@ -165,16 +120,15 @@ export const gradeStudentTest = async (req, res) => {
     }
 
     const sessionId = getRequestSessionId(req);
-    const activeSession = sessionId
-      ? await GradingSession.findOneAndUpdate(
-          { sessionId },
-          { lastAccessedAt: new Date() },
-          { new: true }
-        )
-      : null;
+    const activeSession = sessionId ? await GradingSession.findOne({ sessionId }) : null;
 
     if (sessionId && !activeSession) {
       return res.status(404).json({ error: 'Grading session not found.' });
+    }
+
+    if (activeSession) {
+      activeSession.lastAccessedAt = new Date();
+      await activeSession.save();
     }
 
     const recordManualReviewForSession = async (reason) => {
@@ -228,26 +182,8 @@ export const gradeStudentTest = async (req, res) => {
       return res.status(400).json({ error: 'No image file uploaded.' });
     }
 
-    const imageValidation = validateUploadedImage(file);
-    if (!imageValidation.ok) {
-      await recordManualReviewForSession(imageValidation.reason);
-      return res.status(200).json({
-        status: 'Manual Review Required',
-        message: imageValidation.reason || MANUAL_REVIEW_MESSAGE,
-        errorSummary: imageValidation.reason || MANUAL_REVIEW_MESSAGE
-      });
-    }
-
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const imagePart = formatBufferToClaudePart(
-      file.buffer,
-      imageValidation.mimeType || normalizeMimeType(file.mimetype)
-    );
-
-    const gradingPrompt = buildGradingSystemPrompt(activeSession?.answerKey);
-    const gradeStartMs = Date.now();
-    const gradingResult = await generateWithRetry(client, gradingPrompt, imagePart);
-    const gradingUsage = extractUsage(gradingResult);
+    const gradeResult = await executeWorksheetGrading(file, activeSession?.answerKey);
+    const parsed = gradeResult.payload;
 
     const recordStudentGradeTelemetry = async (successCount) => {
       if (!sessionId) return;
@@ -255,16 +191,13 @@ export const gradeStudentTest = async (req, res) => {
         sessionId,
         worksheetsCount: 1,
         successCount,
-        inputTokens: gradingUsage.inputTokens,
-        outputTokens: gradingUsage.outputTokens,
-        durationMs: Date.now() - gradeStartMs,
+        inputTokens: gradeResult.usage.inputTokens,
+        outputTokens: gradeResult.usage.outputTokens,
+        durationMs: gradeResult.durationMs,
         batchSize: 1,
         source: 'student',
       });
     };
-
-    const responseText = gradingResult.content?.[0]?.text || '';
-    const parsed = parseAndNormalizeGradingResponse(responseText);
 
     if (parsed.status === 'Manual Review Required') {
       await recordManualReviewForSession(parsed.errorSummary);

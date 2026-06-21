@@ -184,10 +184,20 @@
   white-space: nowrap;
 }
 
+/* ═══════ Grading Section (answer key + upload) ═══════ */
+
+.sp-grading-section {
+  margin-bottom: 28px;
+}
+
+.sp-grading-section .answer-key-card {
+  margin-bottom: 1rem;
+}
+
 /* ═══════ Action Section ═══════ */
 
 .sp-action-section {
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 .sp-action-row {
