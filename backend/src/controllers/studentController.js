@@ -4,8 +4,8 @@ import Submission from '../models/Submission.js';
 import GradingSession from '../models/GradingSession.js';
 import { refreshSessionStats } from '../utils/sessionStats.js';
 import {
+  buildGradingSystemPrompt,
   escapeRegExp,
-  GRADING_SYSTEM_PROMPT,
   MANUAL_REVIEW_MESSAGE,
   parseAndNormalizeGradingResponse,
   validateUploadedImage
@@ -206,7 +206,8 @@ export const gradeStudentTest = async (req, res) => {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const imagePart = formatBufferToClaudePart(file.buffer, file.mimetype);
 
-    const gradingResult = await generateWithRetry(client, GRADING_SYSTEM_PROMPT, imagePart);
+    const gradingPrompt = buildGradingSystemPrompt(activeSession?.answerKey);
+    const gradingResult = await generateWithRetry(client, gradingPrompt, imagePart);
 
     const responseText = gradingResult.content?.[0]?.text || '';
     const parsed = parseAndNormalizeGradingResponse(responseText);

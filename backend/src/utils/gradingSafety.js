@@ -10,19 +10,16 @@ export const ALLOWED_IMAGE_TYPES = new Set([
   'image/gif'
 ]);
 
-const MATH_CONCEPTS = new Set([
-  'Linear Equations',
-  'Area Calculation',
-  'Trigonometry',
-  'Quadratic Factorization',
-  'Pythagorean Theorem',
-  'Calculus Differentiation',
-  'Probability',
-  'System of Linear Equations',
-  'Calculus Integration'
-]);
+export const formatBufferToClaudePart = (buffer, mimeType) => ({
+  type: 'image',
+  source: {
+    type: 'base64',
+    media_type: mimeType,
+    data: buffer.toString('base64')
+  }
+});
 
-export const GRADING_SYSTEM_PROMPT = `You are an expert school teacher evaluating uploaded handwritten mathematics tests.
+const BASE_GRADING_INSTRUCTIONS = `You are an expert school teacher evaluating uploaded handwritten school tests.
 Your ONLY task is to decide whether the image is a gradable mathematics test and return valid JSON. Return nothing except JSON.
 
 Before grading, perform an eligibility check. Mark the submission as manual review if ANY of these are true:
@@ -35,20 +32,21 @@ Before grading, perform an eligibility check. Mark the submission as manual revi
 CRITICAL RULES:
 1. Return ONLY a valid JSON object. Do NOT include markdown, code fences, explanations, or text outside JSON.
 2. The JSON must be parseable by JSON.parse() in JavaScript.
-3. There are 10 questions total. Each question is worth 10 points.
-4. If and only if the submission is clearly a gradable mathematics test, calculate the score based on correct answers.
-5. For every ungradable upload, use "gradingDecision": "manual_review", "status": "Manual Review Required", "totalScore": 0, an empty mistakes array, and the teacher-facing error message in "errorSummary".
-6. Never invent a score, student name, question, or math work for an ungradable upload.
+3. If an answer key is provided below, grade ONLY against that answer key. Do not guess a different correct answer.
+4. If an answer key is provided, infer the score from the key's points. Convert the earned points to a 0-100 percentage.
+5. If no answer key is provided, grade only when the worksheet itself clearly includes enough information to judge correctness.
+6. For every ungradable upload, use "gradingDecision": "manual_review", "status": "Manual Review Required", "totalScore": 0, an empty mistakes array, and the teacher-facing error message in "errorSummary".
+7. Never invent a score, student name, question, or math work for an ungradable upload.
 
 Return EXACTLY this structure for a gradable mathematics test:
 {
   "gradingDecision": "graded",
   "studentName": "Extract the exact name written (e.g. 'Student_12'), otherwise 'Unknown'",
-  "totalScore": <number between 0-100, where each correct answer = 10 points>,
+  "totalScore": <number between 0-100, as a percentage of earned points>,
   "mistakes": [
     {
       "questionNumber": "Q1",
-      "conceptMissed": "One of: 'Linear Equations', 'Area Calculation', 'Trigonometry', 'Quadratic Factorization', 'Pythagorean Theorem', 'Calculus Differentiation', 'Probability', 'System of Linear Equations', 'Calculus Integration'"
+      "conceptMissed": "The topic or skill from the answer key, or a concise inferred math concept"
     }
   ],
   "misconception_patterns": [
@@ -68,6 +66,73 @@ Return EXACTLY this structure for unreadable, non-mathematics, incomplete, or ga
   "errorSummary": "${MANUAL_REVIEW_MESSAGE}",
   "status": "Manual Review Required"
 }`;
+
+export const ANSWER_KEY_TRANSCRIPTION_PROMPT = `You are helping a teacher create a grading answer key from one filled model mathematics worksheet.
+Return ONLY valid JSON. Do not include markdown or text outside JSON.
+
+If the image is unreadable, not a mathematics worksheet, blank, or does not contain a filled model solution, return:
+{
+  "status": "Manual Review Required",
+  "errorSummary": "${MANUAL_REVIEW_MESSAGE}",
+  "questions": []
+}
+
+If it is readable, transcribe the answer key into this exact structure:
+{
+  "status": "Success",
+  "title": "Short worksheet title if visible, otherwise Mathematics Worksheet",
+  "questions": [
+    {
+      "questionNumber": "Q1",
+      "expectedAnswer": "Final answer and essential work/steps visible in the model worksheet",
+      "points": 10,
+      "concept": "Specific topic or skill tested",
+      "rubric": "Short note on what should receive credit"
+    }
+  ]
+}
+
+Rules:
+- Include every numbered question you can read.
+- Use the question numbering written on the page.
+- If point values are visible, use them. Otherwise assign 10 points per question.
+- Do not solve new questions yourself beyond what is visible in the filled model worksheet.
+- If any answer is unclear, mention that uncertainty in the expectedAnswer or rubric.`;
+
+const hasUsableAnswerKey = (answerKey) => (
+  answerKey &&
+  Array.isArray(answerKey.questions) &&
+  answerKey.questions.length > 0
+);
+
+export const buildGradingSystemPrompt = (answerKey) => {
+  if (!hasUsableAnswerKey(answerKey)) {
+    return `${BASE_GRADING_INSTRUCTIONS}
+
+No teacher answer key was provided for this session. Use your best judgment only if the worksheet is clearly gradable.`;
+  }
+
+  const compactKey = {
+    source: answerKey.source || 'typed',
+    totalPoints: answerKey.totalPoints,
+    questions: answerKey.questions.map((question) => ({
+      questionNumber: question.questionNumber,
+      expectedAnswer: question.expectedAnswer,
+      points: question.points,
+      concept: question.concept,
+      rubric: question.rubric
+    }))
+  };
+
+  return `${BASE_GRADING_INSTRUCTIONS}
+
+TEACHER ANSWER KEY - ground truth for this session:
+${JSON.stringify(compactKey, null, 2)}
+
+Use the key above as the sole source of correctness. The student worksheet may have a different layout, handwriting, or extra scratch work, but grade against these question numbers and expected answers.`;
+};
+
+export const GRADING_SYSTEM_PROMPT = buildGradingSystemPrompt(null);
 
 export const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -156,6 +221,103 @@ export const extractJsonObject = (responseText = '') => {
   return JSON.parse(cleansedText);
 };
 
+const normalizeQuestionNumber = (value, fallbackIndex) => {
+  const raw = String(value || '').trim();
+  if (raw) return raw.toUpperCase().startsWith('Q') ? raw.toUpperCase() : `Q${raw}`;
+  return `Q${fallbackIndex + 1}`;
+};
+
+export const normalizeAnswerKeyPayload = (payload, source = 'typed') => {
+  const rawQuestions = Array.isArray(payload?.questions) ? payload.questions : [];
+
+  const questions = rawQuestions
+    .map((question, index) => ({
+      questionNumber: normalizeQuestionNumber(question.questionNumber, index),
+      expectedAnswer: String(question.expectedAnswer || question.answer || '').trim(),
+      points: Number.isFinite(Number(question.points)) && Number(question.points) > 0
+        ? Number(question.points)
+        : 10,
+      concept: String(question.concept || question.topic || 'General Mathematics').trim() || 'General Mathematics',
+      rubric: String(question.rubric || question.explanation || '').trim()
+    }))
+    .filter(question => question.expectedAnswer);
+
+  const totalPoints = questions.reduce((sum, question) => sum + question.points, 0);
+
+  return {
+    source,
+    rawText: typeof payload?.rawText === 'string' ? payload.rawText.trim() : '',
+    questions,
+    totalPoints,
+    updatedAt: new Date()
+  };
+};
+
+export const parseTypedAnswerKey = (rawText = '') => {
+  const trimmed = String(rawText || '').trim();
+  if (!trimmed) {
+    return normalizeAnswerKeyPayload({ questions: [] }, 'typed');
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    return normalizeAnswerKeyPayload({ ...parsed, rawText: trimmed }, 'typed');
+  } catch {
+    const questions = trimmed
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map((line, index) => {
+        const match = line.match(/^(?:Q(?:uestion)?\s*)?(\d+[a-zA-Z]?)\s*[:.)-]\s*(.+)$/i);
+        if (!match) {
+          return {
+            questionNumber: `Q${index + 1}`,
+            expectedAnswer: line,
+            points: 10,
+            concept: 'General Mathematics',
+            rubric: ''
+          };
+        }
+
+        return {
+          questionNumber: `Q${match[1]}`,
+          expectedAnswer: match[2].trim(),
+          points: 10,
+          concept: 'General Mathematics',
+          rubric: ''
+        };
+      });
+
+    return normalizeAnswerKeyPayload({ rawText: trimmed, questions }, 'typed');
+  }
+};
+
+export const parseAndNormalizeAnswerKeyResponse = (responseText) => {
+  const parsed = extractJsonObject(responseText);
+  if (String(parsed.status || '').toLowerCase() === MANUAL_REVIEW_STATUS.toLowerCase()) {
+    return {
+      status: MANUAL_REVIEW_STATUS,
+      errorSummary: parsed.errorSummary || MANUAL_REVIEW_MESSAGE,
+      answerKey: normalizeAnswerKeyPayload({ questions: [] }, 'model_worksheet')
+    };
+  }
+
+  const answerKey = normalizeAnswerKeyPayload(parsed, 'model_worksheet');
+  if (!answerKey.questions.length) {
+    return {
+      status: MANUAL_REVIEW_STATUS,
+      errorSummary: 'The model worksheet was readable, but no usable answers could be extracted.',
+      answerKey
+    };
+  }
+
+  return {
+    status: 'Success',
+    title: parsed.title || 'Mathematics Worksheet',
+    answerKey
+  };
+};
+
 export const normalizeGradingPayload = (payload) => {
   if (!payload || typeof payload !== 'object') {
     return buildManualReviewPayload('The AI response could not be interpreted, so this submission requires manual grading.');
@@ -181,8 +343,9 @@ export const normalizeGradingPayload = (payload) => {
   const hasValidMistakes = mistakes.every((mistake) => (
     mistake &&
     typeof mistake.questionNumber === 'string' &&
-    /^Q?\d+$/i.test(mistake.questionNumber.trim()) &&
-    MATH_CONCEPTS.has(mistake.conceptMissed)
+    /^Q?\d+[a-z]?$/i.test(mistake.questionNumber.trim()) &&
+    typeof mistake.conceptMissed === 'string' &&
+    mistake.conceptMissed.trim()
   ));
 
   if (!hasValidScore || !hasValidMistakes) {
@@ -199,7 +362,7 @@ export const normalizeGradingPayload = (payload) => {
       questionNumber: mistake.questionNumber.trim().toUpperCase().startsWith('Q')
         ? mistake.questionNumber.trim().toUpperCase()
         : `Q${mistake.questionNumber.trim()}`,
-      conceptMissed: mistake.conceptMissed
+      conceptMissed: mistake.conceptMissed.trim()
     })),
     misconception_patterns: misconceptionPatterns,
     errorSummary: typeof payload.errorSummary === 'string' ? payload.errorSummary : '',

@@ -32,6 +32,31 @@ export const analyticsAPI = {
     return data;
   },
 
+  getAnswerKey: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/sessions/${sessionId}/answer-key`);
+    return data;
+  },
+
+  saveAnswerKey: async (sessionId, rawText) => {
+    const { data } = await axios.put(`${API_BASE}/sessions/${sessionId}/answer-key`, { rawText });
+    return data;
+  },
+
+  transcribeAnswerKey: async (sessionId, file) => {
+    const compressedFile = await compressImageIfNeeded(file);
+    const formData = new FormData();
+    formData.append('modelWorksheet', compressedFile);
+    const { data } = await axios.post(`${API_BASE}/sessions/${sessionId}/answer-key/transcribe`, formData, {
+      timeout: 120000,
+    });
+    return data;
+  },
+
+  clearAnswerKey: async (sessionId) => {
+    const { data } = await axios.delete(`${API_BASE}/sessions/${sessionId}/answer-key`);
+    return data;
+  },
+
   getClassAnalytics: async (sessionId) => {
     const { data } = await axios.get(`${API_BASE}/analytics`, sessionParams(sessionId));
     return data;

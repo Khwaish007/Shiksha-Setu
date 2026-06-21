@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { API_BASE } from '../config/api.js';
+import { analyticsAPI } from '../api/analyticsAPI.js';
 import { formatFileSize, prepareFilesForUpload } from '../utils/uploadBatches.js';
 import GradingNoticeModal from './GradingNoticeModal.jsx';
 import '../styles/UploadSection.css';
@@ -21,16 +22,44 @@ const uploadFileBatch = async (files, sessionId) => {
   return data;
 };
 
+const renderAnswerKeyText = (answerKey) => (
+  (answerKey?.questions || [])
+    .map(question => `${question.questionNumber}: ${question.expectedAnswer}`)
+    .join('\n')
+);
+
 function UploadSection({ sessionId, onGradingExecutionComplete }) {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
   const [isDragActive, setIsDragActive] = useState(false);
   const [notice, setNotice] = useState(null);
+  const [answerKey, setAnswerKey] = useState(null);
+  const [answerKeyText, setAnswerKeyText] = useState('');
+  const [isSavingKey, setIsSavingKey] = useState(false);
+  const [isTranscribingKey, setIsTranscribingKey] = useState(false);
+  const modelWorksheetInputRef = useRef(null);
 
   const fileList = useMemo(() => Array.from(selectedFiles), [selectedFiles]);
   const previewFiles = fileList.slice(0, 6);
   const remainingFiles = Math.max(0, fileList.length - previewFiles.length);
+  const answerKeyCount = answerKey?.questions?.length || 0;
+  const hasAnswerKey = answerKeyCount > 0;
+
+  useEffect(() => {
+    const fetchAnswerKey = async () => {
+      if (!sessionId) return;
+      try {
+        const key = await analyticsAPI.getAnswerKey(sessionId);
+        setAnswerKey(key);
+        setAnswerKeyText(key?.rawText || renderAnswerKeyText(key));
+      } catch (error) {
+        console.error('Failed to load answer key:', error);
+      }
+    };
+
+    fetchAnswerKey();
+  }, [sessionId]);
 
   const executeFileSelectionInterception = (event) => {
     const nextFiles = Array.from(event.target.files || []).slice(0, MAX_UPLOADS);
@@ -131,6 +160,106 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
     }
   };
 
+  const saveTypedAnswerKey = async () => {
+    if (!sessionId) {
+      setNotice({
+        type: 'error',
+        title: 'Session still loading',
+        message: 'Please wait a moment before saving the answer key.'
+      });
+      return;
+    }
+
+    if (!answerKeyText.trim()) {
+      setNotice({
+        type: 'error',
+        title: 'Answer key is empty',
+        message: 'Add at least one answer, for example Q1: 42, before saving the key.'
+      });
+      return;
+    }
+
+    setIsSavingKey(true);
+    try {
+      const savedKey = await analyticsAPI.saveAnswerKey(sessionId, answerKeyText);
+      setAnswerKey(savedKey);
+      setAnswerKeyText(savedKey.rawText || renderAnswerKeyText(savedKey));
+      setNotice({
+        type: 'success',
+        message: `Answer key saved with ${savedKey.questions?.length || 0} questions. Future grading in this session will use it as ground truth.`
+      });
+    } catch (error) {
+      setNotice({
+        type: 'error',
+        title: 'Answer key not saved',
+        message: error.response?.data?.error || 'Please check the key format and try again.'
+      });
+    } finally {
+      setIsSavingKey(false);
+    }
+  };
+
+  const transcribeModelWorksheet = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!sessionId) {
+      setNotice({
+        type: 'error',
+        title: 'Session still loading',
+        message: 'Please wait a moment before uploading the model worksheet.'
+      });
+      return;
+    }
+
+    setIsTranscribingKey(true);
+    try {
+      const result = await analyticsAPI.transcribeAnswerKey(sessionId, file);
+      if (result.status === 'Manual Review Required') {
+        setNotice({
+          type: 'manual',
+          detail: result.message || result.errorSummary
+        });
+        return;
+      }
+
+      setAnswerKey(result.answerKey);
+      setAnswerKeyText(result.answerKey?.rawText || renderAnswerKeyText(result.answerKey));
+      setNotice({
+        type: 'success',
+        message: `Model worksheet transcribed into ${result.answerKey?.questions?.length || 0} answers. Review it once before grading.`
+      });
+    } catch (error) {
+      setNotice({
+        type: 'error',
+        title: 'Model worksheet not transcribed',
+        message: error.response?.data?.error || 'Please try again with a clearer filled model worksheet.'
+      });
+    } finally {
+      setIsTranscribingKey(false);
+      if (modelWorksheetInputRef.current) modelWorksheetInputRef.current.value = '';
+    }
+  };
+
+  const clearAnswerKey = async () => {
+    if (!sessionId) return;
+
+    setIsSavingKey(true);
+    try {
+      const cleared = await analyticsAPI.clearAnswerKey(sessionId);
+      setAnswerKey(cleared);
+      setAnswerKeyText('');
+    } catch (error) {
+      setNotice({
+        type: 'error',
+        title: 'Answer key not cleared',
+        message: error.response?.data?.error || 'Please try again.'
+      });
+    } finally {
+      setIsSavingKey(false);
+    }
+  };
+
   const closeNotice = () => {
     const shouldComplete = notice?.complete;
     const results = notice?.results;
@@ -148,6 +277,67 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
       transition={{ duration: 0.45, ease: 'easeOut' }}
     >
       <div className="upload-grid">
+        <div className="answer-key-card glass-panel">
+          <div className="answer-key-header">
+            <div>
+              <span className="eyebrow">Teacher Answer Key</span>
+              <h2>Set the ground truth before grading</h2>
+              <p>
+                Paste answers manually or upload one filled model worksheet. Claude will grade this session against the saved key instead of guessing.
+              </p>
+            </div>
+            <div className={`answer-key-status ${hasAnswerKey ? 'ready' : 'empty'}`}>
+              <strong>{answerKeyCount}</strong>
+              <span>{hasAnswerKey ? 'answers ready' : 'no key yet'}</span>
+            </div>
+          </div>
+
+          <div className="answer-key-editor">
+            <textarea
+              value={answerKeyText}
+              onChange={(event) => setAnswerKeyText(event.target.value)}
+              placeholder={'Q1: 42\nQ2: x = 7\nQ3: Area = 154 cm^2'}
+              disabled={isSavingKey || isTranscribingKey}
+            />
+            <div className="answer-key-actions">
+              <button
+                type="button"
+                className="answer-key-button primary"
+                onClick={saveTypedAnswerKey}
+                disabled={isSavingKey || isTranscribingKey}
+              >
+                {isSavingKey ? 'Saving key...' : 'Save Typed Key'}
+              </button>
+              <input
+                ref={modelWorksheetInputRef}
+                type="file"
+                accept="image/*"
+                onChange={transcribeModelWorksheet}
+                className="visually-hidden-input"
+                id="model-answer-key-upload"
+              />
+              <button
+                type="button"
+                className="answer-key-button secondary"
+                onClick={() => modelWorksheetInputRef.current?.click()}
+                disabled={isSavingKey || isTranscribingKey}
+              >
+                {isTranscribingKey ? 'Reading model...' : 'Upload Model Worksheet'}
+              </button>
+              {hasAnswerKey && (
+                <button
+                  type="button"
+                  className="answer-key-button ghost"
+                  onClick={clearAnswerKey}
+                  disabled={isSavingKey || isTranscribingKey}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="upload-main-card glass-panel">
           <div className="section-heading">
             <span className="eyebrow">Worksheet Upload</span>

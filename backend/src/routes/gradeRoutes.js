@@ -19,6 +19,12 @@ import {
 
 import { getPracticeTest } from '../controllers/practiceTestController.js';
 import {
+  clearAnswerKey,
+  getAnswerKey,
+  saveTypedAnswerKey,
+  transcribeModelWorksheet
+} from '../controllers/answerKeyController.js';
+import {
   clearSessionSubmissions,
   createGradingSession,
   deleteGradingSession,
@@ -43,6 +49,20 @@ router.get('/sessions', listGradingSessions);
 router.get('/sessions/:sessionId', getGradingSession);
 router.post('/sessions/:sessionId/resume', resumeGradingSession);
 router.patch('/sessions/:sessionId/resume', resumeGradingSession);
+router.get('/sessions/:sessionId/answer-key', getAnswerKey);
+router.put('/sessions/:sessionId/answer-key', saveTypedAnswerKey);
+router.post('/sessions/:sessionId/answer-key/transcribe', (req, res, next) => {
+  uploadConfiguration.single('modelWorksheet')(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'File too large. Maximum size is 4 MB per file.' });
+      }
+      return next(err);
+    }
+    transcribeModelWorksheet(req, res, next);
+  });
+});
+router.delete('/sessions/:sessionId/answer-key', clearAnswerKey);
 router.delete('/sessions/:sessionId', deleteGradingSession);
 router.delete('/sessions/:sessionId/submissions', clearSessionSubmissions);
 

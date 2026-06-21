@@ -1,0 +1,75 @@
+{
+  "title": "Student Tests Dataset 2 Ground Truth",
+  "questions": [
+    {
+      "questionNumber": "Q1",
+      "expectedAnswer": "x = 6",
+      "points": 10,
+      "concept": "Linear Equations",
+      "rubric": "Solve 4x - 6 = 18 by isolating x. Accept equivalent final answer x = 6."
+    },
+    {
+      "questionNumber": "Q2",
+      "expectedAnswer": "Area = 48 cm^2",
+      "points": 10,
+      "concept": "Area Calculation",
+      "rubric": "Use rectangle area = length x width = 12 x 4 = 48 cm^2."
+    },
+    {
+      "questionNumber": "Q3",
+      "expectedAnswer": "theta = 60 degrees",
+      "points": 10,
+      "concept": "Trigonometry",
+      "rubric": "Recognize that cos(theta) = 0.5 gives theta = 60 degrees for 0 <= theta <= 90 degrees."
+    },
+    {
+      "questionNumber": "Q4",
+      "expectedAnswer": "(x + 3)(x + 4)",
+      "points": 10,
+      "concept": "Quadratic Factorization",
+      "rubric": "Factor x^2 + 7x + 12 into two binomials whose constants multiply to 12 and add to 7."
+    },
+    {
+      "questionNumber": "Q5",
+      "expectedAnswer": "Hypotenuse = 13 cm",
+      "points": 10,
+      "concept": "Pythagorean Theorem",
+      "rubric": "Use c^2 = 5^2 + 12^2 = 169, so c = 13 cm."
+    },
+    {
+      "questionNumber": "Q6",
+      "expectedAnswer": "f'(x) = 6x^2 + 6x - 1",
+      "points": 10,
+      "concept": "Calculus Differentiation",
+      "rubric": "Differentiate 2x^3 + 3x^2 - x term by term to get 6x^2 + 6x - 1."
+    },
+    {
+      "questionNumber": "Q7",
+      "expectedAnswer": "P(red) = 4/10",
+      "points": 10,
+      "concept": "Probability",
+      "rubric": "There are 4 red balls out of 10 total balls, so probability is 4/10. Equivalent 2/5 should also receive credit."
+    },
+    {
+      "questionNumber": "Q8",
+      "expectedAnswer": "x = 3, y = 1",
+      "points": 10,
+      "concept": "System of Linear Equations",
+      "rubric": "Solve 3x + y = 10 and x - y = 2 to obtain x = 3 and y = 1."
+    },
+    {
+      "questionNumber": "Q9",
+      "expectedAnswer": "x^4 - x^2 + C",
+      "points": 10,
+      "concept": "Calculus Integration",
+      "rubric": "Integrate 4x^3 - 2x term by term and include the constant of integration."
+    },
+    {
+      "questionNumber": "Q10",
+      "expectedAnswer": "b = 18",
+      "points": 10,
+      "concept": "Sine Rule",
+      "rubric": "Use b / sin(B) = a / sin(A), so b = 12 x 0.9 / 0.6 = 18."
+    }
+  ]
+}

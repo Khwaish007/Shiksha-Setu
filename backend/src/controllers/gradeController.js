@@ -4,8 +4,8 @@ import Submission from '../models/Submission.js';
 import { refreshSessionStats } from '../utils/sessionStats.js';
 import {
   buildManualReviewPayload,
+  buildGradingSystemPrompt,
   escapeRegExp,
-  GRADING_SYSTEM_PROMPT,
   MANUAL_REVIEW_MESSAGE,
   parseAndNormalizeGradingResponse,
   validateUploadedImage
@@ -131,6 +131,30 @@ const buildAdaptiveConceptBuckets = (items) => {
   };
 
   return { thresholds, items: decorated };
+};
+
+const DEFAULT_CONCEPTS = [
+  'Linear Equations', 'Area Calculation', 'Trigonometry',
+  'Quadratic Factorization', 'Pythagorean Theorem',
+  'Calculus Differentiation', 'Probability',
+  'System of Linear Equations', 'Calculus Integration'
+];
+
+const getSessionConcepts = async (sessionId, submissions = []) => {
+  const session = sessionId ? await GradingSession.findOne({ sessionId }) : null;
+  const concepts = new Set();
+
+  (session?.answerKey?.questions || []).forEach(question => {
+    if (question.concept) concepts.add(question.concept);
+  });
+
+  submissions.forEach(submission => {
+    (submission.mistakes || []).forEach(mistake => {
+      if (mistake.conceptMissed) concepts.add(mistake.conceptMissed);
+    });
+  });
+
+  return concepts.size ? Array.from(concepts) : DEFAULT_CONCEPTS;
 };
 
 // Mock data generator for development/UI testing (bypasses API limits)
@@ -267,7 +291,8 @@ export const processWorksheets = async (req, res) => {
           const imagePart = formatBufferToClaudePart(file.buffer, file.mimetype);
 
           // --- Single Step: Transcribe and Grade the image in one call ---
-          const gradingResult = await generateWithRetry(client, GRADING_SYSTEM_PROMPT, imagePart);
+          const gradingPrompt = buildGradingSystemPrompt(session.answerKey);
+          const gradingResult = await generateWithRetry(client, gradingPrompt, imagePart);
 
           // Extract text from Claude response
           const responseText = gradingResult.content?.[0]?.text || '';
@@ -653,16 +678,12 @@ export const fetchConceptAnalysis = async (req, res) => {
 // NEW INSIGHT: Student-Centric Performance (each student's weak/strong concepts)
 export const fetchStudentWeakAndStrengths = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
+    const sessionId = getRequestSessionId(req);
+    const allSubmissions = await getAggregatedStudents(sessionId);
+    const allConcepts = await getSessionConcepts(sessionId, allSubmissions);
     
     const studentAnalysis = allSubmissions.map(student => {
       const weakConcepts = [...new Set(student.mistakes.map(m => m.conceptMissed))];
-      const allConcepts = [
-        'Linear Equations', 'Area Calculation', 'Trigonometry',
-        'Quadratic Factorization', 'Pythagorean Theorem',
-        'Calculus Differentiation', 'Probability',
-        'System of Linear Equations', 'Calculus Integration'
-      ];
       const strongConcepts = allConcepts.filter(c => !weakConcepts.includes(c));
       
       return {
@@ -731,13 +752,9 @@ export const fetchAtRiskStudents = async (req, res) => {
 // NEW INSIGHT: Class Strengths & Collective Performance
 export const fetchClassStrengthsAndWeaknesses = async (req, res) => {
   try {
-    const allSubmissions = await getAggregatedStudents(getRequestSessionId(req));
-    const allConcepts = [
-      'Linear Equations', 'Area Calculation', 'Trigonometry',
-      'Quadratic Factorization', 'Pythagorean Theorem',
-      'Calculus Differentiation', 'Probability',
-      'System of Linear Equations', 'Calculus Integration'
-    ];
+    const sessionId = getRequestSessionId(req);
+    const allSubmissions = await getAggregatedStudents(sessionId);
+    const allConcepts = await getSessionConcepts(sessionId, allSubmissions);
     
     const conceptStats = allConcepts.map(concept => {
       const mistakeCount = allSubmissions.filter(

@@ -43,6 +43,34 @@ const gradingSessionSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  answerKey: {
+    source: {
+      type: String,
+      enum: ['none', 'typed', 'model_worksheet'],
+      default: 'none'
+    },
+    rawText: {
+      type: String,
+      default: ''
+    },
+    questions: {
+      type: [{
+        questionNumber: { type: String, required: true },
+        expectedAnswer: { type: String, required: true },
+        points: { type: Number, default: 10 },
+        concept: { type: String, default: 'General Mathematics' },
+        rubric: { type: String, default: '' }
+      }],
+      default: []
+    },
+    totalPoints: {
+      type: Number,
+      default: 0
+    },
+    updatedAt: {
+      type: Date
+    }
+  },
   lastAccessedAt: {
     type: Date,
     default: Date.now
