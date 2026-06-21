@@ -27,7 +27,10 @@ const StudentDashboard = () => {
   };
 
   useEffect(() => {
-    fetchStudents();
+    const timer = window.setTimeout(() => {
+      fetchStudents();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const handleStudentCreated = (newStudent) => {

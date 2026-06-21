@@ -4,6 +4,13 @@ import axios from 'axios';
 import { API_BASE } from '../config/api.js';
 import { analyticsAPI } from '../api/analyticsAPI.js';
 import { formatFileSize, prepareFilesForUpload } from '../utils/uploadBatches.js';
+import {
+  estimateWorksheetDataCost,
+  getOfflineQueueSummary,
+  onOfflineQueueChanged,
+  queueWorksheetsForOfflineUpload,
+  syncQueuedWorksheets
+} from '../utils/offlineWorksheetQueue.js';
 import { useI18n } from '../i18n.jsx';
 import GradingNoticeModal from './GradingNoticeModal.jsx';
 import '../styles/UploadSection.css';
@@ -40,7 +47,24 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
   const [answerKeyText, setAnswerKeyText] = useState('');
   const [isSavingKey, setIsSavingKey] = useState(false);
   const [isTranscribingKey, setIsTranscribingKey] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [queueSummary, setQueueSummary] = useState({
+    count: 0,
+    totalBytes: 0,
+    dataCostLabel: formatFileSize(0),
+    averageDataCostLabel: formatFileSize(0)
+  });
+  const [selectedDataCost, setSelectedDataCost] = useState({
+    count: 0,
+    totalBytes: 0,
+    dataCostLabel: formatFileSize(0),
+    averageDataCostLabel: formatFileSize(0)
+  });
+  const [isEstimatingCost, setIsEstimatingCost] = useState(false);
+  const [isSyncingQueue, setIsSyncingQueue] = useState(false);
+  const [syncProgress, setSyncProgress] = useState(null);
   const modelWorksheetInputRef = useRef(null);
+  const syncInFlightRef = useRef(false);
 
   const fileList = useMemo(() => Array.from(selectedFiles), [selectedFiles]);
   const previewFiles = fileList.slice(0, 6);
@@ -63,6 +87,135 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
     fetchAnswerKey();
   }, [sessionId]);
 
+  const refreshQueueSummary = async () => {
+    const summary = await getOfflineQueueSummary();
+    setQueueSummary(summary);
+    return summary;
+  };
+
+  const syncPendingOfflineQueue = async ({ silent = false } = {}) => {
+    if (!sessionId || !navigator.onLine || syncInFlightRef.current) return;
+
+    syncInFlightRef.current = true;
+    setIsSyncingQueue(true);
+    setSyncProgress(null);
+
+    try {
+      const syncResult = await syncQueuedWorksheets({
+        sessionId,
+        onProgress: setSyncProgress
+      });
+      await refreshQueueSummary();
+
+      if (syncResult.syncedCount > 0 && syncResult.results.length > 0) {
+        const manualReviewCount = syncResult.results.filter(
+          item => item.status === 'Manual Review Required'
+        ).length;
+        setNotice(manualReviewCount > 0
+          ? {
+              type: 'manual',
+              count: manualReviewCount,
+              detail: t('offlineSyncManualDetail', { count: syncResult.syncedCount }),
+              complete: true,
+              results: syncResult.results
+            }
+          : {
+              type: 'success',
+              message: t('offlineSyncSuccess', { count: syncResult.syncedCount }),
+              complete: true,
+              results: syncResult.results
+            });
+      } else if (!silent) {
+        setNotice({
+          type: 'success',
+          message: t('offlineQueueEmpty')
+        });
+      }
+    } catch (error) {
+      console.error('Offline queue sync failed:', error);
+      await refreshQueueSummary();
+      if (!silent) {
+        setNotice({
+          type: 'error',
+          title: t('offlineSyncFailedTitle'),
+          message: t('offlineSyncFailedMessage')
+        });
+      }
+    } finally {
+      syncInFlightRef.current = false;
+      setIsSyncingQueue(false);
+      setSyncProgress(null);
+    }
+  };
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      syncPendingOfflineQueue({ silent: true });
+    };
+    const handleOffline = () => setIsOnline(false);
+
+    const initialSummaryTimer = window.setTimeout(() => {
+      refreshQueueSummary();
+    }, 0);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    const unsubscribe = onOfflineQueueChanged(refreshQueueSummary);
+
+    return () => {
+      window.clearTimeout(initialSummaryTimer);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      unsubscribe();
+    };
+    // Queue listeners should be bound to the active grading session only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (isOnline && sessionId && queueSummary.count > 0) {
+      const syncTimer = window.setTimeout(() => {
+        syncPendingOfflineQueue({ silent: true });
+      }, 0);
+      return () => window.clearTimeout(syncTimer);
+    }
+    return undefined;
+    // Auto-sync is triggered by connection/session/queue changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOnline, sessionId, queueSummary.count]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const estimateCost = async () => {
+      if (!fileList.length) {
+        setSelectedDataCost({
+          count: 0,
+          totalBytes: 0,
+          dataCostLabel: formatFileSize(0),
+          averageDataCostLabel: formatFileSize(0)
+        });
+        return;
+      }
+
+      setIsEstimatingCost(true);
+      try {
+        const estimate = await estimateWorksheetDataCost(fileList);
+        if (!cancelled) setSelectedDataCost(estimate);
+      } catch (error) {
+        console.error('Failed to estimate upload data cost:', error);
+      } finally {
+        if (!cancelled) setIsEstimatingCost(false);
+      }
+    };
+
+    estimateCost();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fileList]);
+
   const executeFileSelectionInterception = (event) => {
     const nextFiles = Array.from(event.target.files || []).slice(0, MAX_UPLOADS);
     setSelectedFiles(nextFiles);
@@ -79,6 +232,20 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
     setIsDragActive(false);
   };
 
+  const queueSelectedFilesForLater = async () => {
+    const queued = await queueWorksheetsForOfflineUpload(fileList, sessionId);
+    await refreshQueueSummary();
+    setSelectedFiles([]);
+    setNotice({
+      type: 'success',
+      message: t('offlineQueuedSuccess', {
+        count: queued.count,
+        data: queued.dataCostLabel
+      })
+    });
+    return queued;
+  };
+
   const dispatchBatchUploadPipeline = async () => {
     if (fileList.length === 0) {
       setNotice({
@@ -86,6 +253,22 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
         title: t('noWorksheetsTitle'),
         message: t('noWorksheetsMessage')
       });
+      return;
+    }
+
+    if (!isOnline) {
+      setIsProcessing(true);
+      try {
+        await queueSelectedFilesForLater();
+      } catch (error) {
+        setNotice({
+          type: 'error',
+          title: t('offlineQueueFailedTitle'),
+          message: error.message || t('offlineQueueFailedMessage')
+        });
+      } finally {
+        setIsProcessing(false);
+      }
       return;
     }
 
@@ -149,6 +332,23 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
           title: t('uploadCouldNotPrepare'),
           message: networkError.message
         });
+      } else if (!networkError.response || networkError.code === 'ERR_NETWORK') {
+        try {
+          const queued = await queueSelectedFilesForLater();
+          setNotice({
+            type: 'success',
+            message: t('offlineQueuedAfterNetworkDrop', {
+              count: queued.count,
+              data: queued.dataCostLabel
+            })
+          });
+        } catch (queueError) {
+          setNotice({
+            type: 'error',
+            title: t('offlineQueueFailedTitle'),
+            message: queueError.message || t('offlineQueueFailedMessage')
+          });
+        }
       } else {
         setNotice({
           type: 'error',
@@ -392,6 +592,50 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
               <span className="summary-value">{fileList.length}</span>
               <span className="summary-label">{t('selectedFiles')}</span>
             </div>
+            <div>
+              <span className="summary-value">
+                {isEstimatingCost ? t('calculating') : selectedDataCost.dataCostLabel}
+              </span>
+              <span className="summary-label">
+                {fileList.length > 0
+                  ? t('dataCostPerWorksheet', { average: selectedDataCost.averageDataCostLabel })
+                  : t('dataCostSelected')}
+              </span>
+            </div>
+            <div>
+              <span className="summary-value">{queueSummary.count}</span>
+              <span className="summary-label">{t('offlineQueued')}</span>
+            </div>
+          </div>
+
+          <div className={`offline-capture-panel ${isOnline ? 'online' : 'offline'}`}>
+            <div className="offline-capture-copy">
+              <span className="offline-status-dot" />
+              <div>
+                <strong>{isOnline ? t('onlineReadyToSync') : t('offlineCaptureReady')}</strong>
+                <p>
+                  {queueSummary.count > 0
+                    ? t('offlineQueueSummary', {
+                        count: queueSummary.count,
+                        data: queueSummary.dataCostLabel,
+                        average: queueSummary.averageDataCostLabel
+                      })
+                    : t('offlineQueueEmptyHint')}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="offline-sync-button"
+              onClick={() => syncPendingOfflineQueue({ silent: false })}
+              disabled={!isOnline || !sessionId || queueSummary.count === 0 || isSyncingQueue}
+            >
+              {isSyncingQueue && syncProgress
+                ? t('syncingBatch', { current: syncProgress.current, total: syncProgress.total })
+                : isSyncingQueue
+                  ? t('syncingOfflineQueue')
+                  : t('syncQueuedNow')}
+            </button>
           </div>
 
           <div className="file-grid">
@@ -442,7 +686,9 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
             ? t('gradingBatch', { current: uploadProgress.current, total: uploadProgress.total })
             : isProcessing
               ? t('preparingUpload')
-              : t('processSelectedWorksheets')}
+              : isOnline
+                ? t('processSelectedWorksheets')
+                : t('saveOfflineForSync')}
         </span>
         <span className="button-chevron">→</span>
       </motion.button>

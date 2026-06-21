@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function App() {
@@ -18,7 +18,10 @@ function App() {
   };
 
   useEffect(() => {
-    fetchHeatmap();
+    const timer = window.setTimeout(() => {
+      fetchHeatmap();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   // Handle file selection

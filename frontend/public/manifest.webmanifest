@@ -1,0 +1,19 @@
+{
+  "name": "Shiksha Setu",
+  "short_name": "Shiksha Setu",
+  "description": "Offline-ready classroom grading and analytics for teachers.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#060816",
+  "theme_color": "#7dd3fc",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

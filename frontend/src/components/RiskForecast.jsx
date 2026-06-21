@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
 import { useI18n } from '../i18n.jsx';
@@ -23,7 +23,10 @@ const RiskForecast = () => {
   };
 
   useEffect(() => {
-    fetchStudents();
+    const timer = window.setTimeout(() => {
+      fetchStudents();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const handleRunAssessment = async () => {

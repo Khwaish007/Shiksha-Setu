@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { analyticsAPI } from '../api/analyticsAPI';
 import '../styles/StudentRankings.css';
 import { useI18n } from '../i18n.jsx';

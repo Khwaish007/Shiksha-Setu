@@ -33,7 +33,12 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
   };
 
   useEffect(() => {
-    fetchStudent();
+    const timer = window.setTimeout(() => {
+      fetchStudent();
+    }, 0);
+    return () => window.clearTimeout(timer);
+    // Fetch only when the route student id changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   // ── Computed Values ──────────────────────────────────────────────
