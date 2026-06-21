@@ -131,6 +131,34 @@ body {
   flex-wrap: wrap;
 }
 
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.language-toggle select {
+  min-width: 96px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.language-toggle option {
+  color: #0f172a;
+}
+
 .topbar-chip {
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
@@ -315,6 +343,11 @@ body {
   .topbar-chip {
     flex: 1;
     justify-content: center;
+  }
+
+  .language-toggle {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .view-stage {

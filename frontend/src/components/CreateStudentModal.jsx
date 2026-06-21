@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
+import { useI18n } from '../i18n.jsx';
 
 const CreateStudentModal = ({ onClose, onStudentCreated }) => {
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -10,7 +12,7 @@ const CreateStudentModal = ({ onClose, onStudentCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Please enter a student name.');
+      setError(t('enterStudentName'));
       return;
     }
 
@@ -20,7 +22,7 @@ const CreateStudentModal = ({ onClose, onStudentCreated }) => {
       const newStudent = await analyticsAPI.createStudent(name.trim());
       onStudentCreated(newStudent);
     } catch (err) {
-      const msg = err.response?.data?.error || 'Failed to create student.';
+      const msg = err.response?.data?.error || t('failedCreateStudent');
       setError(msg);
     } finally {
       setLoading(false);
@@ -63,24 +65,24 @@ const CreateStudentModal = ({ onClose, onStudentCreated }) => {
         }}
       >
         <div style={{ marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.18em', fontSize: '0.72rem', color: 'rgba(248, 250, 252, 0.5)' }}>
-          New Profile
+          {t('newProfile')}
         </div>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f8fafc', marginBottom: '6px', letterSpacing: '-0.03em' }}>
-          Create Student
+          {t('createStudent')}
         </h2>
         <p style={{ fontSize: '0.88rem', color: 'rgba(203, 213, 225, 0.7)', marginBottom: '28px', lineHeight: 1.5 }}>
-          Add a new student to begin tracking their individual test performance over time.
+          {t('createStudentDescription')}
         </p>
 
         <form onSubmit={handleSubmit}>
           <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 600, color: '#cbd5e1', marginBottom: '8px' }}>
-            Student Name
+            {t('studentName')}
           </label>
           <input
             type="text"
             value={name}
             onChange={(e) => { setName(e.target.value); setError(''); }}
-            placeholder="e.g. Rohan Sharma"
+            placeholder={t('studentNameExample')}
             autoFocus
             style={{
               width: '100%',
@@ -119,7 +121,7 @@ const CreateStudentModal = ({ onClose, onStudentCreated }) => {
                 transition: 'all 0.2s ease',
               }}
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
@@ -140,7 +142,7 @@ const CreateStudentModal = ({ onClose, onStudentCreated }) => {
                 boxShadow: loading ? 'none' : '0 8px 24px rgba(125, 211, 252, 0.2)',
               }}
             >
-              {loading ? 'Creating…' : 'Create Student'}
+              {loading ? t('creating') : t('createStudent')}
             </button>
           </div>
         </form>

@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
 import CreateStudentModal from './CreateStudentModal';
 import RiskForecast from './RiskForecast';
+import { useI18n } from '../i18n.jsx';
 import '../styles/StudentDashboard.css';
 
 const StudentDashboard = () => {
+  const { t } = useI18n();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,7 +56,7 @@ const StudentDashboard = () => {
     return (
       <div className="sd-loading">
         <div className="sd-loading-spinner" />
-        <p>Loading student profiles...</p>
+        <p>{t('loadingStudentProfiles')}</p>
       </div>
     );
   }
@@ -63,11 +65,11 @@ const StudentDashboard = () => {
     <div className="sd-container">
       <header className="sd-header">
         <div className="sd-header-text">
-          <span className="sd-eyebrow">Individual Tracking</span>
+          <span className="sd-eyebrow">{t('individualTracking')}</span>
           <h1 className="sd-title">
-            <span className="sd-gradient-text">Student Profiles</span>
+            <span className="sd-gradient-text">{t('studentProfiles')}</span>
           </h1>
-          <p className="sd-subtitle">Track individual progress, identify patterns, and personalize interventions.</p>
+          <p className="sd-subtitle">{t('studentProfilesSubtitle')}</p>
         </div>
         <motion.button
           className="sd-create-btn"
@@ -76,7 +78,7 @@ const StudentDashboard = () => {
           whileTap={{ scale: 0.98 }}
         >
           <span className="sd-create-icon">+</span>
-          <span>Add New Student</span>
+          <span>{t('addNewStudent')}</span>
         </motion.button>
       </header>
 
@@ -87,7 +89,7 @@ const StudentDashboard = () => {
           <input
             type="text"
             className="sd-search-input"
-            placeholder="Search students by name..."
+            placeholder={t('searchStudents')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -97,7 +99,7 @@ const StudentDashboard = () => {
         </div>
         <div className="sd-stats-pill">
           <span className="sd-stats-count">{students.length}</span>
-          <span className="sd-stats-label">Students</span>
+          <span className="sd-stats-label">{t('students')}</span>
         </div>
       </div>
 
@@ -112,8 +114,8 @@ const StudentDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="sd-empty-icon">👤</div>
-          <h3>{searchQuery ? 'No students match your search' : 'No students yet'}</h3>
-          <p>{searchQuery ? 'Try a different search term.' : 'Create your first student profile to start tracking individual progress.'}</p>
+          <h3>{searchQuery ? t('noStudentsMatch') : t('noStudentsYet')}</h3>
+          <p>{searchQuery ? t('tryDifferentSearch') : t('createFirstStudentHint')}</p>
           {!searchQuery && (
             <motion.button
               className="sd-empty-btn"
@@ -121,7 +123,7 @@ const StudentDashboard = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              + Create First Student
+              + {t('createFirstStudent')}
             </motion.button>
           )}
         </motion.div>
@@ -156,7 +158,7 @@ const StudentDashboard = () => {
                 <div className="sd-card-info">
                   <h3 className="sd-card-name">{student.studentName}</h3>
                   <span className="sd-card-tests">
-                    {student.totalTests} {student.totalTests === 1 ? 'test' : 'tests'} recorded
+                    {student.totalTests} {student.totalTests === 1 ? t('testRecorded') : t('testsRecorded')}
                   </span>
                 </div>
               </div>

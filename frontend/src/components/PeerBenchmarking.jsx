@@ -1,6 +1,9 @@
 import '../styles/PeerBenchmarking.css';
+import { useI18n } from '../i18n.jsx';
 
 const PeerBenchmarking = ({ benchmarks }) => {
+  const { t } = useI18n();
+
   const getPercentileColor = (percentile) => {
     if (percentile >= 80) return '#10b981';
     if (percentile >= 60) return '#3b82f6';
@@ -11,8 +14,8 @@ const PeerBenchmarking = ({ benchmarks }) => {
   return (
     <div className="benchmarking-container">
       <div className="benchmarking-header">
-        <h2>Peer Performance Comparison</h2>
-        <p className="benchmarking-subtitle">How each student ranks within the class</p>
+        <h2>{t('performanceComparison')}</h2>
+        <p className="benchmarking-subtitle">{t('performanceComparisonSubtitle')}</p>
       </div>
 
       <div className="benchmarks-list">
@@ -37,26 +40,26 @@ const PeerBenchmarking = ({ benchmarks }) => {
 
               <div className="percentile-display">
                 <div className="percentile-value">{student.percentile}th</div>
-                <div className="percentile-label">Percentile</div>
+                <div className="percentile-label">{t('percentile')}</div>
               </div>
 
               <div className="score-comparison">
                 <span className="score-badge">{student.score}%</span>
                 <span className={`vs-average ${student.vsClassAverage >= 0 ? 'above' : 'below'}`}>
-                  {student.vsClassAverage >= 0 ? '+' : ''}{student.vsClassAverage} vs Avg
+                  {student.vsClassAverage >= 0 ? '+' : ''}{student.vsClassAverage} {t('vsAvg')}
                 </span>
               </div>
             </div>
 
             <div className="peers-section">
-              <span className="peers-label">Similar Performers:</span>
+              <span className="peers-label">{t('similarPerformers')}</span>
               <div className="peers-list">
                 {student.peers && student.peers.length > 0 ? (
                   student.peers.map((peer, i) => (
                     <span key={i} className="peer-tag">{peer}</span>
                   ))
                 ) : (
-                  <span className="peer-tag placeholder">None in similar range</span>
+                  <span className="peer-tag placeholder">{t('noneInSimilarRange')}</span>
                 )}
               </div>
             </div>

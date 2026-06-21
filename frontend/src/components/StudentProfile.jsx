@@ -5,9 +5,11 @@ import { analyticsAPI } from '../api/analyticsAPI';
 import ErrorDNA from './ErrorDNA';
 import GradingNoticeModal from './GradingNoticeModal.jsx';
 import ParentMessageModal from './ParentMessageModal';
+import { useI18n } from '../i18n.jsx';
 import '../styles/StudentProfile.css';
 
 const StudentProfile = ({ sessionId, onSessionUpdated }) => {
+  const { t } = useI18n();
   const { id } = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -150,7 +152,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
     return (
       <div className="sp-loading">
         <div className="sp-loading-spinner" />
-        <p>Loading student profile...</p>
+        <p>{t('loadingStudentProfile')}</p>
       </div>
     );
   }
@@ -158,8 +160,8 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
   if (!student) {
     return (
       <div className="sp-error">
-        <h2>Student not found</h2>
-        <button onClick={() => navigate('/students')}>← Back to Students</button>
+        <h2>{t('studentNotFound')}</h2>
+        <button onClick={() => navigate('/students')}>← {t('backToStudents')}</button>
       </div>
     );
   }
@@ -194,7 +196,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
         whileHover={{ x: -4 }}
         whileTap={{ scale: 0.96 }}
       >
-        ← Back to Students
+        ← {t('backToStudents')}
       </motion.button>
 
       {/* ═══════ SECTION 1: Vital Signs Header ═══════ */}
@@ -209,8 +211,8 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
           <div className="sp-vital-info">
             <h1 className="sp-student-name">{student.studentName}</h1>
             <div className="sp-vital-meta">
-              <span className="sp-meta-pill">{student.tests?.length || 0} tests recorded</span>
-              <span className="sp-meta-pill">Joined {formatDate(student.createdAt)}</span>
+              <span className="sp-meta-pill">{student.tests?.length || 0} {student.tests?.length === 1 ? t('testRecorded') : t('testsRecorded')}</span>
+              <span className="sp-meta-pill">{t('joined')} {formatDate(student.createdAt)}</span>
             </div>
           </div>
         </div>
@@ -241,7 +243,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
               <span className="sp-score-number" style={{ color: getScoreColor(averageScore) }}>
                 {averageScore}
               </span>
-              <span className="sp-score-suffix">avg</span>
+              <span className="sp-score-suffix">{t('avg')}</span>
             </div>
           </div>
 
@@ -278,12 +280,12 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
             {uploading ? (
               <>
                 <span className="sp-upload-spinner" />
-                <span>AI is grading… please wait</span>
+                <span>{t('aiGradingWait')}</span>
               </>
             ) : (
               <>
                 <span className="sp-upload-icon">📄</span>
-                <span>Upload New Test</span>
+                <span>{t('uploadNewTest')}</span>
               </>
             )}
           </motion.button>
@@ -292,12 +294,12 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
             className="sp-notify-parent-btn"
             onClick={() => setShowParentModal(true)}
             disabled={!student.tests?.length}
-            title={student.tests?.length ? 'Generate a bilingual parent update' : 'Upload at least one test first'}
+            title={student.tests?.length ? t('generateParentUpdate') : t('uploadAtLeastOneTestFirst')}
             whileHover={{ scale: student.tests?.length ? 1.02 : 1, y: student.tests?.length ? -2 : 0 }}
             whileTap={{ scale: student.tests?.length ? 0.98 : 1 }}
           >
             <span className="sp-upload-icon">💬</span>
-            <span>Notify Parent</span>
+            <span>{t('notifyParent')}</span>
           </motion.button>
         </div>
       </section>
@@ -306,10 +308,10 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
       {(errorDNA.length > 0 || struggleCloud.length > 0) && (
         <section className="sp-struggle-section">
           <div className="sp-section-header">
-            <span className="sp-section-eyebrow">Cumulative Profile</span>
-            <h2 className="sp-section-title">Error DNA Profile</h2>
+            <span className="sp-section-eyebrow">{t('cumulativeProfile')}</span>
+            <h2 className="sp-section-title">{t('errorDnaProfile')}</h2>
             <p className="sp-section-desc">
-              Tracks specific misconceptions and their persistence across all submissions.
+              {t('errorDnaProfileDescription')}
             </p>
           </div>
 
@@ -317,7 +319,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
 
           {struggleCloud.length > 0 && (
             <div className="sp-practice-tests-section" style={{ marginTop: '2rem' }}>
-              <h3 className="sp-practice-tests-title">🎯 Targeted Practice Tests</h3>
+              <h3 className="sp-practice-tests-title">🎯 {t('targetedPracticeTests')}</h3>
               <div className="sp-practice-tests-grid">
                 {struggleCloud.slice(0, 3).map((item, i) => {
                   const formattedTopic = item.concept.toLowerCase().replace(/\s+/g, '_');
@@ -328,7 +330,9 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
                         <span className="sp-practice-rank">#{i + 1}</span>
                         <div>
                           <div className="sp-practice-concept">{item.concept}</div>
-                          <div className="sp-practice-desc">Based on {item.count} recurring {item.count === 1 ? 'mistake' : 'mistakes'}</div>
+                          <div className="sp-practice-desc">
+                            {t('basedOnRecurring', { count: item.count, label: item.count === 1 ? t('mistake') : t('mistakes').toLowerCase() })}
+                          </div>
                         </div>
                       </div>
                       <button 
@@ -336,7 +340,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
                         onClick={() => window.open(pdfUrl, '_blank')}
                       >
                         <span className="sp-practice-btn-icon">📥</span>
-                        <span>Download Test</span>
+                        <span>{t('downloadTest')}</span>
                       </button>
                     </div>
                   );
@@ -350,17 +354,17 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
       {/* ═══════ SECTION 4: Test Timeline ═══════ */}
       <section className="sp-timeline-section">
         <div className="sp-section-header">
-          <span className="sp-section-eyebrow">Test History</span>
-          <h2 className="sp-section-title">Test Timeline</h2>
+          <span className="sp-section-eyebrow">{t('testHistory')}</span>
+          <h2 className="sp-section-title">{t('testTimeline')}</h2>
           <p className="sp-section-desc">
-            Chronological record of every test and the specific concepts missed.
+            {t('testTimelineDescription')}
           </p>
         </div>
 
         {sortedTests.length === 0 ? (
           <div className="sp-timeline-empty">
             <span className="sp-timeline-empty-icon">📋</span>
-            <p>No tests recorded yet. Upload the first test above to start tracking.</p>
+            <p>{t('noTestsRecordedYet')}</p>
           </div>
         ) : (
           <div className="sp-timeline-grid">
@@ -386,7 +390,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
                         <div className="sp-test-info">
                           <span className="sp-test-date">{formatDate(test.date)}</span>
                           <span className="sp-test-score-text">
-                            Score: <strong style={{ color: getScoreColor(test.score) }}>{test.score}</strong>
+                            {t('scoreLabel')}: <strong style={{ color: getScoreColor(test.score) }}>{test.score}</strong>
                             <span className="sp-test-out-of">/{test.totalQuestions * 10 || 100}</span>
                           </span>
                         </div>
@@ -398,11 +402,11 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
                             className={`sp-test-expand-btn ${isExpanded ? 'expanded' : ''}`}
                             onClick={() => toggleTestExpand(testKey)}
                           >
-                            {isExpanded ? 'Hide Mistakes' : 'View Mistakes'}
+                            {isExpanded ? t('hideMistakes') : t('viewMistakes')}
                             <span className="sp-test-expand-chevron">{isExpanded ? '▲' : '▼'}</span>
                           </button>
                         ) : (
-                          <span className="sp-test-perfect">✨ Perfect Score</span>
+                          <span className="sp-test-perfect">✨ {t('perfectScore')}</span>
                         )}
                       </div>
                     </div>

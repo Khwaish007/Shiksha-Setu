@@ -1,14 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useI18n } from '../i18n.jsx';
 
 const ClassMisconceptions = ({ misconceptions }) => {
+  const { t } = useI18n();
+
   if (!misconceptions || misconceptions.length === 0) {
     return (
       <div className="content-section">
-        <h2>Top Class Misconceptions</h2>
+        <h2>{t('topClassMisconceptions')}</h2>
         <div style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>
           <span style={{ fontSize: '3rem', display: 'block', marginBottom: '1rem', opacity: 0.5 }}>🧬</span>
-          <p>No class-wide misconception patterns identified yet.</p>
+          <p>{t('noClassMisconceptions')}</p>
         </div>
       </div>
     );
@@ -17,9 +20,9 @@ const ClassMisconceptions = ({ misconceptions }) => {
   return (
     <div className="content-section">
       <div className="section-header">
-        <h2 className="section-title">Class-Wide Error DNA</h2>
+        <h2 className="section-title">{t('classWideErrorDna')}</h2>
         <p className="section-description">
-          Top 5 persistent misconceptions across all students. Use this to guide your next group lesson plan.
+          {t('errorDnaDescription')}
         </p>
       </div>
 
@@ -73,13 +76,13 @@ const ClassMisconceptions = ({ misconceptions }) => {
                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: dna.severity === 'major' ? '#fca5a5' : '#e2e8f0' }}>
                   {dna.studentsAffectedCount}
                 </div>
-                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Students Affected</div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{t('studentsAffected')}</div>
               </div>
             </div>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed rgba(255,255,255,0.1)' }}>
               <span style={{ fontSize: '0.85rem', color: '#cbd5e1' }}>
-                Occurred <strong>{dna.occurrences}</strong> times total in class.
+                {t('occurred')} <strong>{dna.occurrences}</strong> {t('timesTotalInClass')}
               </span>
               
               <button 
@@ -92,9 +95,9 @@ const ClassMisconceptions = ({ misconceptions }) => {
                   cursor: 'pointer',
                   fontSize: '0.85rem'
                 }}
-                onClick={() => alert(`Lesson plan generation for "${dna.concept}" coming soon!`)}
+                onClick={() => alert(t('lessonPlanComingSoon', { concept: dna.concept }))}
               >
-                Generate Lesson Plan
+                {t('generateLessonPlan')}
               </button>
             </div>
           </motion.div>

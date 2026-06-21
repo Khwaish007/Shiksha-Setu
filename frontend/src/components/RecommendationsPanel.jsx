@@ -1,7 +1,9 @@
 import React from 'react';
 import '../styles/RecommendationsPanel.css';
+import { useI18n } from '../i18n.jsx';
 
 const RecommendationsPanel = ({ recommendations, thresholds }) => {
+  const { t } = useI18n();
   const normalizePriority = (priority) => String(priority || '').toUpperCase().replace(/\s+/g, '_');
 
   const getCategory = (item) => {
@@ -19,11 +21,11 @@ const RecommendationsPanel = ({ recommendations, thresholds }) => {
 
   const formatPriorityLabel = (priority) => {
     const normalized = normalizePriority(priority);
-    if (normalized === 'VERY_HIGH') return 'Very High';
-    if (normalized === 'HIGH') return 'High';
-    if (normalized === 'MEDIUM') return 'Medium';
-    if (normalized === 'LOW') return 'Low';
-    return priority || 'Unknown';
+    if (normalized === 'VERY_HIGH') return t('veryHigh');
+    if (normalized === 'HIGH') return t('high');
+    if (normalized === 'MEDIUM') return t('medium');
+    if (normalized === 'LOW') return t('low');
+    return priority || t('unknown');
   };
 
   const getPriorityIcon = (priority) => {
@@ -45,8 +47,8 @@ const RecommendationsPanel = ({ recommendations, thresholds }) => {
   return (
     <div className="recommendations-container">
       <div className="recommendations-header">
-        <h2>Teacher Focus Recommendations</h2>
-        <p className="recommendations-subtitle">Prioritized topics for remedial focus</p>
+        <h2>{t('teacherFocusRecommendations')}</h2>
+        <p className="recommendations-subtitle">{t('prioritizedTopics')}</p>
       </div>
 
       <div className="recommendations-list">
@@ -68,11 +70,11 @@ const RecommendationsPanel = ({ recommendations, thresholds }) => {
 
             <div className="rec-stats">
               <div className="stat-item">
-                <span className="stat-label">Students Affected</span>
+                <span className="stat-label">{t('studentsAffected')}</span>
                 <span className="stat-value">{item.studentsAffected}</span>
               </div>
               <div className="stat-item">
-                <span className="stat-label">Class Percentage</span>
+                <span className="stat-label">{t('classPercentage')}</span>
                 <span className="stat-value">{item.percentageOfClass}%</span>
               </div>
             </div>
@@ -87,7 +89,7 @@ const RecommendationsPanel = ({ recommendations, thresholds }) => {
                   window.open(pdfUrl, '_blank');
                 }}
               >
-                Create Practice Test
+                {t('createPracticeTest')}
               </button>
             </div>
 

@@ -1,11 +1,14 @@
 import '../styles/PerformanceStats.css';
+import { useI18n } from '../i18n.jsx';
 
 const PerformanceStats = ({ distribution }) => {
+  const { t } = useI18n();
+
   return (
     <div className="performance-stats-container">
       <div className="stats-header">
-        <h2>Performance Distribution Analysis</h2>
-        <p className="stats-subtitle">Statistical insights into class performance patterns</p>
+        <h2>{t('performanceDistributionAnalysis')}</h2>
+        <p className="stats-subtitle">{t('performanceDistributionSubtitle')}</p>
       </div>
 
       <div className="stats-grid">
@@ -13,15 +16,15 @@ const PerformanceStats = ({ distribution }) => {
           <div className="stat-icon">📊</div>
           <div className="stat-content">
             <div className="stat-item">
-              <span className="stat-label">Minimum Score</span>
+              <span className="stat-label">{t('minimumScore')}</span>
               <span className="stat-value">{distribution.min}%</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Maximum Score</span>
+              <span className="stat-label">{t('maximumScore')}</span>
               <span className="stat-value">{distribution.max}%</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Score Range</span>
+              <span className="stat-label">{t('scoreRange')}</span>
               <span className="stat-value">{distribution.max - distribution.min}%</span>
             </div>
           </div>
@@ -31,15 +34,15 @@ const PerformanceStats = ({ distribution }) => {
           <div className="stat-icon">📈</div>
           <div className="stat-content">
             <div className="stat-item">
-              <span className="stat-label">Mean (Average)</span>
+              <span className="stat-label">{t('meanAverage')}</span>
               <span className="stat-value">{distribution.mean}%</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Median (Middle)</span>
+              <span className="stat-label">{t('medianMiddle')}</span>
               <span className="stat-value">{distribution.median}%</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Std Deviation</span>
+              <span className="stat-label">{t('stdDeviation')}</span>
               <span className="stat-value">{distribution.stdDev}</span>
             </div>
           </div>
@@ -49,15 +52,15 @@ const PerformanceStats = ({ distribution }) => {
           <div className="stat-icon">📉</div>
           <div className="stat-content">
             <div className="stat-item">
-              <span className="stat-label">Distribution Type</span>
-              <span className="stat-value">{distribution.distributionType || 'Normal'}</span>
+              <span className="stat-label">{t('distributionType')}</span>
+              <span className="stat-value">{distribution.distributionType || t('normal')}</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Bimodal Pattern</span>
-              <span className="stat-value">{distribution.bimodal ? 'Yes' : 'No'}</span>
+              <span className="stat-label">{t('bimodalPattern')}</span>
+              <span className="stat-value">{distribution.bimodal ? t('yes') : t('no')}</span>
             </div>
             <div className="stat-item">
-              <span className="stat-label">Skewness</span>
+              <span className="stat-label">{t('skewness')}</span>
               <span className="stat-value" style={{ textTransform: 'capitalize' }}>{distribution.skewness}</span>
             </div>
           </div>
@@ -65,7 +68,7 @@ const PerformanceStats = ({ distribution }) => {
       </div>
 
       <div className="insights-box">
-        <h3 className="insights-title">💡 Key Insights</h3>
+        <h3 className="insights-title">💡 {t('keyInsights')}</h3>
         <ul className="insights-list">
           {distribution.insights && distribution.insights.map((insight, idx) => (
             <li key={idx} className="insight-item">
@@ -77,24 +80,24 @@ const PerformanceStats = ({ distribution }) => {
       </div>
 
       <div className="interpretation-box">
-        <h3 className="interpretation-title">🔍 What This Means</h3>
+        <h3 className="interpretation-title">🔍 {t('whatThisMeans')}</h3>
         <div className="interpretation-content">
           {distribution.mean === distribution.median ? (
-            <p>The class shows a symmetric distribution with consistent performance.</p>
+            <p>{t('symmetricDistribution')}</p>
           ) : distribution.mean > distribution.median ? (
-            <p>High performers are pulling the average up. Most students score below the average.</p>
+            <p>{t('highPerformersPulling')}</p>
           ) : (
-            <p>Most students perform above average. Only a few low performers bring down the mean.</p>
+            <p>{t('mostAboveAverage')}</p>
           )}
 
           {distribution.stdDev > 15 ? (
-            <p>High variance indicates diverse performance levels. Students need differentiated instruction.</p>
+            <p>{t('highVariance')}</p>
           ) : (
-            <p>Low variance shows consistent performance across the class. Good for cohort-level instruction.</p>
+            <p>{t('lowVariance')}</p>
           )}
 
           {distribution.bimodal ? (
-            <p>Bimodal distribution suggests two distinct groups: strong performers and struggling students. Consider forming ability-based groups.</p>
+            <p>{t('bimodalAdvice')}</p>
           ) : null}
         </div>
       </div>

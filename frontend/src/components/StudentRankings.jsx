@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { analyticsAPI } from '../api/analyticsAPI';
 import '../styles/StudentRankings.css';
+import { useI18n } from '../i18n.jsx';
 
 const StudentRankings = ({ rankings }) => {
+  const { t } = useI18n();
   const [filter, setFilter] = useState('all');
   const [riskMap, setRiskMap] = useState({});
 
@@ -39,8 +41,8 @@ const StudentRankings = ({ rankings }) => {
     <div className="rankings-container">
       <div className="rankings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h2>Student Performance Rankings</h2>
-          <p className="rankings-subtitle">Top performers in your class</p>
+          <h2>{t('studentPerformanceRankings')}</h2>
+          <p className="rankings-subtitle">{t('topPerformers')}</p>
         </div>
         <div>
           <select 
@@ -56,19 +58,19 @@ const StudentRankings = ({ rankings }) => {
               cursor: 'pointer'
             }}
           >
-            <option value="all">Show: All</option>
-            <option value="atRisk">Show: At Risk Only (High/Med)</option>
+            <option value="all">{t('showAll')}</option>
+            <option value="atRisk">{t('showAtRiskOnly')}</option>
           </select>
         </div>
       </div>
 
       <div className="rankings-table">
         <div className="table-header">
-          <div className="col rank">Rank</div>
-          <div className="col student">Student</div>
-          <div className="col score">Score</div>
-          <div className="col mistakes">Mistakes</div>
-          <div className="col status">Status</div>
+          <div className="col rank">{t('rank')}</div>
+          <div className="col student">{t('student')}</div>
+          <div className="col score">{t('score')}</div>
+          <div className="col mistakes">{t('mistakes')}</div>
+          <div className="col status">{t('status')}</div>
         </div>
 
         <div className="table-body">

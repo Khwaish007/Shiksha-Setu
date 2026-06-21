@@ -4,6 +4,7 @@ import axios from 'axios';
 import { API_BASE } from '../config/api.js';
 import { analyticsAPI } from '../api/analyticsAPI.js';
 import { formatFileSize, prepareFilesForUpload } from '../utils/uploadBatches.js';
+import { useI18n } from '../i18n.jsx';
 import GradingNoticeModal from './GradingNoticeModal.jsx';
 import '../styles/UploadSection.css';
 
@@ -29,6 +30,7 @@ const renderAnswerKeyText = (answerKey) => (
 );
 
 function UploadSection({ sessionId, onGradingExecutionComplete }) {
+  const { t } = useI18n();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(null);
@@ -81,8 +83,8 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
     if (fileList.length === 0) {
       setNotice({
         type: 'error',
-        title: 'No worksheets selected',
-        message: 'Please add at least one worksheet image before processing.'
+        title: t('noWorksheetsTitle'),
+        message: t('noWorksheetsMessage')
       });
       return;
     }
@@ -90,8 +92,8 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
     if (!sessionId) {
       setNotice({
         type: 'error',
-        title: 'Session still loading',
-        message: 'Please wait a moment while your fresh grading session is prepared.'
+        title: t('sessionLoadingTitle'),
+        message: t('sessionLoadingMessage')
       });
       return;
     }
@@ -116,13 +118,13 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
         ? {
             type: 'manual',
             count: manualReviewCount,
-            detail: 'These files were not graded. They may be unclear, non-mathematical, incomplete, or outside the expected worksheet format.',
+            detail: t('batchManualDetail'),
             complete: true,
             results: consolidatedResults
           }
         : {
             type: 'success',
-            message: 'All selected worksheets were graded successfully. Click Got it to view the refreshed dashboard.',
+            message: t('batchSuccess'),
             complete: true,
             results: consolidatedResults
           });
@@ -132,26 +134,26 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
       if (status === 413) {
         setNotice({
           type: 'error',
-          title: 'File too large',
-          message: 'Try a smaller image or take a photo at lower resolution.'
+          title: t('fileTooLarge'),
+          message: t('smallerImage')
         });
       } else if (status === 504 || networkError.code === 'ECONNABORTED') {
         setNotice({
           type: 'error',
-          title: 'Grading timed out',
-          message: 'Try again with a smaller image or fewer worksheets.'
+          title: t('gradingTimedOut'),
+          message: t('smallerBatch')
         });
       } else if (networkError.message?.includes('must be under') || networkError.message?.includes('Could not')) {
         setNotice({
           type: 'error',
-          title: 'Upload could not be prepared',
+          title: t('uploadCouldNotPrepare'),
           message: networkError.message
         });
       } else {
         setNotice({
           type: 'error',
-          title: 'Upload failed',
-          message: 'Please try again with clear worksheet images.'
+          title: t('uploadFailed'),
+          message: t('clearWorksheetImage')
         });
       }
     } finally {
@@ -164,8 +166,8 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
     if (!sessionId) {
       setNotice({
         type: 'error',
-        title: 'Session still loading',
-        message: 'Please wait a moment before saving the answer key.'
+        title: t('sessionLoadingTitle'),
+        message: t('sessionLoadingMessage')
       });
       return;
     }
@@ -173,8 +175,8 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
     if (!answerKeyText.trim()) {
       setNotice({
         type: 'error',
-        title: 'Answer key is empty',
-        message: 'Add at least one answer, for example Q1: 42, before saving the key.'
+        title: t('answerKeyEmptyTitle'),
+        message: t('answerKeyEmptyMessage')
       });
       return;
     }
@@ -186,13 +188,13 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
       setAnswerKeyText(savedKey.rawText || renderAnswerKeyText(savedKey));
       setNotice({
         type: 'success',
-        message: `Answer key saved with ${savedKey.questions?.length || 0} questions. Future grading in this session will use it as ground truth.`
+        message: t('answerKeySaved', { count: savedKey.questions?.length || 0 })
       });
     } catch (error) {
       setNotice({
         type: 'error',
-        title: 'Answer key not saved',
-        message: error.response?.data?.error || 'Please check the key format and try again.'
+        title: t('answerKeyNotSaved'),
+        message: error.response?.data?.error || t('checkKeyFormat')
       });
     } finally {
       setIsSavingKey(false);
@@ -206,8 +208,8 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
     if (!sessionId) {
       setNotice({
         type: 'error',
-        title: 'Session still loading',
-        message: 'Please wait a moment before uploading the model worksheet.'
+        title: t('sessionLoadingTitle'),
+        message: t('sessionLoadingMessage')
       });
       return;
     }
@@ -227,13 +229,13 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
       setAnswerKeyText(result.answerKey?.rawText || renderAnswerKeyText(result.answerKey));
       setNotice({
         type: 'success',
-        message: `Model worksheet transcribed into ${result.answerKey?.questions?.length || 0} answers. Review it once before grading.`
+        message: t('modelTranscribed', { count: result.answerKey?.questions?.length || 0 })
       });
     } catch (error) {
       setNotice({
         type: 'error',
-        title: 'Model worksheet not transcribed',
-        message: error.response?.data?.error || 'Please try again with a clearer filled model worksheet.'
+        title: t('modelWorksheetNotTranscribed'),
+        message: error.response?.data?.error || t('clearerModelWorksheet')
       });
     } finally {
       setIsTranscribingKey(false);
@@ -252,8 +254,8 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
     } catch (error) {
       setNotice({
         type: 'error',
-        title: 'Answer key not cleared',
-        message: error.response?.data?.error || 'Please try again.'
+        title: t('answerKeyNotCleared'),
+        message: error.response?.data?.error || t('tryAgain')
       });
     } finally {
       setIsSavingKey(false);
@@ -280,15 +282,15 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
         <div className="answer-key-card glass-panel">
           <div className="answer-key-header">
             <div>
-              <span className="eyebrow">Teacher Answer Key</span>
-              <h2>Set the ground truth before grading</h2>
+              <span className="eyebrow">{t('teacherAnswerKey')}</span>
+              <h2>{t('answerKeyTitle')}</h2>
               <p>
-                Paste answers manually or upload one filled model worksheet. Claude will grade this session against the saved key instead of guessing.
+                {t('answerKeyDescription')}
               </p>
             </div>
             <div className={`answer-key-status ${hasAnswerKey ? 'ready' : 'empty'}`}>
               <strong>{answerKeyCount}</strong>
-              <span>{hasAnswerKey ? 'answers ready' : 'no key yet'}</span>
+              <span>{hasAnswerKey ? t('answersReady') : t('noKeyYet')}</span>
             </div>
           </div>
 
@@ -306,7 +308,7 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
                 onClick={saveTypedAnswerKey}
                 disabled={isSavingKey || isTranscribingKey}
               >
-                {isSavingKey ? 'Saving key...' : 'Save Typed Key'}
+                {isSavingKey ? t('savingKey') : t('saveTypedKey')}
               </button>
               <input
                 ref={modelWorksheetInputRef}
@@ -322,7 +324,7 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
                 onClick={() => modelWorksheetInputRef.current?.click()}
                 disabled={isSavingKey || isTranscribingKey}
               >
-                {isTranscribingKey ? 'Reading model...' : 'Upload Model Worksheet'}
+                {isTranscribingKey ? t('readingModel') : t('uploadModelWorksheet')}
               </button>
               {hasAnswerKey && (
                 <button
@@ -331,7 +333,7 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
                   onClick={clearAnswerKey}
                   disabled={isSavingKey || isTranscribingKey}
                 >
-                  Clear
+                  {t('clear')}
                 </button>
               )}
             </div>
@@ -340,10 +342,10 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
 
         <div className="upload-main-card glass-panel">
           <div className="section-heading">
-            <span className="eyebrow">Worksheet Upload</span>
-            <h2>Upload tests in one elegant flow</h2>
+            <span className="eyebrow">{t('worksheetUpload')}</span>
+            <h2>{t('uploadFlowTitle')}</h2>
             <p>
-              Select handwritten worksheets, preview them instantly, and send them for grading in one clean step.
+              {t('uploadFlowDescription')}
             </p>
           </div>
 
@@ -372,15 +374,15 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
                 transition={{ type: 'spring', stiffness: 180, damping: 16 }}
               />
               <div className="dropzone-copy">
-                <span className="upload-badge">Drag & Drop Ready</span>
-                <h3>{isDragActive ? 'Release to stage your worksheets' : 'Drop files here or browse from your device'}</h3>
+                <span className="upload-badge">{t('dragDropReady')}</span>
+                <h3>{isDragActive ? t('releaseToStage') : t('dropFilesHere')}</h3>
                 <p>
-                  Upload any number of worksheets. Files are sent in small batches of 2 and graded in parallel.
+                  {t('uploadBatchHint')}
                 </p>
               </div>
               <div className="dropzone-actions">
-                <span className="ghost-button">Choose Files</span>
-                <span className="helper-text">PNG, JPG, JPEG, WEBP</span>
+                <span className="ghost-button">{t('chooseFiles')}</span>
+                <span className="helper-text">{t('supportedFormats')}</span>
               </div>
             </label>
           </div>
@@ -388,7 +390,7 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
           <div className="selected-summary">
             <div>
               <span className="summary-value">{fileList.length}</span>
-              <span className="summary-label">Selected files</span>
+              <span className="summary-label">{t('selectedFiles')}</span>
             </div>
           </div>
 
@@ -415,13 +417,13 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
-                  <span>No worksheets selected yet.</span>
-                  <p>Once you add files, the upload deck will preview the first few and keep the rest organized behind the scenes.</p>
+                  <span>{t('noWorksheetsSelected')}</span>
+                  <p>{t('uploadDeckHint')}</p>
                 </motion.div>
               )}
             </AnimatePresence>
             {remainingFiles > 0 && (
-              <div className="more-files-pill">+{remainingFiles} more files</div>
+              <div className="more-files-pill">+{remainingFiles} {t('moreFiles')}</div>
             )}
           </div>
         </div>
@@ -437,10 +439,10 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
       >
         <span>
           {isProcessing && uploadProgress
-            ? `Grading batch ${uploadProgress.current} of ${uploadProgress.total}…`
+            ? t('gradingBatch', { current: uploadProgress.current, total: uploadProgress.total })
             : isProcessing
-              ? 'Preparing upload…'
-              : `Process ${fileList.length || 'selected'} worksheets`}
+              ? t('preparingUpload')
+              : t('processSelectedWorksheets')}
         </span>
         <span className="button-chevron">→</span>
       </motion.button>

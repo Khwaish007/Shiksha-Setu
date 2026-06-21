@@ -29,6 +29,11 @@ Before grading, perform an eligibility check. Mark the submission as manual revi
 - You cannot identify enough math questions and student work to grade fairly.
 - You are uncertain whether the content is a mathematics test.
 
+Language and script handling:
+- Readable mathematics worksheets may be written in English, Hindi, Marathi, Devanagari script, Romanized Hindi/Marathi, or a mix of these. Do NOT send a worksheet to manual review solely because it uses an Indian language or Devanagari text.
+- Preserve student names exactly as written, including Hindi/Marathi/Devanagari characters and mixed-script names.
+- Translate or interpret math instructions only as needed to grade; keep concept tags concise in English unless the answer key supplies a different concept label.
+
 CRITICAL RULES:
 1. Return ONLY a valid JSON object. Do NOT include markdown, code fences, explanations, or text outside JSON.
 2. The JSON must be parseable by JSON.parse() in JavaScript.
@@ -41,7 +46,7 @@ CRITICAL RULES:
 Return EXACTLY this structure for a gradable mathematics test:
 {
   "gradingDecision": "graded",
-  "studentName": "Extract the exact name written (e.g. 'Student_12'), otherwise 'Unknown'",
+  "studentName": "Extract and preserve the exact name written, including Devanagari or mixed-script names, otherwise 'Unknown'",
   "totalScore": <number between 0-100, as a percentage of earned points>,
   "mistakes": [
     {
@@ -69,6 +74,8 @@ Return EXACTLY this structure for unreadable, non-mathematics, incomplete, or ga
 
 export const ANSWER_KEY_TRANSCRIPTION_PROMPT = `You are helping a teacher create a grading answer key from one filled model mathematics worksheet.
 Return ONLY valid JSON. Do not include markdown or text outside JSON.
+
+Readable model worksheets may be written in English, Hindi, Marathi, Devanagari script, Romanized Hindi/Marathi, or mixed language. Treat them as valid mathematics worksheets when the questions and filled answers are clear, and preserve source text where it matters for the answer key.
 
 If the image is unreadable, not a mathematics worksheet, blank, or does not contain a filled model solution, return:
 {

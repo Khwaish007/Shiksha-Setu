@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
+import { useI18n } from '../i18n.jsx';
 import '../styles/ParentMessageModal.css';
 
 const TypewriterText = ({ text }) => {
@@ -21,6 +22,7 @@ const TypewriterText = ({ text }) => {
 };
 
 const ParentMessageModal = ({ student, onClose }) => {
+  const { t } = useI18n();
   const [language, setLanguage] = useState('both');
   const [tone, setTone] = useState('friendly');
   const [loading, setLoading] = useState(false);
@@ -34,7 +36,7 @@ const ParentMessageModal = ({ student, onClose }) => {
       setMessageData(data);
     } catch (err) {
       console.error('Failed to generate message:', err);
-      alert('Failed to generate message.');
+      alert(t('failedGenerateMessage'));
     } finally {
       setLoading(false);
     }
@@ -43,7 +45,7 @@ const ParentMessageModal = ({ student, onClose }) => {
   const copyToClipboard = () => {
     if (!messageData) return;
     navigator.clipboard.writeText(messageData.whatsappText);
-    alert('Copied to clipboard!');
+    alert(t('copiedToClipboard'));
   };
 
   const openWhatsApp = () => {
@@ -62,29 +64,29 @@ const ParentMessageModal = ({ student, onClose }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="pm-modal-header">
-          <h2>Notify Parent: {student.studentName}</h2>
+          <h2>{t('notifyParentFor', { name: student.studentName })}</h2>
           <button className="pm-close-btn" onClick={onClose}>&times;</button>
         </div>
 
         <div className="pm-modal-body">
           <div className="pm-controls">
             <div className="pm-control-group">
-              <label>Language</label>
+              <label>{t('language')}</label>
               <select value={language} onChange={(e) => setLanguage(e.target.value)}>
-                <option value="both">Hindi + English</option>
-                <option value="hindi">Hindi Only</option>
-                <option value="english">English Only</option>
+                <option value="both">{t('hindiEnglish')}</option>
+                <option value="hindi">{t('hindiOnly')}</option>
+                <option value="english">{t('englishOnly')}</option>
               </select>
             </div>
             <div className="pm-control-group">
-              <label>Tone</label>
+              <label>{t('tone')}</label>
               <select value={tone} onChange={(e) => setTone(e.target.value)}>
-                <option value="friendly">Warm & Friendly</option>
-                <option value="formal">Professional & Formal</option>
+                <option value="friendly">{t('warmFriendly')}</option>
+                <option value="formal">{t('professionalFormal')}</option>
               </select>
             </div>
             <button className="pm-generate-btn" onClick={handleGenerate} disabled={loading}>
-              {loading ? 'Composing...' : 'Generate Message'}
+              {loading ? t('composing') : t('generateMessage')}
             </button>
           </div>
 
@@ -92,7 +94,7 @@ const ParentMessageModal = ({ student, onClose }) => {
             {loading ? (
               <div className="pm-loading">
                 <span className="pm-spinner">✍️</span>
-                <p><TypewriterText text="Composing personalized message..." /></p>
+                <p><TypewriterText text={t('composingPersonalizedMessage')} /></p>
               </div>
             ) : messageData ? (
               <div className="pm-preview-card">
@@ -110,7 +112,7 @@ const ParentMessageModal = ({ student, onClose }) => {
               </div>
             ) : (
               <div className="pm-empty-state">
-                <p>Select options and click Generate to create a parent message.</p>
+                <p>{t('selectOptionsGenerate')}</p>
               </div>
             )}
           </div>
@@ -118,10 +120,10 @@ const ParentMessageModal = ({ student, onClose }) => {
 
         <div className="pm-modal-footer">
           <button className="pm-btn-secondary" onClick={copyToClipboard} disabled={!messageData || loading}>
-            Copy to Clipboard
+            {t('copyToClipboard')}
           </button>
           <button className="pm-btn-primary" onClick={openWhatsApp} disabled={!messageData || loading}>
-            <span className="whatsapp-icon">💬</span> Open in WhatsApp
+            <span className="whatsapp-icon">💬</span> {t('openInWhatsApp')}
           </button>
         </div>
       </motion.div>

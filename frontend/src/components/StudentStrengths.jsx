@@ -1,11 +1,14 @@
 import '../styles/StudentStrengths.css';
+import { useI18n } from '../i18n.jsx';
 
 const StudentStrengths = ({ students }) => {
+  const { t } = useI18n();
+
   return (
     <div className="student-strengths-container">
       <div className="strengths-header">
-        <h2>Student Profile Analysis</h2>
-        <p className="strengths-subtitle">Individual strengths and improvement areas</p>
+        <h2>{t('studentProfileAnalysis')}</h2>
+        <p className="strengths-subtitle">{t('individualStrengthAreas')}</p>
       </div>
 
       <div className="students-grid">
@@ -42,27 +45,27 @@ const StudentStrengths = ({ students }) => {
             </div>
 
             <div className="strengths-section">
-              <h4 className="section-title">💪 Strengths</h4>
+              <h4 className="section-title">💪 {t('strengths')}</h4>
               <div className="areas-list">
                 {student.strongAreas && student.strongAreas.length > 0 ? (
                   student.strongAreas.map((area, i) => (
                     <span key={i} className="area-tag strength">{area}</span>
                   ))
                 ) : (
-                  <span className="area-tag placeholder">None identified yet</span>
+                  <span className="area-tag placeholder">{t('noneIdentifiedYet')}</span>
                 )}
               </div>
             </div>
 
             <div className="weaknesses-section">
-              <h4 className="section-title">🎯 Needs Improvement</h4>
+              <h4 className="section-title">🎯 {t('needsImprovement')}</h4>
               <div className="areas-list">
                 {student.weakAreas && student.weakAreas.length > 0 ? (
                   student.weakAreas.map((area, i) => (
                     <span key={i} className="area-tag weakness">{area}</span>
                   ))
                 ) : (
-                  <span className="area-tag placeholder">All concepts mastered!</span>
+                  <span className="area-tag placeholder">{t('allConceptsMastered')}</span>
                 )}
               </div>
             </div>

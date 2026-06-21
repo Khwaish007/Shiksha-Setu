@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
+import { useI18n } from '../i18n.jsx';
 import '../styles/RiskForecast.css';
 
 const RiskForecast = () => {
+  const { t } = useI18n();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [assessing, setAssessing] = useState(false);
@@ -31,7 +33,7 @@ const RiskForecast = () => {
       await fetchStudents();
     } catch (err) {
       console.error("Failed to assess risk", err);
-      alert("Failed to run AI risk assessment");
+      alert(t('failedRiskAssessment'));
     } finally {
       setAssessing(false);
     }
@@ -53,7 +55,7 @@ const RiskForecast = () => {
     return "#9ca3af";
   };
 
-  if (loading) return <div className="forecast-loading">Loading predictive forecast...</div>;
+  if (loading) return <div className="forecast-loading">{t('loadingPredictiveForecast')}</div>;
 
   const highRisk = students.filter(s => s.riskTier === 'high');
   const mediumRisk = students.filter(s => s.riskTier === 'medium');
@@ -66,9 +68,9 @@ const RiskForecast = () => {
     <div className="content-section forecast-panel">
       <div className="forecast-header">
         <div>
-          <h2>Predictive Risk Forecast</h2>
+          <h2>{t('predictiveRiskForecast')}</h2>
           <p className="forecast-subtitle">
-            <span className="attention-count">{needsAttentionCount} students</span> need attention before the next test.
+            <span className="attention-count">{t('studentsNeedAttention', { count: needsAttentionCount })}</span>
           </p>
         </div>
         <button 
@@ -76,7 +78,7 @@ const RiskForecast = () => {
           onClick={handleRunAssessment}
           disabled={assessing}
         >
-          {assessing ? "Analyzing Cohort..." : "Run AI Risk Assessment"}
+          {assessing ? t('analyzingCohort') : t('runAiRiskAssessment')}
         </button>
       </div>
 
@@ -84,7 +86,7 @@ const RiskForecast = () => {
         {/* High Risk */}
         <div className="forecast-col high-risk-col">
           <div className="col-header">
-            <h3>🔴 High Risk ({highRisk.length})</h3>
+            <h3>🔴 {t('highRisk')} ({highRisk.length})</h3>
           </div>
           <div className="student-cards">
             {highRisk.map(s => {
@@ -94,14 +96,14 @@ const RiskForecast = () => {
                   key={s._id} 
                   className="student-risk-card high-risk-card"
                   whileHover={{ scale: 1.02 }}
-                  title={s.riskReason || "No reason provided"}
+                  title={s.riskReason || t('noReasonProvided')}
                 >
                   <div className="card-top">
                     <span className="student-name">{s.studentName}</span>
                     <span className="trend-arrow" style={{ color: getTrendColor(arrow) }}>{arrow}</span>
                   </div>
                   {s.riskRecommendedAction && (
-                    <div className="recommended-action">Action: {s.riskRecommendedAction}</div>
+                    <div className="recommended-action">{t('action')}: {s.riskRecommendedAction}</div>
                   )}
                   <div className="pulse-ring"></div>
                 </motion.div>
@@ -113,7 +115,7 @@ const RiskForecast = () => {
         {/* Medium Risk */}
         <div className="forecast-col medium-risk-col">
           <div className="col-header">
-            <h3>🟡 Medium Risk ({mediumRisk.length})</h3>
+            <h3>🟡 {t('mediumRisk')} ({mediumRisk.length})</h3>
           </div>
           <div className="student-cards">
             {mediumRisk.map(s => {
@@ -123,14 +125,14 @@ const RiskForecast = () => {
                   key={s._id} 
                   className="student-risk-card medium-risk-card"
                   whileHover={{ scale: 1.02 }}
-                  title={s.riskReason || "No reason provided"}
+                  title={s.riskReason || t('noReasonProvided')}
                 >
                   <div className="card-top">
                     <span className="student-name">{s.studentName}</span>
                     <span className="trend-arrow" style={{ color: getTrendColor(arrow) }}>{arrow}</span>
                   </div>
                   {s.riskRecommendedAction && (
-                    <div className="recommended-action">Action: {s.riskRecommendedAction}</div>
+                    <div className="recommended-action">{t('action')}: {s.riskRecommendedAction}</div>
                   )}
                 </motion.div>
               );
@@ -141,7 +143,7 @@ const RiskForecast = () => {
         {/* Low Risk */}
         <div className="forecast-col low-risk-col">
           <div className="col-header">
-            <h3>🟢 Low Risk ({lowRisk.length})</h3>
+            <h3>🟢 {t('lowRisk')} ({lowRisk.length})</h3>
           </div>
           <div className="student-cards">
             {lowRisk.map(s => {
@@ -151,7 +153,7 @@ const RiskForecast = () => {
                   key={s._id} 
                   className="student-risk-card low-risk-card"
                   whileHover={{ scale: 1.02 }}
-                  title={s.riskReason || "No reason provided"}
+                  title={s.riskReason || t('noReasonProvided')}
                 >
                   <div className="card-top">
                     <span className="student-name">{s.studentName}</span>
@@ -166,7 +168,7 @@ const RiskForecast = () => {
       
       {unassessed.length > 0 && (
         <div className="unassessed-alert">
-          {unassessed.length} students have not been assessed yet. Click "Run AI Risk Assessment" to generate predictions.
+          {t('unassessedStudents', { count: unassessed.length })}
         </div>
       )}
     </div>

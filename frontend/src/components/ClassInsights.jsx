@@ -1,18 +1,21 @@
 import '../styles/ClassInsights.css';
+import { useI18n } from '../i18n.jsx';
 
 const ClassInsights = ({ classData }) => {
+  const { t } = useI18n();
+
   return (
     <div className="class-insights-container">
       <div className="insights-header">
-        <h2>Class Collective Insights</h2>
-        <p className="insights-subtitle">What the entire class excels at and struggles with</p>
+        <h2>{t('classCollectiveInsights')}</h2>
+        <p className="insights-subtitle">{t('classInsightsSubtitle')}</p>
       </div>
 
       <div className="insights-grid">
         <div className="insight-card strength-card">
           <div className="card-icon">💪</div>
-          <h3 className="card-title">Class Strengths</h3>
-          <p className="card-description">Topics where majority of students excel</p>
+          <h3 className="card-title">{t('classStrengthsTitle')}</h3>
+          <p className="card-description">{t('classStrengthsDescription')}</p>
 
           <div className="insights-list">
             {classData && classData.classStrengths && classData.classStrengths.map((strength, idx) => (
@@ -20,7 +23,7 @@ const ClassInsights = ({ classData }) => {
                 <div className="item-rank">{idx + 1}</div>
                 <div className="item-content">
                   <h4>{strength.topic}</h4>
-                  <span className="item-stat">{strength.mistakesCount} mistakes</span>
+                  <span className="item-stat">{strength.mistakesCount} {t('mistakes').toLowerCase()}</span>
                 </div>
                 <div className="success-badge">✅</div>
               </div>
@@ -30,8 +33,8 @@ const ClassInsights = ({ classData }) => {
 
         <div className="insight-card weakness-card">
           <div className="card-icon">⚠️</div>
-          <h3 className="card-title">Class Weaknesses</h3>
-          <p className="card-description">Topics needing class-wide intervention</p>
+          <h3 className="card-title">{t('classWeaknessesTitle')}</h3>
+          <p className="card-description">{t('classWeaknessesDescription')}</p>
 
           <div className="insights-list">
             {classData && classData.classWeaknesses && classData.classWeaknesses.map((weakness, idx) => (
@@ -39,7 +42,7 @@ const ClassInsights = ({ classData }) => {
                 <div className="item-rank">{idx + 1}</div>
                 <div className="item-content">
                   <h4>{weakness.topic}</h4>
-                  <span className="item-stat">{weakness.mistakesCount} mistakes</span>
+                  <span className="item-stat">{weakness.mistakesCount} {t('mistakes').toLowerCase()}</span>
                 </div>
                 <div className="warning-badge">⚠️</div>
               </div>
@@ -50,7 +53,7 @@ const ClassInsights = ({ classData }) => {
 
       {classData && classData.overallTrend && (
         <div className="trend-section">
-          <h3>📊 Overall Class Trend</h3>
+          <h3>📊 {t('overallClassTrend')}</h3>
           <p className="trend-text">{classData.overallTrend}</p>
         </div>
       )}

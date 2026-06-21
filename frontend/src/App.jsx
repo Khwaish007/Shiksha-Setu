@@ -8,8 +8,35 @@ import StudentDashboard from './components/StudentDashboard';
 import StudentProfile from './components/StudentProfile';
 import SessionHistoryModal from './components/SessionHistoryModal';
 import { analyticsAPI } from './api/analyticsAPI';
+import { I18nProvider, useI18n } from './i18n.jsx';
 
 function App() {
+  return (
+    <I18nProvider>
+      <AppShell />
+    </I18nProvider>
+  );
+}
+
+function LanguageToggle() {
+  const { language, setLanguage, languages, t } = useI18n();
+
+  return (
+    <label className="language-toggle">
+      <span>{t('language')}</span>
+      <select value={language} onChange={(event) => setLanguage(event.target.value)}>
+        {languages.map(item => (
+          <option key={item.code} value={item.code}>
+            {item.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function AppShell() {
+  const { t } = useI18n();
   const [activeView, setActiveView] = useState('dashboard');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [activeSession, setActiveSession] = useState(null);
@@ -132,36 +159,37 @@ function App() {
 
       <header className="app-topbar">
         <div>
-          <span className="app-kicker">Shiksha Intelligence Suite</span>
-          <h1>Premium classroom analytics and batch grading</h1>
+          <span className="app-kicker">{t('appKicker')}</span>
+          <h1>{t('appTitle')}</h1>
         </div>
         <div className="topbar-actions">
-          <span className="session-chip" title={activeSession?.sessionId || 'Preparing session'}>
-            {sessionLoading ? 'Preparing session' : activeSession?.title || 'Fresh session'}
+          <LanguageToggle />
+          <span className="session-chip" title={activeSession?.sessionId || t('preparingSession')}>
+            {sessionLoading ? t('preparingSession') : activeSession?.title || t('freshSession')}
           </span>
           <button
             className="topbar-chip"
             onClick={handleOpenSessionHistory}
           >
-            History
+            {t('history')}
           </button>
           <button
             className={`topbar-chip ${isHomeRoute && activeView === 'dashboard' ? 'active' : ''}`}
             onClick={() => { navigate('/'); setActiveView('dashboard'); }}
           >
-            Dashboard
+            {t('dashboard')}
           </button>
           <button
             className={`topbar-chip ${isHomeRoute && activeView === 'upload' ? 'active' : ''}`}
             onClick={() => { navigate('/'); setActiveView('upload'); }}
           >
-            Upload Tests
+            {t('uploadTests')}
           </button>
           <button
             className={`topbar-chip ${isStudentsRoute ? 'active' : ''}`}
             onClick={() => navigate('/students')}
           >
-            Students
+            {t('students')}
           </button>
         </div>
       </header>
@@ -248,12 +276,12 @@ function App() {
         <motion.button
           className="fab-button"
           onClick={() => setActiveView(activeView === 'dashboard' ? 'upload' : 'dashboard')}
-          title={activeView === 'dashboard' ? 'Upload New Worksheets' : 'View Analytics'}
+          title={activeView === 'dashboard' ? t('uploadNewWorksheets') : t('viewAnalytics')}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.98 }}
         >
           <span className="fab-icon">{activeView === 'dashboard' ? '+' : 'A'}</span>
-          <span className="fab-copy">{activeView === 'dashboard' ? 'Upload' : 'Analytics'}</span>
+          <span className="fab-copy">{activeView === 'dashboard' ? t('upload') : t('analytics')}</span>
         </motion.button>
       )}
     </div>

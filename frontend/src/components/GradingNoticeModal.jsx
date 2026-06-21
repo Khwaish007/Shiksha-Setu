@@ -1,31 +1,33 @@
 import { motion } from 'framer-motion';
+import { useI18n } from '../i18n.jsx';
 import '../styles/GradingNoticeModal.css';
 
 const copy = {
   manual: {
-    eyebrow: 'Manual review needed',
-    title: 'This submission needs a teacher review',
-    body: "The AI could not grade this reliably. The page may be unclear, incomplete, non-mathematical, or outside the expected test format.",
+    eyebrowKey: 'manualEyebrow',
+    titleKey: 'manualTitle',
+    bodyKey: 'manualBody',
     accent: 'manual',
     icon: '!'
   },
   success: {
-    eyebrow: 'Grading complete',
-    title: 'Results are ready',
-    body: 'The worksheet grading finished successfully and the dashboard has been updated.',
+    eyebrowKey: 'successEyebrow',
+    titleKey: 'successTitle',
+    bodyKey: 'successBody',
     accent: 'success',
     icon: '✓'
   },
   error: {
-    eyebrow: 'Upload issue',
-    title: 'This upload could not be processed',
-    body: 'Something interrupted the grading request. Please try again with a clear worksheet image.',
+    eyebrowKey: 'errorEyebrow',
+    titleKey: 'errorTitle',
+    bodyKey: 'errorBody',
     accent: 'error',
     icon: 'i'
   }
 };
 
 function GradingNoticeModal({ type = 'manual', title, message, detail, count, onClose }) {
+  const { t } = useI18n();
   const content = copy[type] || copy.manual;
 
   return (
@@ -47,19 +49,19 @@ function GradingNoticeModal({ type = 'manual', title, message, detail, count, on
         <div className="grading-notice-glow" />
         <div className="grading-notice-icon">{content.icon}</div>
         <div className="grading-notice-content">
-          <span className="grading-notice-eyebrow">{content.eyebrow}</span>
-          <h2>{title || content.title}</h2>
-          <p>{message || content.body}</p>
+          <span className="grading-notice-eyebrow">{t(content.eyebrowKey)}</span>
+          <h2>{title || t(content.titleKey)}</h2>
+          <p>{message || t(content.bodyKey)}</p>
           {typeof count === 'number' && count > 0 && (
             <div className="grading-notice-count">
               <strong>{count}</strong>
-              <span>{count === 1 ? 'submission' : 'submissions'} set aside for manual checking</span>
+              <span>{count === 1 ? t('submission') : t('submissions')} {t('manualCountSuffix')}</span>
             </div>
           )}
           {detail && <div className="grading-notice-detail">{detail}</div>}
         </div>
         <button className="grading-notice-close" onClick={onClose}>
-          Got it
+          {t('gotIt')}
         </button>
       </motion.div>
     </motion.div>

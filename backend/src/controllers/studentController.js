@@ -104,7 +104,7 @@ export const createStudent = async (req, res) => {
 
     // Check for duplicate
     const existing = await Student.findOne({
-      studentName: { $regex: new RegExp(`^${studentName.trim()}$`, 'i') }
+      studentName: { $regex: new RegExp(`^${escapeRegExp(studentName.trim())}$`, 'i') }
     });
     if (existing) {
       return res.status(409).json({ error: 'A student with this name already exists.' });

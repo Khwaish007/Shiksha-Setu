@@ -13,21 +13,23 @@ import PeerBenchmarking from './PeerBenchmarking';
 import PerformanceStats from './PerformanceStats';
 import ClassMisconceptions from './ClassMisconceptions';
 import { analyticsAPI } from '../api/analyticsAPI';
+import { useI18n } from '../i18n.jsx';
 
 const dashboardTabs = [
-  { key: 'overview', label: 'Overview' },
-  { key: 'stats', label: 'Statistics' },
-  { key: 'heatmap', label: 'Heatmap' },
-  { key: 'misconceptions', label: 'Misconceptions' },
-  { key: 'class', label: 'Class Insights' },
-  { key: 'recommendations', label: 'Recommendations' },
-  { key: 'at-risk', label: 'At-Risk' },
-  { key: 'strengths', label: 'Strengths' },
-  { key: 'rankings', label: 'Rankings' },
-  { key: 'peers', label: 'Peer Compare' }
+  { key: 'overview', labelKey: 'overview' },
+  { key: 'stats', labelKey: 'statistics' },
+  { key: 'heatmap', labelKey: 'heatmap' },
+  { key: 'misconceptions', labelKey: 'misconceptions' },
+  { key: 'class', labelKey: 'classInsights' },
+  { key: 'recommendations', labelKey: 'recommendations' },
+  { key: 'at-risk', labelKey: 'atRisk' },
+  { key: 'strengths', labelKey: 'strengths' },
+  { key: 'rankings', labelKey: 'rankings' },
+  { key: 'peers', labelKey: 'peerCompare' }
 ];
 
 const Dashboard = ({ session }) => {
+  const { t } = useI18n();
   const sessionId = session?.sessionId;
   const [analytics, setAnalytics] = useState(null);
   const [heatmapData, setHeatmapData] = useState(null);
@@ -89,7 +91,7 @@ const Dashboard = ({ session }) => {
     return (
       <div className="dashboard-loading">
         <div className="loading-spinner"></div>
-        <p>Loading classroom session...</p>
+        <p>{t('loadingClassroomSession')}</p>
       </div>
     );
   }
@@ -104,12 +106,12 @@ const Dashboard = ({ session }) => {
       <header className="dashboard-header">
         <div className="header-content">
           <h1 className="header-title">
-            <span className="gradient-text">Classroom Intelligence</span>
+            <span className="gradient-text">{t('classroomIntelligence')}</span>
           </h1>
-          <p className="header-subtitle">AI-powered educational insights dashboard</p>
+          <p className="header-subtitle">{t('dashboardSubtitle')}</p>
           {session && (
             <p className="header-subtitle">
-              Current session: {session.title || 'Untitled session'}
+              {t('currentSession')}: {session.title || t('untitledSession')}
             </p>
           )}
         </div>
@@ -124,7 +126,7 @@ const Dashboard = ({ session }) => {
               className={`nav-tab ${activeTab === tab.key ? 'active' : ''}`}
               onClick={() => setActiveTab(tab.key)}
             >
-              {tab.label}
+              {t(tab.labelKey)}
             </button>
           ))}
         </div>
@@ -137,25 +139,25 @@ const Dashboard = ({ session }) => {
             {/* Key Metrics */}
             <section className="metrics-grid">
               <MetricsCard
-                title="Total Students"
+                title={t('totalStudents')}
                 value={analytics.totalStudents}
                 icon="👥"
                 color="blue"
               />
               <MetricsCard
-                title="Average Score"
+                title={t('averageScore')}
                 value={`${analytics.averageScore}%`}
                 icon="📊"
                 color="purple"
               />
               <MetricsCard
-                title="Highest Score"
+                title={t('highestScore')}
                 value={`${analytics.highestScore}%`}
                 icon="⭐"
                 color="gold"
               />
               <MetricsCard
-                title="Excellence Rate"
+                title={t('excellenceRate')}
                 value={`${excellenceRate}%`}
                 icon="🎯"
                 color="green"
@@ -165,7 +167,7 @@ const Dashboard = ({ session }) => {
             {/* Performance Distribution */}
             <section className="chart-section">
               <PerformanceChart
-                title="Score Distribution"
+                title={t('scoreDistribution')}
                 data={analytics.scoreDistribution}
                 metrics={analytics.performanceMetrics}
               />

@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
 import '../styles/ConceptHeatmap.css';
+import { useI18n } from '../i18n.jsx';
 
 const LEVELS = [
-  { key: 'low', label: 'Low' },
-  { key: 'medium', label: 'Medium' },
-  { key: 'high', label: 'High' },
-  { key: 'very_high', label: 'Very High' }
+  { key: 'low', labelKey: 'low' },
+  { key: 'medium', labelKey: 'medium' },
+  { key: 'high', labelKey: 'high' },
+  { key: 'very_high', labelKey: 'veryHigh' }
 ];
 
 const ConceptHeatmap = ({ data, thresholds }) => {
+  const { t } = useI18n();
   const maxStudents = useMemo(() => Math.max(...data.map(d => d.totalStudentsAffected), 1), [data]);
 
   // Use backend-provided intensity when available. Fallback to percentage-based.
@@ -58,8 +60,8 @@ const ConceptHeatmap = ({ data, thresholds }) => {
   return (
     <div className="heatmap-container">
       <div className="heatmap-header">
-        <h2>Concept Difficulty Heatmap</h2>
-        <p className="heatmap-subtitle">Darker = More students struggling</p>
+        <h2>{t('conceptDifficultyHeatmap')}</h2>
+        <p className="heatmap-subtitle">{t('darkerMeansStruggling')}</p>
       </div>
 
       <div className="heatmap-grid">
@@ -67,13 +69,13 @@ const ConceptHeatmap = ({ data, thresholds }) => {
           <div
             key={idx}
             className={`heatmap-cell intensity-${mapIntensityToClass(getIntensity(item))}`}
-            title={`${item._id}: ${item.totalStudentsAffected} students (${getPercent(item)}%)`}
+            title={`${item._id}: ${item.totalStudentsAffected} ${t('students').toLowerCase()} (${getPercent(item)}%)`}
           >
             <div className="cell-content">
               <h4 className="cell-topic">{item._id}</h4>
               <div className="cell-stats">
                 <span className="stat-number">{item.totalStudentsAffected}</span>
-                <span className="stat-label">students</span>
+                <span className="stat-label">{t('students').toLowerCase()}</span>
                 {typeof item.percentageOfClass === 'number' && (
                   <span className="stat-percent">{item.percentageOfClass}%</span>
                 )}
@@ -82,11 +84,11 @@ const ConceptHeatmap = ({ data, thresholds }) => {
           </div>
         ))}
         {visibleItems.length === 0 && (
-          <div className="heatmap-empty">No concepts match the selected filters.</div>
+          <div className="heatmap-empty">{t('noConceptsMatch')}</div>
         )}
       </div>
 
-      <div className="heatmap-legend" role="toolbar" aria-label="Filter difficulty levels">
+      <div className="heatmap-legend" role="toolbar" aria-label={t('filterDifficultyLevels')}>
         {LEVELS.map(level => (
           <button
             key={level.key}
@@ -96,7 +98,7 @@ const ConceptHeatmap = ({ data, thresholds }) => {
             aria-pressed={enabled.has(level.key)}
           >
             <span className={`legend-swatch ${level.key}`} aria-hidden="true" />
-            <span className="legend-label">{level.label}</span>
+            <span className="legend-label">{t(level.labelKey)}</span>
           </button>
         ))}
       </div>

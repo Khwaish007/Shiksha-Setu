@@ -1,11 +1,14 @@
 import '../styles/AtRiskStudents.css';
+import { useI18n } from '../i18n.jsx';
 
 const AtRiskStudents = ({ students }) => {
+  const { t } = useI18n();
+
   return (
     <div className="atrisk-container">
       <div className="atrisk-header">
-        <h2>At-Risk Students</h2>
-        <p className="atrisk-subtitle">Students needing intervention and support</p>
+        <h2>{t('atRiskStudents')}</h2>
+        <p className="atrisk-subtitle">{t('studentsNeedSupport')}</p>
       </div>
 
       <div className="atrisk-grid">
@@ -20,28 +23,28 @@ const AtRiskStudents = ({ students }) => {
 
             <div className="score-display">
               <div className="score-number">{student.score}%</div>
-              <div className="score-label">Current Score</div>
+              <div className="score-label">{t('currentScore')}</div>
             </div>
 
             <div className="weak-areas">
-              <div className="areas-title">Problem Areas</div>
+              <div className="areas-title">{t('problemAreas')}</div>
               <div className="areas-tags">
                 {student.topMistakes && student.topMistakes.length > 0 ? (
                   student.topMistakes.map((area, i) => (
                     <span key={i} className="area-tag">{area}</span>
                   ))
                 ) : (
-                  <span className="area-tag">No specific weak areas</span>
+                  <span className="area-tag">{t('noSpecificWeakAreas')}</span>
                 )}
               </div>
             </div>
 
             <div className="intervention-section">
-              <div className="intervention-type">Intervention Type:</div>
+              <div className="intervention-type">{t('interventionType')}</div>
               <div className="intervention-desc">{student.interventionType}</div>
             </div>
 
-            <div className="study-hours">⏱️ Estimated Study Hours: {student.estimatedStudyHours}</div>
+            <div className="study-hours">⏱️ {t('estimatedStudyHours')}: {student.estimatedStudyHours}</div>
           </div>
           );
         })}
