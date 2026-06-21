@@ -27,6 +27,10 @@ import {
   transcribeModelWorksheet
 } from '../controllers/answerKeyController.js';
 import {
+  getLatestAccuracyReport,
+  runAccuracyReport
+} from '../controllers/accuracyController.js';
+import {
   clearSessionSubmissions,
   createGradingSession,
   deleteGradingSession,
@@ -51,6 +55,8 @@ router.get('/sessions', listGradingSessions);
 router.get('/sessions/:sessionId', getGradingSession);
 router.post('/sessions/:sessionId/resume', resumeGradingSession);
 router.patch('/sessions/:sessionId/resume', resumeGradingSession);
+router.get('/accuracy-report', getLatestAccuracyReport);
+router.post('/accuracy-report/run', runAccuracyReport);
 router.get('/sessions/:sessionId/answer-key', getAnswerKey);
 router.get('/sessions/:sessionId/review-queue', fetchReviewQueue);
 router.patch('/sessions/:sessionId/review-queue/:submissionId/approve', approveReviewSubmission);

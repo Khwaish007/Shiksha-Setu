@@ -13,12 +13,14 @@ import PeerBenchmarking from './PeerBenchmarking';
 import PerformanceStats from './PerformanceStats';
 import ClassMisconceptions from './ClassMisconceptions';
 import ReviewQueue from './ReviewQueue.jsx';
+import AccuracyReport from './AccuracyReport.jsx';
 import { analyticsAPI } from '../api/analyticsAPI';
 import { useI18n } from '../i18n.jsx';
 
 const dashboardTabs = [
   { key: 'overview', labelKey: 'overview' },
   { key: 'review', labelKey: 'reviewQueue' },
+  { key: 'accuracy', labelKey: 'accuracyReport' },
   { key: 'stats', labelKey: 'statistics' },
   { key: 'heatmap', labelKey: 'heatmap' },
   { key: 'misconceptions', labelKey: 'misconceptions' },
@@ -46,6 +48,7 @@ const Dashboard = ({ session }) => {
   const [performanceDistribution, setPerformanceDistribution] = useState(null);
   const [classMisconceptions, setClassMisconceptions] = useState(null);
   const [reviewQueue, setReviewQueue] = useState([]);
+  const [accuracyReportData, setAccuracyReportData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -54,7 +57,7 @@ const Dashboard = ({ session }) => {
 
     setLoading(true);
     try {
-      const [analyticsData, heatmap, recs, ranks, atRisk, strengths, classStr, peers, perfDist, misconceptions, reviews] = await Promise.all([
+      const [analyticsData, heatmap, recs, ranks, atRisk, strengths, classStr, peers, perfDist, misconceptions, reviews, accuracyReport] = await Promise.all([
         analyticsAPI.getClassAnalytics(sessionId),
         analyticsAPI.getHeatmapData(sessionId),
         analyticsAPI.getTopicRecommendations(sessionId),
@@ -65,7 +68,8 @@ const Dashboard = ({ session }) => {
         analyticsAPI.getPeerBenchmarking(sessionId),
         analyticsAPI.getPerformanceDistribution(sessionId),
         analyticsAPI.getClassMisconceptions(sessionId),
-        analyticsAPI.getReviewQueue(sessionId)
+        analyticsAPI.getReviewQueue(sessionId),
+        analyticsAPI.getAccuracyReport()
       ]);
 
       setAnalytics(analyticsData);
@@ -81,6 +85,7 @@ const Dashboard = ({ session }) => {
       setPerformanceDistribution(perfDist);
       setClassMisconceptions(misconceptions);
       setReviewQueue(reviews);
+      setAccuracyReportData(accuracyReport);
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -89,7 +94,10 @@ const Dashboard = ({ session }) => {
   }, [sessionId]);
 
   useEffect(() => {
-    fetchAllData();
+    const timer = window.setTimeout(() => {
+      fetchAllData();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchAllData]);
 
   if (loading || !sessionId) {
@@ -199,6 +207,14 @@ const Dashboard = ({ session }) => {
             sessionId={sessionId}
             items={reviewQueue}
             onChanged={fetchAllData}
+          />
+        )}
+
+        {activeTab === 'accuracy' && (
+          <AccuracyReport
+            benchmark={accuracyReportData?.benchmark}
+            report={accuracyReportData?.report}
+            onReportUpdated={setAccuracyReportData}
           />
         )}
 

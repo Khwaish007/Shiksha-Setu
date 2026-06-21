@@ -67,6 +67,18 @@ export const analyticsAPI = {
     return data;
   },
 
+  getAccuracyReport: async () => {
+    const { data } = await axios.get(`${API_BASE}/accuracy-report`);
+    return data;
+  },
+
+  runAccuracyReport: async ({ maxCases = 12, mode = 'live' } = {}) => {
+    const { data } = await axios.post(`${API_BASE}/accuracy-report/run`, { maxCases, mode }, {
+      timeout: 240000
+    });
+    return data;
+  },
+
   getClassAnalytics: async (sessionId) => {
     const { data } = await axios.get(`${API_BASE}/analytics`, sessionParams(sessionId));
     return data;

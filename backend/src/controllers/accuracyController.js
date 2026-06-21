@@ -1,0 +1,38 @@
+import AccuracyReport from '../models/AccuracyReport.js';
+import { getBenchmarkSummary, runAccuracyBenchmark } from '../utils/accuracyBenchmark.js';
+
+export const getLatestAccuracyReport = async (req, res) => {
+  try {
+    const [latestReport, benchmark] = await Promise.all([
+      AccuracyReport.findOne().sort({ createdAt: -1 }),
+      getBenchmarkSummary()
+    ]);
+
+    res.status(200).json({
+      benchmark,
+      report: latestReport
+    });
+  } catch (error) {
+    console.error('Accuracy Report Fetch Error:', error);
+    res.status(500).json({ error: 'Failed to fetch accuracy report.' });
+  }
+};
+
+export const runAccuracyReport = async (req, res) => {
+  try {
+    const maxCases = Number(req.body?.maxCases || req.query?.maxCases || 12);
+    const mode = req.body?.mode === 'mock' || req.query?.mode === 'mock' ? 'mock' : 'live';
+    const reportPayload = await runAccuracyBenchmark({ maxCases, mode });
+    const savedReport = await AccuracyReport.create(reportPayload);
+
+    res.status(201).json({
+      benchmark: await getBenchmarkSummary(),
+      report: savedReport
+    });
+  } catch (error) {
+    console.error('Accuracy Report Run Error:', error);
+    res.status(500).json({
+      error: error.message || 'Failed to run accuracy benchmark.'
+    });
+  }
+};

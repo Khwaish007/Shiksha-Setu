@@ -1,0 +1,191 @@
+{
+  "title": "Prototype Accuracy Benchmark",
+  "datasetVersion": "student-tests-datasets-v1",
+  "description": "Small labeled benchmark for score MAE, concept precision/recall, and review-rate reporting. Scores and concepts can be edited as the human-labeled set is refined.",
+  "cases": [
+    {
+      "caseId": "dataset1-student-01",
+      "dataset": "student_tests_dataset",
+      "file": "student_tests_dataset/student_1_test.png",
+      "answerKeyFile": "student_tests_dataset/ground_truth_answer_key.json",
+      "studentName": "Student_1",
+      "expectedStatus": "Success",
+      "expectedScore": 20,
+      "expectedConcepts": [
+        "Trigonometry",
+        "Quadratic Factorization",
+        "Pythagorean Theorem",
+        "Calculus Differentiation",
+        "Probability",
+        "System of Linear Equations",
+        "Calculus Integration",
+        "Sine Rule"
+      ]
+    },
+    {
+      "caseId": "dataset1-student-02",
+      "dataset": "student_tests_dataset",
+      "file": "student_tests_dataset/student_2_test.png",
+      "answerKeyFile": "student_tests_dataset/ground_truth_answer_key.json",
+      "studentName": "Student_2",
+      "expectedStatus": "Success",
+      "expectedScore": 10,
+      "expectedConcepts": [
+        "Area Calculation",
+        "Trigonometry",
+        "Quadratic Factorization",
+        "Pythagorean Theorem",
+        "Calculus Differentiation",
+        "Probability",
+        "System of Linear Equations",
+        "Calculus Integration",
+        "Sine Rule"
+      ]
+    },
+    {
+      "caseId": "dataset1-student-06",
+      "dataset": "student_tests_dataset",
+      "file": "student_tests_dataset/student_6_test.png",
+      "answerKeyFile": "student_tests_dataset/ground_truth_answer_key.json",
+      "studentName": "Student_6",
+      "expectedStatus": "Success",
+      "expectedScore": 40,
+      "expectedConcepts": [
+        "Trigonometry",
+        "Quadratic Factorization",
+        "Pythagorean Theorem",
+        "Probability",
+        "Calculus Integration",
+        "Sine Rule"
+      ]
+    },
+    {
+      "caseId": "dataset1-student-11",
+      "dataset": "student_tests_dataset",
+      "file": "student_tests_dataset/student_11_test.png",
+      "answerKeyFile": "student_tests_dataset/ground_truth_answer_key.json",
+      "studentName": "Student_11",
+      "expectedStatus": "Success",
+      "expectedScore": 70,
+      "expectedConcepts": [
+        "Area Calculation",
+        "Probability",
+        "Sine Rule"
+      ]
+    },
+    {
+      "caseId": "dataset1-student-16",
+      "dataset": "student_tests_dataset",
+      "file": "student_tests_dataset/student_16_test.png",
+      "answerKeyFile": "student_tests_dataset/ground_truth_answer_key.json",
+      "studentName": "Student_16",
+      "expectedStatus": "Success",
+      "expectedScore": 90,
+      "expectedConcepts": [
+        "Calculus Integration"
+      ]
+    },
+    {
+      "caseId": "dataset1-student-20",
+      "dataset": "student_tests_dataset",
+      "file": "student_tests_dataset/student_20_test.png",
+      "answerKeyFile": "student_tests_dataset/ground_truth_answer_key.json",
+      "studentName": "Student_20",
+      "expectedStatus": "Success",
+      "expectedScore": 90,
+      "expectedConcepts": [
+        "Pythagorean Theorem"
+      ]
+    },
+    {
+      "caseId": "dataset2-student-01",
+      "dataset": "student_tests_dataset_2",
+      "file": "student_tests_dataset_2/student_1_test2.png",
+      "answerKeyFile": "student_tests_dataset_2/ground_truth_answer_key.json",
+      "studentName": "student_1",
+      "expectedStatus": "Success",
+      "expectedScore": 20,
+      "expectedConcepts": [
+        "Area Calculation",
+        "Trigonometry",
+        "Quadratic Factorization",
+        "Pythagorean Theorem",
+        "Calculus Differentiation",
+        "Probability",
+        "System of Linear Equations",
+        "Calculus Integration"
+      ]
+    },
+    {
+      "caseId": "dataset2-student-06",
+      "dataset": "student_tests_dataset_2",
+      "file": "student_tests_dataset_2/student_6_test2.png",
+      "answerKeyFile": "student_tests_dataset_2/ground_truth_answer_key.json",
+      "studentName": "student_6",
+      "expectedStatus": "Success",
+      "expectedScore": 40,
+      "expectedConcepts": [
+        "Linear Equations",
+        "Area Calculation",
+        "Pythagorean Theorem",
+        "Calculus Differentiation",
+        "Probability",
+        "Sine Rule"
+      ]
+    },
+    {
+      "caseId": "dataset2-student-10",
+      "dataset": "student_tests_dataset_2",
+      "file": "student_tests_dataset_2/student_10_test2.png",
+      "answerKeyFile": "student_tests_dataset_2/ground_truth_answer_key.json",
+      "studentName": "student_10",
+      "expectedStatus": "Success",
+      "expectedScore": 50,
+      "expectedConcepts": [
+        "Linear Equations",
+        "Trigonometry",
+        "Probability",
+        "Calculus Integration",
+        "Sine Rule"
+      ]
+    },
+    {
+      "caseId": "dataset2-student-12",
+      "dataset": "student_tests_dataset_2",
+      "file": "student_tests_dataset_2/student_12_test2.png",
+      "answerKeyFile": "student_tests_dataset_2/ground_truth_answer_key.json",
+      "studentName": "student_12",
+      "expectedStatus": "Success",
+      "expectedScore": 70,
+      "expectedConcepts": [
+        "Linear Equations",
+        "Quadratic Factorization",
+        "System of Linear Equations"
+      ]
+    },
+    {
+      "caseId": "dataset2-student-16",
+      "dataset": "student_tests_dataset_2",
+      "file": "student_tests_dataset_2/student_16_test2.png",
+      "answerKeyFile": "student_tests_dataset_2/ground_truth_answer_key.json",
+      "studentName": "student_16",
+      "expectedStatus": "Success",
+      "expectedScore": 90,
+      "expectedConcepts": [
+        "Trigonometry"
+      ]
+    },
+    {
+      "caseId": "dataset2-student-20",
+      "dataset": "student_tests_dataset_2",
+      "file": "student_tests_dataset_2/student_20_test2.png",
+      "answerKeyFile": "student_tests_dataset_2/ground_truth_answer_key.json",
+      "studentName": "student_20",
+      "expectedStatus": "Success",
+      "expectedScore": 90,
+      "expectedConcepts": [
+        "Area Calculation"
+      ]
+    }
+  ]
+}
