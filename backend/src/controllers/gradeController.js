@@ -10,6 +10,7 @@ import {
   escapeRegExp,
   MANUAL_REVIEW_MESSAGE,
   NEEDS_TEACHER_REVIEW_STATUS,
+  normalizeMimeType,
   parseAndNormalizeGradingResponse,
   validateUploadedImage
 } from '../utils/gradingSafety.js';
@@ -33,7 +34,7 @@ const generateWithRetry = async (client, systemPrompt, imageData, maxRetries = 3
     try {
       return await client.messages.create({
         model: "claude-opus-4-1-20250805",
-        max_tokens: 1024,
+        max_tokens: 4096,
         system: systemPrompt,
         messages: [
           {
@@ -383,7 +384,10 @@ export const processWorksheets = async (req, res) => {
             return savedManualDocument;
           }
 
-          const imagePart = formatBufferToClaudePart(file.buffer, file.mimetype);
+          const imagePart = formatBufferToClaudePart(
+            file.buffer,
+            imageValidation.mimeType || normalizeMimeType(file.mimetype)
+          );
 
           // --- Single Step: Transcribe and Grade the image in one call ---
           const gradingPrompt = buildGradingSystemPrompt(session.answerKey);

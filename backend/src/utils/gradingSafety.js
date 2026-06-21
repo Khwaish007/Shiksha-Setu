@@ -7,10 +7,19 @@ export const MANUAL_REVIEW_MESSAGE =
 
 export const ALLOWED_IMAGE_TYPES = new Set([
   'image/jpeg',
+  'image/jpg',
   'image/png',
   'image/webp',
   'image/gif'
 ]);
+
+export const normalizeMimeType = (mimeType) => {
+  const normalized = String(mimeType || 'image/jpeg').toLowerCase();
+  if (normalized === 'image/jpg' || normalized === 'image/jpeg') return 'image/jpeg';
+  return normalized;
+};
+
+const CANONICAL_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 export const formatBufferToClaudePart = (buffer, mimeType) => ({
   type: 'image',
@@ -21,31 +30,39 @@ export const formatBufferToClaudePart = (buffer, mimeType) => ({
   }
 });
 
-const BASE_GRADING_INSTRUCTIONS = `You are an expert school teacher evaluating uploaded handwritten school tests.
-Your ONLY task is to decide whether the image is a gradable mathematics test and return valid JSON. Return nothing except JSON.
+const BASE_GRADING_INSTRUCTIONS = `You are an expert school mathematics teacher grading uploaded handwritten tests.
+Your ONLY task is to grade readable mathematics worksheets and return valid JSON. Return nothing except JSON.
 
-Before grading, perform an eligibility check. Mark the submission as manual review if ANY of these are true:
-- The image is blank, corrupted, too blurry, too dark, rotated/cropped so badly that answers cannot be read, or handwriting is not understandable.
-- The upload is not a school mathematics test or worksheet.
-- The upload contains non-mathematics content, random marks, screenshots, photos of unrelated objects, documents from other subjects, or garbage/noise.
-- You cannot identify enough math questions and student work to grade fairly.
-- You are uncertain whether the content is a mathematics test.
+DEFAULT BEHAVIOR — GRADE FIRST:
+Assume a readable handwritten mathematics worksheet SHOULD be graded. When unsure between grading and manual review, choose grading.
+
+Mark "gradingDecision": "manual_review" ONLY when the upload is clearly NOT gradable:
+- The image is blank, severely corrupted, or so blurry/dark/cropped that NO math questions or student answers can be read at all.
+- The upload is clearly NOT a mathematics test: photos of people/objects, unrelated documents, pure garbage/noise, screenshots with no math work.
+- The content is clearly a non-mathematics subject with no math to grade (e.g. essay, history notes only).
+
+DO NOT use manual_review for:
+- Messy, informal, or partially cropped handwriting that is still readable.
+- Hindi, Marathi, Devanagari, English, or mixed-language math worksheets.
+- Missing or unclear student name (use "Unknown").
+- Some questions hard to read — grade the readable ones; use needs_teacher_review only if major ambiguity affects the score.
+- Imperfect photo quality when math questions and student work are still visible.
 
 Language and script handling:
-- Readable mathematics worksheets may be written in English, Hindi, Marathi, Devanagari script, Romanized Hindi/Marathi, or a mix of these. Do NOT send a worksheet to manual review solely because it uses an Indian language or Devanagari text.
-- Preserve student names exactly as written, including Hindi/Marathi/Devanagari characters and mixed-script names.
-- Translate or interpret math instructions only as needed to grade; keep concept tags concise in English unless the answer key supplies a different concept label.
+- Readable mathematics worksheets may be written in English, Hindi, Marathi, Devanagari script, Romanized Hindi/Marathi, or a mix. Language is NEVER a reason for manual review.
+- Preserve student names exactly as written, including Hindi/Marathi/Devanagari characters.
+- Keep concept tags concise in English unless the answer key supplies a different concept label.
 
 CRITICAL RULES:
 1. Return ONLY a valid JSON object. Do NOT include markdown, code fences, explanations, or text outside JSON.
 2. The JSON must be parseable by JSON.parse() in JavaScript.
-3. If an answer key is provided below, grade ONLY against that answer key. Do not guess a different correct answer.
-4. If an answer key is provided, infer the score from the key's points. Convert the earned points to a 0-100 percentage.
-5. If no answer key is provided, grade only when the worksheet itself clearly includes enough information to judge correctness.
-6. For every ungradable upload, use "gradingDecision": "manual_review", "status": "Manual Review Required", "totalScore": 0, an empty mistakes array, and the teacher-facing error message in "errorSummary".
-7. Never invent a score, student name, question, or math work for an ungradable upload.
-8. For every gradable upload, return one questionResults item per question you graded. Each confidence must be a decimal from 0 to 1.
-9. If any graded question has confidence below ${LOW_CONFIDENCE_THRESHOLD}, or the score is only tentative because the work is ambiguous, use "gradingDecision": "needs_teacher_review" and "status": "Needs Teacher Review". Keep the tentative score and mistakes, but explain why a teacher should review it.
+3. If a TEACHER ANSWER KEY is provided below, grade ONLY against that key — it is the ground truth for correctness and points.
+4. If an answer key is provided, compute totalScore as the percentage of points earned out of total key points (0–100).
+5. If NO answer key is provided, use your own mathematical knowledge: read each question, determine the correct answer yourself, compare the student's visible work, and assign a fair score. You MUST grade readable math worksheets without an answer key.
+6. For manual_review uploads only: "gradingDecision": "manual_review", "status": "Manual Review Required", "totalScore": 0, empty mistakes, and errorSummary explaining why.
+7. Never invent student work, but DO grade real visible work even when handwriting is imperfect.
+8. For gradable uploads, include questionResults for each question you graded (confidence 0–1). If a perfect score, mistakes may be an empty array [].
+9. Use "gradingDecision": "needs_teacher_review" and "status": "Needs Teacher Review" ONLY when you graded but one or more questions have confidence below ${LOW_CONFIDENCE_THRESHOLD} or the score is genuinely ambiguous. Do NOT use this for clear, readable worksheets.
 
 Return EXACTLY this structure for a gradable mathematics test:
 {
@@ -173,7 +190,13 @@ export const buildGradingSystemPrompt = (answerKey) => {
   if (!hasUsableAnswerKey(answerKey)) {
     return `${BASE_GRADING_INSTRUCTIONS}
 
-No teacher answer key was provided for this session. Use your best judgment only if the worksheet is clearly gradable.`;
+NO TEACHER ANSWER KEY for this session.
+Grade using your mathematical expertise:
+- Read every visible question on the worksheet.
+- Solve each question yourself to determine the correct answer.
+- Compare the student's handwritten work to your solution.
+- Assign points per question and compute totalScore as a 0–100 percentage.
+- Readable handwritten mathematics tests MUST receive a grade, not manual review.`;
   }
 
   const compactKey = {
@@ -190,10 +213,10 @@ No teacher answer key was provided for this session. Use your best judgment only
 
   return `${BASE_GRADING_INSTRUCTIONS}
 
-TEACHER ANSWER KEY - ground truth for this session:
+TEACHER ANSWER KEY — ground truth for this session (use this as the SOLE source of correct answers):
 ${JSON.stringify(compactKey, null, 2)}
 
-Use the key above as the sole source of correctness. The student worksheet may have a different layout, handwriting, or extra scratch work, but grade against these question numbers and expected answers.`;
+Grade the student's worksheet against the key above. Match question numbers flexibly (e.g. "1" = "Q1"). The student sheet may differ in layout or include scratch work, but correctness is determined ONLY by the key.`;
 };
 
 export const GRADING_SYSTEM_PROMPT = buildGradingSystemPrompt(null);
@@ -221,7 +244,9 @@ export const validateUploadedImage = (file) => {
     return { ok: false, reason: 'No image file uploaded.' };
   }
 
-  if (!ALLOWED_IMAGE_TYPES.has(file.mimetype)) {
+  const mimeType = normalizeMimeType(file.mimetype);
+
+  if (!CANONICAL_IMAGE_TYPES.has(mimeType) && !ALLOWED_IMAGE_TYPES.has(String(file.mimetype || '').toLowerCase())) {
     return {
       ok: false,
       reason: 'This file type is not supported for AI grading. Please upload a clear PNG, JPG, WEBP, or GIF image of a mathematics test for manual review.'
@@ -241,17 +266,14 @@ export const validateUploadedImage = (file) => {
     bytes[0] === 0x89 &&
     bytes[1] === 0x50 &&
     bytes[2] === 0x4e &&
-    bytes[3] === 0x47 &&
-    bytes[4] === 0x0d &&
-    bytes[5] === 0x0a &&
-    bytes[6] === 0x1a &&
-    bytes[7] === 0x0a;
+    bytes[3] === 0x47;
   const isGif =
     bytes[0] === 0x47 &&
     bytes[1] === 0x49 &&
     bytes[2] === 0x46 &&
     bytes[3] === 0x38;
   const isWebp =
+    bytes.length > 12 &&
     bytes[0] === 0x52 &&
     bytes[1] === 0x49 &&
     bytes[2] === 0x46 &&
@@ -262,10 +284,16 @@ export const validateUploadedImage = (file) => {
     bytes[11] === 0x50;
 
   const signatureMatches =
-    (file.mimetype === 'image/jpeg' && isJpeg) ||
-    (file.mimetype === 'image/png' && isPng) ||
-    (file.mimetype === 'image/gif' && isGif) ||
-    (file.mimetype === 'image/webp' && isWebp);
+    (mimeType === 'image/jpeg' && isJpeg) ||
+    (mimeType === 'image/png' && isPng) ||
+    (mimeType === 'image/gif' && isGif) ||
+    (mimeType === 'image/webp' && isWebp);
+
+  // Allow common camera uploads through even when MIME/signature metadata is imperfect;
+  // Claude decides whether the content is a gradable math worksheet.
+  if (!signatureMatches && bytes.length >= 512) {
+    return { ok: true, mimeType };
+  }
 
   if (!signatureMatches) {
     return {
@@ -274,7 +302,7 @@ export const validateUploadedImage = (file) => {
     };
   }
 
-  return { ok: true };
+  return { ok: true, mimeType };
 };
 
 export const extractJsonObject = (responseText = '') => {
@@ -293,7 +321,14 @@ export const extractJsonObject = (responseText = '') => {
 
 const normalizeQuestionNumber = (value, fallbackIndex) => {
   const raw = String(value || '').trim();
-  if (raw) return raw.toUpperCase().startsWith('Q') ? raw.toUpperCase() : `Q${raw}`;
+  if (raw) {
+    const digitMatch = raw.match(/(\d+[a-z]?)/i);
+    if (digitMatch) {
+      const num = digitMatch[1].toUpperCase();
+      return num.startsWith('Q') ? num : `Q${num}`;
+    }
+    if (raw.toUpperCase().startsWith('Q')) return raw.toUpperCase();
+  }
   return `Q${fallbackIndex + 1}`;
 };
 
@@ -438,6 +473,24 @@ export const parseAndNormalizeAnswerKeyResponse = (responseText) => {
   };
 };
 
+const normalizeMistakesArray = (mistakes = []) => {
+  if (!Array.isArray(mistakes)) return [];
+
+  return mistakes
+    .filter((mistake) => mistake && (mistake.questionNumber != null || mistake.conceptMissed || mistake.concept))
+    .map((mistake, index) => ({
+      questionNumber: normalizeQuestionNumber(mistake.questionNumber, index),
+      conceptMissed: String(mistake.conceptMissed || mistake.concept || 'General Mathematics').trim() || 'General Mathematics'
+    }));
+};
+
+const parseScore = (payload) => {
+  const raw = payload?.totalScore ?? payload?.score;
+  const score = Number(raw);
+  if (!Number.isFinite(score)) return null;
+  return Math.min(100, Math.max(0, Math.round(score)));
+};
+
 export const normalizeGradingPayload = (payload) => {
   if (!payload || typeof payload !== 'object') {
     return buildManualReviewPayload('The AI response could not be interpreted, so this submission requires manual grading.');
@@ -445,58 +498,53 @@ export const normalizeGradingPayload = (payload) => {
 
   const status = String(payload.status || '').trim();
   const decision = String(payload.gradingDecision || '').trim().toLowerCase();
-  const isManualReview =
-    decision === 'manual_review' ||
-    status.toLowerCase() === MANUAL_REVIEW_STATUS.toLowerCase();
+  const totalScore = parseScore(payload);
+  const hasValidScore = totalScore !== null;
+
+  const explicitManualReview = decision === 'manual_review';
+  const statusSaysManual = status.toLowerCase() === MANUAL_REVIEW_STATUS.toLowerCase();
+
+  const questionResultsEarly = normalizeQuestionResults(payload.questionResults);
+  const hasGradingEvidence =
+    decision === 'graded' ||
+    questionResultsEarly.length > 0 ||
+    (Array.isArray(payload.mistakes) && payload.mistakes.length > 0) ||
+    (hasValidScore && totalScore > 0);
+
+  if ((explicitManualReview || statusSaysManual) && !hasGradingEvidence) {
+    return buildManualReviewPayload(payload.errorSummary || MANUAL_REVIEW_MESSAGE, payload.studentName || 'Unknown');
+  }
+
   const isNeedsTeacherReview =
     decision === 'needs_teacher_review' ||
     status.toLowerCase() === NEEDS_TEACHER_REVIEW_STATUS.toLowerCase();
 
-  if (isManualReview) {
-    return buildManualReviewPayload(payload.errorSummary || MANUAL_REVIEW_MESSAGE, payload.studentName || 'Unknown');
-  }
-
-  const totalScore = Number(payload.totalScore);
-  const mistakes = Array.isArray(payload.mistakes) ? payload.mistakes : [];
   const misconceptionPatterns = Array.isArray(payload.misconception_patterns)
     ? payload.misconception_patterns
     : [];
-  const questionResults = normalizeQuestionResults(payload.questionResults);
+  const questionResults = questionResultsEarly;
   const confidenceSummary = buildConfidenceSummary(questionResults, payload.confidenceSummary);
+  const normalizedMistakes = normalizeMistakesArray(payload.mistakes);
 
-  const hasValidScore = Number.isFinite(totalScore) && totalScore >= 0 && totalScore <= 100;
-  const hasValidMistakes = mistakes.every((mistake) => (
-    mistake &&
-    typeof mistake.questionNumber === 'string' &&
-    /^Q?\d+[a-z]?$/i.test(mistake.questionNumber.trim()) &&
-    typeof mistake.conceptMissed === 'string' &&
-    mistake.conceptMissed.trim()
-  ));
-
-  if (!hasValidScore || !hasValidMistakes) {
-    return buildManualReviewPayload('The AI response was incomplete or inconsistent, so this submission requires manual grading.');
+  if (!hasValidScore) {
+    return buildManualReviewPayload('The AI response did not include a valid score, so this submission requires manual grading.');
   }
 
-  const normalizedMistakes = mistakes.map((mistake) => ({
-    questionNumber: mistake.questionNumber.trim().toUpperCase().startsWith('Q')
-      ? mistake.questionNumber.trim().toUpperCase()
-      : `Q${mistake.questionNumber.trim()}`,
-    conceptMissed: mistake.conceptMissed.trim()
-  }));
+  const studentName = typeof payload.studentName === 'string' && payload.studentName.trim()
+    ? payload.studentName.trim()
+    : 'Unknown';
 
-  if (isNeedsTeacherReview || confidenceSummary.lowConfidenceCount > 0 || questionResults.length === 0) {
+  const hasLowConfidence = questionResults.length > 0 && confidenceSummary.lowConfidenceCount > 0;
+
+  if (isNeedsTeacherReview || hasLowConfidence) {
     return {
       gradingDecision: 'needs_teacher_review',
-      studentName: typeof payload.studentName === 'string' && payload.studentName.trim()
-        ? payload.studentName.trim()
-        : 'Unknown',
+      studentName,
       totalScore,
       mistakes: normalizedMistakes,
       questionResults,
       confidenceSummary,
-      reviewReason: questionResults.length === 0
-        ? 'The AI did not return per-question confidence scores, so the grade needs teacher review.'
-        : typeof payload.reviewReason === 'string' && payload.reviewReason.trim()
+      reviewReason: typeof payload.reviewReason === 'string' && payload.reviewReason.trim()
         ? payload.reviewReason.trim()
         : 'One or more question judgments had low confidence and should be checked by a teacher.',
       misconception_patterns: misconceptionPatterns,
@@ -507,9 +555,7 @@ export const normalizeGradingPayload = (payload) => {
 
   return {
     gradingDecision: 'graded',
-    studentName: typeof payload.studentName === 'string' && payload.studentName.trim()
-      ? payload.studentName.trim()
-      : 'Unknown',
+    studentName,
     totalScore,
     mistakes: normalizedMistakes,
     questionResults,
