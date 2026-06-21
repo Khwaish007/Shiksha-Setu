@@ -4,7 +4,7 @@ Shiksha-Setu is an AI-powered Classroom Intelligence Suite and Batch Grading pro
 
 ---
 
-## 🚀 Key Features
+## 🚀 Key Features are
 
 ### 1. AI-Powered Batch Grading & OCR
 *   **Multimodal Handwriting Analysis**: Utilizes **Claude 3.5 Sonnet** (via the Anthropic SDK with robust error handling and exponential backoff retry mechanisms) to perform optical character recognition (OCR) on handwritten student quizzes and worksheets.
