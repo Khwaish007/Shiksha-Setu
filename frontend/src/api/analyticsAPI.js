@@ -57,6 +57,16 @@ export const analyticsAPI = {
     return data;
   },
 
+  getReviewQueue: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/sessions/${sessionId}/review-queue`);
+    return data;
+  },
+
+  approveReviewSubmission: async (sessionId, submissionId) => {
+    const { data } = await axios.patch(`${API_BASE}/sessions/${sessionId}/review-queue/${submissionId}/approve`);
+    return data;
+  },
+
   getClassAnalytics: async (sessionId) => {
     const { data } = await axios.get(`${API_BASE}/analytics`, sessionParams(sessionId));
     return data;

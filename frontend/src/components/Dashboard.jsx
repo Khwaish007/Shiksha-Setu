@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import '../styles/Dashboard.css';
 import MetricsCard from './MetricsCard';
 import PerformanceChart from './PerformanceChart';
@@ -12,11 +12,13 @@ import ClassInsights from './ClassInsights';
 import PeerBenchmarking from './PeerBenchmarking';
 import PerformanceStats from './PerformanceStats';
 import ClassMisconceptions from './ClassMisconceptions';
+import ReviewQueue from './ReviewQueue.jsx';
 import { analyticsAPI } from '../api/analyticsAPI';
 import { useI18n } from '../i18n.jsx';
 
 const dashboardTabs = [
   { key: 'overview', labelKey: 'overview' },
+  { key: 'review', labelKey: 'reviewQueue' },
   { key: 'stats', labelKey: 'statistics' },
   { key: 'heatmap', labelKey: 'heatmap' },
   { key: 'misconceptions', labelKey: 'misconceptions' },
@@ -43,49 +45,52 @@ const Dashboard = ({ session }) => {
   const [peerBenchmarking, setPeerBenchmarking] = useState(null);
   const [performanceDistribution, setPerformanceDistribution] = useState(null);
   const [classMisconceptions, setClassMisconceptions] = useState(null);
+  const [reviewQueue, setReviewQueue] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    const fetchAllData = async () => {
-      if (!sessionId) return;
+  const fetchAllData = useCallback(async () => {
+    if (!sessionId) return;
 
-      setLoading(true);
-      try {
-        const [analyticsData, heatmap, recs, ranks, atRisk, strengths, classStr, peers, perfDist, misconceptions] = await Promise.all([
-          analyticsAPI.getClassAnalytics(sessionId),
-          analyticsAPI.getHeatmapData(sessionId),
-          analyticsAPI.getTopicRecommendations(sessionId),
-          analyticsAPI.getStudentRankings(sessionId),
-          analyticsAPI.getAtRiskStudents(sessionId),
-          analyticsAPI.getStudentStrengths(sessionId),
-          analyticsAPI.getClassStrengths(sessionId),
-          analyticsAPI.getPeerBenchmarking(sessionId),
-          analyticsAPI.getPerformanceDistribution(sessionId),
-          analyticsAPI.getClassMisconceptions(sessionId)
-        ]);
+    setLoading(true);
+    try {
+      const [analyticsData, heatmap, recs, ranks, atRisk, strengths, classStr, peers, perfDist, misconceptions, reviews] = await Promise.all([
+        analyticsAPI.getClassAnalytics(sessionId),
+        analyticsAPI.getHeatmapData(sessionId),
+        analyticsAPI.getTopicRecommendations(sessionId),
+        analyticsAPI.getStudentRankings(sessionId),
+        analyticsAPI.getAtRiskStudents(sessionId),
+        analyticsAPI.getStudentStrengths(sessionId),
+        analyticsAPI.getClassStrengths(sessionId),
+        analyticsAPI.getPeerBenchmarking(sessionId),
+        analyticsAPI.getPerformanceDistribution(sessionId),
+        analyticsAPI.getClassMisconceptions(sessionId),
+        analyticsAPI.getReviewQueue(sessionId)
+      ]);
 
-        setAnalytics(analyticsData);
-        setHeatmapData(heatmap && heatmap.items ? heatmap.items : heatmap);
-        setHeatmapThresholds(heatmap && heatmap.thresholds ? heatmap.thresholds : null);
-        setRecommendations(recs && recs.recommendations ? recs.recommendations : recs);
-        setRecommendationThresholds(recs && recs.thresholds ? recs.thresholds : null);
-        setRankings(ranks);
-        setAtRiskStudents(atRisk);
-        setStudentStrengths(strengths);
-        setClassStrengths(classStr);
-        setPeerBenchmarking(peers);
-        setPerformanceDistribution(perfDist);
-        setClassMisconceptions(misconceptions);
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchAllData();
+      setAnalytics(analyticsData);
+      setHeatmapData(heatmap && heatmap.items ? heatmap.items : heatmap);
+      setHeatmapThresholds(heatmap && heatmap.thresholds ? heatmap.thresholds : null);
+      setRecommendations(recs && recs.recommendations ? recs.recommendations : recs);
+      setRecommendationThresholds(recs && recs.thresholds ? recs.thresholds : null);
+      setRankings(ranks);
+      setAtRiskStudents(atRisk);
+      setStudentStrengths(strengths);
+      setClassStrengths(classStr);
+      setPeerBenchmarking(peers);
+      setPerformanceDistribution(perfDist);
+      setClassMisconceptions(misconceptions);
+      setReviewQueue(reviews);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      setLoading(false);
+    }
   }, [sessionId]);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   if (loading || !sessionId) {
     return (
@@ -162,6 +167,12 @@ const Dashboard = ({ session }) => {
                 icon="🎯"
                 color="green"
               />
+              <MetricsCard
+                title={t('needsReview')}
+                value={reviewQueue.length}
+                icon="?"
+                color="blue"
+              />
             </section>
 
             {/* Performance Distribution */}
@@ -181,6 +192,14 @@ const Dashboard = ({ session }) => {
 
         {activeTab === 'recommendations' && recommendations && (
           <RecommendationsPanel recommendations={recommendations} thresholds={recommendationThresholds || heatmapThresholds} />
+        )}
+
+        {activeTab === 'review' && (
+          <ReviewQueue
+            sessionId={sessionId}
+            items={reviewQueue}
+            onChanged={fetchAllData}
+          />
         )}
 
         {activeTab === 'rankings' && rankings && (

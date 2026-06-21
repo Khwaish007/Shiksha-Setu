@@ -2,9 +2,11 @@ import express from 'express';
 import multer from 'multer';
 import { 
   processWorksheets,
+  approveReviewSubmission,
   clearSubmissions,
   fetchClassroomHeatmap,
   fetchClassAnalytics,
+  fetchReviewQueue,
   fetchTopicRecommendations,
   fetchRecommendationsDebug,
   fetchStudentRankings,
@@ -50,6 +52,8 @@ router.get('/sessions/:sessionId', getGradingSession);
 router.post('/sessions/:sessionId/resume', resumeGradingSession);
 router.patch('/sessions/:sessionId/resume', resumeGradingSession);
 router.get('/sessions/:sessionId/answer-key', getAnswerKey);
+router.get('/sessions/:sessionId/review-queue', fetchReviewQueue);
+router.patch('/sessions/:sessionId/review-queue/:submissionId/approve', approveReviewSubmission);
 router.put('/sessions/:sessionId/answer-key', saveTypedAnswerKey);
 router.post('/sessions/:sessionId/answer-key/transcribe', (req, res, next) => {
   uploadConfiguration.single('modelWorksheet')(req, res, (err) => {

@@ -1,4 +1,6 @@
 export const MANUAL_REVIEW_STATUS = 'Manual Review Required';
+export const NEEDS_TEACHER_REVIEW_STATUS = 'Needs Teacher Review';
+export const LOW_CONFIDENCE_THRESHOLD = 0.72;
 
 export const MANUAL_REVIEW_MESSAGE =
   "I can't grade this submission reliably. It may be unreadable, incomplete, or not a mathematics test, so it requires manual grading by a teacher.";
@@ -42,6 +44,8 @@ CRITICAL RULES:
 5. If no answer key is provided, grade only when the worksheet itself clearly includes enough information to judge correctness.
 6. For every ungradable upload, use "gradingDecision": "manual_review", "status": "Manual Review Required", "totalScore": 0, an empty mistakes array, and the teacher-facing error message in "errorSummary".
 7. Never invent a score, student name, question, or math work for an ungradable upload.
+8. For every gradable upload, return one questionResults item per question you graded. Each confidence must be a decimal from 0 to 1.
+9. If any graded question has confidence below ${LOW_CONFIDENCE_THRESHOLD}, or the score is only tentative because the work is ambiguous, use "gradingDecision": "needs_teacher_review" and "status": "Needs Teacher Review". Keep the tentative score and mistakes, but explain why a teacher should review it.
 
 Return EXACTLY this structure for a gradable mathematics test:
 {
@@ -54,11 +58,58 @@ Return EXACTLY this structure for a gradable mathematics test:
       "conceptMissed": "The topic or skill from the answer key, or a concise inferred math concept"
     }
   ],
+  "questionResults": [
+    {
+      "questionNumber": "Q1",
+      "concept": "The answer-key concept or inferred math concept",
+      "isCorrect": true,
+      "confidence": 0.94,
+      "evidence": "Short reason based on visible student work",
+      "pointsEarned": 10
+    }
+  ],
+  "confidenceSummary": {
+    "averageConfidence": 0.91,
+    "minimumConfidence": 0.84,
+    "lowConfidenceCount": 0
+  },
   "misconception_patterns": [
     { "concept": "Fractions", "misconception": "short description", "severity": "minor|major" }
   ],
   "errorSummary": "Overall summary of student's misconceptions, if any",
   "status": "Success"
+}
+
+Return EXACTLY this structure for a mathematics worksheet that is readable enough to grade tentatively, but has one or more low-confidence question judgments:
+{
+  "gradingDecision": "needs_teacher_review",
+  "studentName": "Extract and preserve the exact name written, otherwise 'Unknown'",
+  "totalScore": <tentative number between 0-100>,
+  "mistakes": [
+    {
+      "questionNumber": "Q1",
+      "conceptMissed": "The topic or skill from the answer key, or a concise inferred math concept"
+    }
+  ],
+  "questionResults": [
+    {
+      "questionNumber": "Q1",
+      "concept": "The answer-key concept or inferred math concept",
+      "isCorrect": false,
+      "confidence": 0.58,
+      "evidence": "What is unclear or ambiguous",
+      "pointsEarned": 0
+    }
+  ],
+  "confidenceSummary": {
+    "averageConfidence": 0.78,
+    "minimumConfidence": 0.58,
+    "lowConfidenceCount": 1
+  },
+  "reviewReason": "Short teacher-facing reason for review",
+  "misconception_patterns": [],
+  "errorSummary": "Tentative summary; teacher should verify low-confidence questions before accepting the grade.",
+  "status": "Needs Teacher Review"
 }
 
 Return EXACTLY this structure for unreadable, non-mathematics, incomplete, or garbage uploads:
@@ -67,6 +118,12 @@ Return EXACTLY this structure for unreadable, non-mathematics, incomplete, or ga
   "studentName": "Unknown",
   "totalScore": 0,
   "mistakes": [],
+  "questionResults": [],
+  "confidenceSummary": {
+    "averageConfidence": 0,
+    "minimumConfidence": 0,
+    "lowConfidenceCount": 0
+  },
   "misconception_patterns": [],
   "errorSummary": "${MANUAL_REVIEW_MESSAGE}",
   "status": "Manual Review Required"
@@ -148,6 +205,12 @@ export const buildManualReviewPayload = (reason = MANUAL_REVIEW_MESSAGE, student
   studentName,
   totalScore: 0,
   mistakes: [],
+  questionResults: [],
+  confidenceSummary: {
+    averageConfidence: 0,
+    minimumConfidence: 0,
+    lowConfidenceCount: 0
+  },
   misconception_patterns: [],
   errorSummary: reason || MANUAL_REVIEW_MESSAGE,
   status: MANUAL_REVIEW_STATUS
@@ -232,6 +295,56 @@ const normalizeQuestionNumber = (value, fallbackIndex) => {
   const raw = String(value || '').trim();
   if (raw) return raw.toUpperCase().startsWith('Q') ? raw.toUpperCase() : `Q${raw}`;
   return `Q${fallbackIndex + 1}`;
+};
+
+const clampConfidence = (value) => {
+  const confidence = Number(value);
+  if (!Number.isFinite(confidence)) return null;
+  return Math.min(1, Math.max(0, confidence));
+};
+
+const normalizeQuestionResults = (results = []) => (
+  Array.isArray(results)
+    ? results.map((result, index) => {
+        const confidence = clampConfidence(result?.confidence);
+        const pointsEarned = Number(result?.pointsEarned);
+
+        return {
+          questionNumber: normalizeQuestionNumber(result?.questionNumber, index),
+          concept: String(result?.concept || result?.conceptMissed || 'General Mathematics').trim() || 'General Mathematics',
+          isCorrect: Boolean(result?.isCorrect),
+          confidence: confidence ?? 0,
+          evidence: String(result?.evidence || '').trim(),
+          pointsEarned: Number.isFinite(pointsEarned) ? pointsEarned : null
+        };
+      })
+    : []
+);
+
+const buildConfidenceSummary = (questionResults, providedSummary = {}) => {
+  const confidences = questionResults
+    .map(result => clampConfidence(result.confidence))
+    .filter(confidence => confidence !== null);
+
+  const minimumConfidence = confidences.length ? Math.min(...confidences) : 0;
+  const averageConfidence = confidences.length
+    ? confidences.reduce((sum, confidence) => sum + confidence, 0) / confidences.length
+    : 0;
+  const lowConfidenceCount = confidences.filter(confidence => confidence < LOW_CONFIDENCE_THRESHOLD).length;
+
+  const providedLowCount = Number(providedSummary.lowConfidenceCount);
+
+  return {
+    averageConfidence: Number.isFinite(Number(providedSummary.averageConfidence))
+      ? Math.min(1, Math.max(0, Number(providedSummary.averageConfidence)))
+      : Number(averageConfidence.toFixed(2)),
+    minimumConfidence: Number.isFinite(Number(providedSummary.minimumConfidence))
+      ? Math.min(1, Math.max(0, Number(providedSummary.minimumConfidence)))
+      : Number(minimumConfidence.toFixed(2)),
+    lowConfidenceCount: Number.isFinite(providedLowCount)
+      ? Math.max(lowConfidenceCount, Math.max(0, providedLowCount))
+      : lowConfidenceCount
+  };
 };
 
 export const normalizeAnswerKeyPayload = (payload, source = 'typed') => {
@@ -335,6 +448,9 @@ export const normalizeGradingPayload = (payload) => {
   const isManualReview =
     decision === 'manual_review' ||
     status.toLowerCase() === MANUAL_REVIEW_STATUS.toLowerCase();
+  const isNeedsTeacherReview =
+    decision === 'needs_teacher_review' ||
+    status.toLowerCase() === NEEDS_TEACHER_REVIEW_STATUS.toLowerCase();
 
   if (isManualReview) {
     return buildManualReviewPayload(payload.errorSummary || MANUAL_REVIEW_MESSAGE, payload.studentName || 'Unknown');
@@ -345,6 +461,8 @@ export const normalizeGradingPayload = (payload) => {
   const misconceptionPatterns = Array.isArray(payload.misconception_patterns)
     ? payload.misconception_patterns
     : [];
+  const questionResults = normalizeQuestionResults(payload.questionResults);
+  const confidenceSummary = buildConfidenceSummary(questionResults, payload.confidenceSummary);
 
   const hasValidScore = Number.isFinite(totalScore) && totalScore >= 0 && totalScore <= 100;
   const hasValidMistakes = mistakes.every((mistake) => (
@@ -359,18 +477,44 @@ export const normalizeGradingPayload = (payload) => {
     return buildManualReviewPayload('The AI response was incomplete or inconsistent, so this submission requires manual grading.');
   }
 
+  const normalizedMistakes = mistakes.map((mistake) => ({
+    questionNumber: mistake.questionNumber.trim().toUpperCase().startsWith('Q')
+      ? mistake.questionNumber.trim().toUpperCase()
+      : `Q${mistake.questionNumber.trim()}`,
+    conceptMissed: mistake.conceptMissed.trim()
+  }));
+
+  if (isNeedsTeacherReview || confidenceSummary.lowConfidenceCount > 0 || questionResults.length === 0) {
+    return {
+      gradingDecision: 'needs_teacher_review',
+      studentName: typeof payload.studentName === 'string' && payload.studentName.trim()
+        ? payload.studentName.trim()
+        : 'Unknown',
+      totalScore,
+      mistakes: normalizedMistakes,
+      questionResults,
+      confidenceSummary,
+      reviewReason: questionResults.length === 0
+        ? 'The AI did not return per-question confidence scores, so the grade needs teacher review.'
+        : typeof payload.reviewReason === 'string' && payload.reviewReason.trim()
+        ? payload.reviewReason.trim()
+        : 'One or more question judgments had low confidence and should be checked by a teacher.',
+      misconception_patterns: misconceptionPatterns,
+      errorSummary: typeof payload.errorSummary === 'string' ? payload.errorSummary : '',
+      status: NEEDS_TEACHER_REVIEW_STATUS
+    };
+  }
+
   return {
     gradingDecision: 'graded',
     studentName: typeof payload.studentName === 'string' && payload.studentName.trim()
       ? payload.studentName.trim()
       : 'Unknown',
     totalScore,
-    mistakes: mistakes.map((mistake) => ({
-      questionNumber: mistake.questionNumber.trim().toUpperCase().startsWith('Q')
-        ? mistake.questionNumber.trim().toUpperCase()
-        : `Q${mistake.questionNumber.trim()}`,
-      conceptMissed: mistake.conceptMissed.trim()
-    })),
+    mistakes: normalizedMistakes,
+    questionResults,
+    confidenceSummary,
+    reviewReason: '',
     misconception_patterns: misconceptionPatterns,
     errorSummary: typeof payload.errorSummary === 'string' ? payload.errorSummary : '',
     status: 'Success'

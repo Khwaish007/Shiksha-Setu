@@ -7,6 +7,7 @@ import {
   buildGradingSystemPrompt,
   escapeRegExp,
   MANUAL_REVIEW_MESSAGE,
+  NEEDS_TEACHER_REVIEW_STATUS,
   parseAndNormalizeGradingResponse,
   validateUploadedImage
 } from '../utils/gradingSafety.js';
@@ -181,11 +182,43 @@ export const gradeStudentTest = async (req, res) => {
         studentName: student.studentName.trim(),
         totalScore: 0,
         mistakes: [],
+        questionResults: [],
+        confidenceSummary: {
+          averageConfidence: 0,
+          minimumConfidence: 0,
+          lowConfidenceCount: 0
+        },
         errorSummary: reason || MANUAL_REVIEW_MESSAGE,
         status: 'Manual Review Required',
+        reviewStatus: 'none',
+        sourceStudentId: student._id,
         createdAt: new Date()
       }).save();
       await refreshSessionStats(sessionId, 'student');
+    };
+
+    const recordNeedsTeacherReviewForSession = async (payload) => {
+      if (!sessionId) return null;
+      const reviewSubmission = await new Submission({
+        sessionId,
+        studentName: student.studentName.trim(),
+        totalScore: Number(payload.totalScore) || 0,
+        mistakes: payload.mistakes || [],
+        questionResults: payload.questionResults || [],
+        confidenceSummary: payload.confidenceSummary || {
+          averageConfidence: 0,
+          minimumConfidence: 0,
+          lowConfidenceCount: 0
+        },
+        reviewReason: payload.reviewReason || 'One or more question judgments need teacher verification.',
+        errorSummary: payload.errorSummary || '',
+        status: NEEDS_TEACHER_REVIEW_STATUS,
+        reviewStatus: 'pending',
+        sourceStudentId: student._id,
+        createdAt: new Date()
+      }).save();
+      await refreshSessionStats(sessionId, 'student');
+      return reviewSubmission;
     };
 
     const file = req.file;
@@ -221,12 +254,33 @@ export const gradeStudentTest = async (req, res) => {
       });
     }
 
+    if (parsed.status === NEEDS_TEACHER_REVIEW_STATUS) {
+      const reviewSubmission = await recordNeedsTeacherReviewForSession(parsed);
+      return res.status(200).json({
+        status: parsed.status,
+        message: parsed.reviewReason || 'This grade needs teacher review before it is added to the student timeline.',
+        reviewReason: parsed.reviewReason,
+        totalScore: parsed.totalScore,
+        mistakes: parsed.mistakes,
+        questionResults: parsed.questionResults,
+        confidenceSummary: parsed.confidenceSummary,
+        reviewSubmissionId: reviewSubmission?._id
+      });
+    }
+
     // Build the test record
     const testRecord = {
       date: new Date(),
       score: Number(parsed.totalScore) || 0,
       totalQuestions: 10,
       mistakes: parsed.mistakes || [],
+      questionResults: parsed.questionResults || [],
+      confidenceSummary: parsed.confidenceSummary || {
+        averageConfidence: 0,
+        minimumConfidence: 0,
+        lowConfidenceCount: 0
+      },
+      reviewReason: parsed.reviewReason || '',
       errorSummary: parsed.errorSummary || '',
     };
 
@@ -274,8 +328,13 @@ export const gradeStudentTest = async (req, res) => {
         studentName: student.studentName.trim(),
         totalScore: testRecord.score,
         mistakes: testRecord.mistakes,
+        questionResults: testRecord.questionResults,
+        confidenceSummary: testRecord.confidenceSummary,
+        reviewReason: testRecord.reviewReason,
         errorSummary: testRecord.errorSummary,
         status: parsed.status || 'Success',
+        reviewStatus: 'none',
+        sourceStudentId: student._id,
         createdAt: new Date()
       };
       await Submission.findOneAndUpdate(submissionFilter, submissionUpdate, { returnDocument: 'after', upsert: true });

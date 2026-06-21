@@ -100,6 +100,14 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
         });
         return;
       }
+      if (result.status === 'Needs Teacher Review') {
+        onSessionUpdated?.();
+        setGradingNotice({
+          type: 'review',
+          detail: result.message || result.reviewReason || t('studentReviewDetail')
+        });
+        return;
+      }
       // Refresh student data to show new test
       await fetchStudent();
       onSessionUpdated?.();

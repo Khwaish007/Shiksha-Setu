@@ -39,6 +39,10 @@ const gradingSessionSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  needsReviewCount: {
+    type: Number,
+    default: 0
+  },
   averageScore: {
     type: Number,
     default: 0

@@ -10,6 +10,7 @@ export const summarizeSession = async (sessionId) => {
     totalUploads: submissions.length,
     gradedCount: graded.length,
     manualReviewCount: submissions.filter(item => item.status === 'Manual Review Required').length,
+    needsReviewCount: submissions.filter(item => item.status === 'Needs Teacher Review').length,
     averageScore: graded.length ? Math.round(totalScore / graded.length) : 0
   };
 };

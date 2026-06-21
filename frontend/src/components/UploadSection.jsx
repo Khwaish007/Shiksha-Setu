@@ -36,6 +36,21 @@ const renderAnswerKeyText = (answerKey) => (
     .join('\n')
 );
 
+const summarizeReviewStatuses = (results = []) => {
+  const manualReviewCount = results.filter(
+    item => item.status === 'Manual Review Required'
+  ).length;
+  const needsTeacherReviewCount = results.filter(
+    item => item.status === 'Needs Teacher Review'
+  ).length;
+
+  return {
+    manualReviewCount,
+    needsTeacherReviewCount,
+    hasAnyReview: manualReviewCount > 0 || needsTeacherReviewCount > 0
+  };
+};
+
 function UploadSection({ sessionId, onGradingExecutionComplete }) {
   const { t } = useI18n();
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -108,14 +123,16 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
       await refreshQueueSummary();
 
       if (syncResult.syncedCount > 0 && syncResult.results.length > 0) {
-        const manualReviewCount = syncResult.results.filter(
-          item => item.status === 'Manual Review Required'
-        ).length;
-        setNotice(manualReviewCount > 0
+        const { manualReviewCount, needsTeacherReviewCount, hasAnyReview } = summarizeReviewStatuses(syncResult.results);
+        setNotice(hasAnyReview
           ? {
-              type: 'manual',
-              count: manualReviewCount,
-              detail: t('offlineSyncManualDetail', { count: syncResult.syncedCount }),
+              type: needsTeacherReviewCount > 0 ? 'review' : 'manual',
+              count: needsTeacherReviewCount || manualReviewCount,
+              detail: t('offlineSyncReviewDetail', {
+                count: syncResult.syncedCount,
+                review: needsTeacherReviewCount,
+                manual: manualReviewCount
+              }),
               complete: true,
               results: syncResult.results
             }
@@ -294,14 +311,14 @@ function UploadSection({ sessionId, onGradingExecutionComplete }) {
         consolidatedResults.push(...batchResults);
       }
 
-      const manualReviewCount = consolidatedResults.filter(
-        item => item.status === 'Manual Review Required'
-      ).length;
-      setNotice(manualReviewCount > 0
+      const { manualReviewCount, needsTeacherReviewCount, hasAnyReview } = summarizeReviewStatuses(consolidatedResults);
+      setNotice(hasAnyReview
         ? {
-            type: 'manual',
-            count: manualReviewCount,
-            detail: t('batchManualDetail'),
+            type: needsTeacherReviewCount > 0 ? 'review' : 'manual',
+            count: needsTeacherReviewCount || manualReviewCount,
+            detail: needsTeacherReviewCount > 0
+              ? t('batchReviewDetail', { review: needsTeacherReviewCount, manual: manualReviewCount })
+              : t('batchManualDetail'),
             complete: true,
             results: consolidatedResults
           }

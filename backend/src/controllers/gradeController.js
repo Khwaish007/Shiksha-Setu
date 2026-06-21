@@ -1,12 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk';
 import GradingSession from '../models/GradingSession.js';
 import Submission from '../models/Submission.js';
+import Student from '../models/Student.js';
 import { refreshSessionStats } from '../utils/sessionStats.js';
 import {
   buildManualReviewPayload,
   buildGradingSystemPrompt,
   escapeRegExp,
   MANUAL_REVIEW_MESSAGE,
+  NEEDS_TEACHER_REVIEW_STATUS,
   parseAndNormalizeGradingResponse,
   validateUploadedImage
 } from '../utils/gradingSafety.js';
@@ -133,6 +135,25 @@ const buildAdaptiveConceptBuckets = (items) => {
   return { thresholds, items: decorated };
 };
 
+const buildSubmissionUpdate = (sessionId, payload, overrides = {}) => ({
+  sessionId,
+  studentName: (payload.studentName || 'Unknown').trim(),
+  totalScore: Number(payload.totalScore) || 0,
+  mistakes: payload.mistakes || [],
+  questionResults: payload.questionResults || [],
+  confidenceSummary: payload.confidenceSummary || {
+    averageConfidence: 0,
+    minimumConfidence: 0,
+    lowConfidenceCount: 0
+  },
+  reviewReason: payload.reviewReason || '',
+  reviewStatus: payload.status === NEEDS_TEACHER_REVIEW_STATUS ? 'pending' : 'none',
+  errorSummary: payload.errorSummary || '',
+  status: payload.status,
+  createdAt: new Date(),
+  ...overrides
+});
+
 const DEFAULT_CONCEPTS = [
   'Linear Equations', 'Area Calculation', 'Trigonometry',
   'Quadratic Factorization', 'Pythagorean Theorem',
@@ -200,6 +221,81 @@ export const clearSubmissions = async (req, res) => {
   } catch (err) {
     console.error('Clear Submissions Error:', err);
     res.status(500).json({ error: 'Failed to clear submissions.' });
+  }
+};
+
+export const fetchReviewQueue = async (req, res) => {
+  try {
+    const sessionId = getRequestSessionId(req);
+    if (!sessionId) {
+      return res.status(400).json({ error: 'sessionId is required.' });
+    }
+
+    const queue = await Submission.find({
+      sessionId,
+      status: NEEDS_TEACHER_REVIEW_STATUS,
+      reviewStatus: 'pending'
+    }).sort({ createdAt: -1 });
+
+    res.status(200).json(queue);
+  } catch (error) {
+    console.error('Review Queue Error:', error);
+    res.status(500).json({ error: 'Failed to fetch teacher review queue.' });
+  }
+};
+
+export const approveReviewSubmission = async (req, res) => {
+  try {
+    const sessionId = getRequestSessionId(req);
+    const { submissionId } = req.params;
+
+    if (!sessionId || !submissionId) {
+      return res.status(400).json({ error: 'sessionId and submissionId are required.' });
+    }
+
+    const submission = await Submission.findOne({
+      _id: submissionId,
+      sessionId,
+      status: NEEDS_TEACHER_REVIEW_STATUS,
+      reviewStatus: 'pending'
+    });
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Pending review submission not found.' });
+    }
+
+    submission.status = 'Success';
+    submission.reviewStatus = 'approved';
+    submission.reviewedAt = new Date();
+    await submission.save();
+
+    if (submission.sourceStudentId) {
+      const student = await Student.findById(submission.sourceStudentId);
+      if (student) {
+        student.tests.push({
+          date: submission.reviewedAt,
+          score: Number(submission.totalScore) || 0,
+          totalQuestions: Math.max(submission.questionResults?.length || 0, 1),
+          mistakes: submission.mistakes || [],
+          questionResults: submission.questionResults || [],
+          confidenceSummary: submission.confidenceSummary,
+          reviewReason: submission.reviewReason,
+          errorSummary: submission.errorSummary || ''
+        });
+        await student.save();
+      }
+    }
+
+    const session = await refreshSessionStats(sessionId, 'batch');
+
+    res.status(200).json({
+      message: 'Review approved and added to analytics.',
+      submission,
+      session
+    });
+  } catch (error) {
+    console.error('Approve Review Submission Error:', error);
+    res.status(500).json({ error: 'Failed to approve review submission.' });
   }
 };
 
@@ -276,14 +372,7 @@ export const processWorksheets = async (req, res) => {
           const imageValidation = validateUploadedImage(file);
           if (!imageValidation.ok) {
             const manualPayload = buildManualReviewPayload(imageValidation.reason, file.originalname || 'Unknown');
-            const savedManualDocument = new Submission({
-              sessionId,
-              studentName: manualPayload.studentName,
-              totalScore: manualPayload.totalScore,
-              mistakes: manualPayload.mistakes,
-              errorSummary: manualPayload.errorSummary,
-              status: manualPayload.status
-            });
+            const savedManualDocument = new Submission(buildSubmissionUpdate(sessionId, manualPayload));
             await savedManualDocument.save();
             return savedManualDocument;
           }
@@ -300,15 +389,9 @@ export const processWorksheets = async (req, res) => {
 
           // Save entry block directly to MongoDB Atlas - Overwriting old records to keep only the latest
           const cleanName = parsedGradingPayload.studentName.trim();
-          const update = {
-            sessionId,
-            studentName: cleanName,
-            totalScore: Number(parsedGradingPayload.totalScore),
-            mistakes: parsedGradingPayload.mistakes,
-            errorSummary: parsedGradingPayload.errorSummary || "",
-            status: parsedGradingPayload.status,
-            createdAt: new Date()
-          };
+          const update = buildSubmissionUpdate(sessionId, parsedGradingPayload, {
+            studentName: cleanName
+          });
 
           const savedDocument = parsedGradingPayload.status === 'Success'
             ? await Submission.findOneAndUpdate(

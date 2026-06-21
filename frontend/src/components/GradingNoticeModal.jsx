@@ -10,6 +10,13 @@ const copy = {
     accent: 'manual',
     icon: '!'
   },
+  review: {
+    eyebrowKey: 'reviewEyebrow',
+    titleKey: 'reviewTitle',
+    bodyKey: 'reviewBody',
+    accent: 'review',
+    icon: '?'
+  },
   success: {
     eyebrowKey: 'successEyebrow',
     titleKey: 'successTitle',
@@ -55,7 +62,10 @@ function GradingNoticeModal({ type = 'manual', title, message, detail, count, on
           {typeof count === 'number' && count > 0 && (
             <div className="grading-notice-count">
               <strong>{count}</strong>
-              <span>{count === 1 ? t('submission') : t('submissions')} {t('manualCountSuffix')}</span>
+              <span>
+                {count === 1 ? t('submission') : t('submissions')}{' '}
+                {type === 'review' ? t('reviewCountSuffix') : t('manualCountSuffix')}
+              </span>
             </div>
           )}
           {detail && <div className="grading-notice-detail">{detail}</div>}

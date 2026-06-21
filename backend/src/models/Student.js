@@ -11,6 +11,35 @@ const studentMistakeSchema = new mongoose.Schema({
   }
 }, { _id: false });
 
+const studentQuestionResultSchema = new mongoose.Schema({
+  questionNumber: {
+    type: String,
+    required: true
+  },
+  concept: {
+    type: String,
+    default: 'General Mathematics'
+  },
+  isCorrect: {
+    type: Boolean,
+    default: false
+  },
+  confidence: {
+    type: Number,
+    min: 0,
+    max: 1,
+    default: 0
+  },
+  evidence: {
+    type: String,
+    default: ''
+  },
+  pointsEarned: {
+    type: Number,
+    default: null
+  }
+}, { _id: false });
+
 const errorDNASchema = new mongoose.Schema({
   concept: { type: String, required: true },
   misconception: { type: String, required: true },
@@ -35,6 +64,32 @@ const testRecordSchema = new mongoose.Schema({
     default: 10
   },
   mistakes: [studentMistakeSchema],
+  questionResults: {
+    type: [studentQuestionResultSchema],
+    default: []
+  },
+  confidenceSummary: {
+    averageConfidence: {
+      type: Number,
+      min: 0,
+      max: 1,
+      default: 0
+    },
+    minimumConfidence: {
+      type: Number,
+      min: 0,
+      max: 1,
+      default: 0
+    },
+    lowConfidenceCount: {
+      type: Number,
+      default: 0
+    }
+  },
+  reviewReason: {
+    type: String,
+    default: ''
+  },
   errorSummary: {
     type: String
   }
