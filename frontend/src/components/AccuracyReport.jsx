@@ -16,6 +16,10 @@ const formatDate = (value) => {
 };
 
 const getErrorMessage = (error, fallback) => {
+  if (error?.response?.status === 504) {
+    return 'Vercel timed out while waiting for Claude. Try again once, or run the full benchmark from the backend CLI where there is no serverless timeout.';
+  }
+
   const responseError = error?.response?.data?.error || error?.response?.data || error?.message;
   if (!responseError) return fallback;
   if (typeof responseError === 'string') return responseError;
@@ -34,7 +38,7 @@ function AccuracyReport({ benchmark, report, onReportUpdated }) {
     setError('');
 
     try {
-      const maxCases = mode === 'live' ? 4 : 12;
+      const maxCases = mode === 'live' ? 1 : 12;
       const nextReport = await analyticsAPI.runAccuracyReport({ maxCases, mode });
       await onReportUpdated?.(nextReport);
     } catch (runError) {
@@ -62,7 +66,7 @@ function AccuracyReport({ benchmark, report, onReportUpdated }) {
             onClick={() => runBenchmark('live')}
             disabled={isRunning}
           >
-            {isRunning ? t('runningBenchmark') : t('runLiveBenchmark')}
+            {isRunning ? t('runningBenchmark') : t('runSingleLiveCase')}
           </button>
           <button
             type="button"

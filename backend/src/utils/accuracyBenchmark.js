@@ -1,5 +1,5 @@
 import fs from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, statSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Anthropic from '@anthropic-ai/sdk';
@@ -239,7 +239,16 @@ const buildAggregateReport = ({ manifest, comparedCases, mode, notes }) => {
 
 export const runAccuracyBenchmark = async ({ maxCases = 12, mode = 'live' } = {}) => {
   const manifest = await loadBenchmarkManifest();
-  const selectedCases = manifest.cases.slice(0, Math.max(1, Number(maxCases) || 12));
+  const benchmarkCases = mode === 'live'
+    ? [...manifest.cases].sort((a, b) => {
+        const aPath = resolveWorkspacePath(a.file);
+        const bPath = resolveWorkspacePath(b.file);
+        const aSize = existsSync(aPath) ? statSync(aPath).size : Number.MAX_SAFE_INTEGER;
+        const bSize = existsSync(bPath) ? statSync(bPath).size : Number.MAX_SAFE_INTEGER;
+        return aSize - bSize;
+      })
+    : manifest.cases;
+  const selectedCases = benchmarkCases.slice(0, Math.max(1, Number(maxCases) || 12));
   const answerKeyCache = new Map();
   const client = mode === 'live'
     ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })

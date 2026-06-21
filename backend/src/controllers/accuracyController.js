@@ -23,7 +23,7 @@ export const runAccuracyReport = async (req, res) => {
     const mode = req.body?.mode === 'mock' || req.query?.mode === 'mock' ? 'mock' : 'live';
     const requestedMaxCases = Number(req.body?.maxCases || req.query?.maxCases || 12);
     const maxCases = mode === 'live'
-      ? Math.min(Math.max(1, requestedMaxCases || 4), 4)
+      ? 1
       : Math.min(Math.max(1, requestedMaxCases || 12), 12);
     const reportPayload = await runAccuracyBenchmark({ maxCases, mode });
     const savedReport = await AccuracyReport.create(reportPayload);

@@ -121,6 +121,7 @@ const translations = {
     accuracyBenchmark: 'Accuracy Benchmark',
     benchmarkCasesAvailable: 'benchmark cases available',
     runLiveBenchmark: 'Run Live Benchmark',
+    runSingleLiveCase: 'Run 1 Live Case',
     runningBenchmark: 'Running benchmark...',
     testUiRun: 'Test UI Run',
     accuracyRunFailed: 'Could not run the accuracy benchmark.',
