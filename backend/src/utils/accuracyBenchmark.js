@@ -34,6 +34,7 @@ const roundMetric = (value, digits = 2) => Number((Number(value) || 0).toFixed(d
 
 const getWorkspaceRootCandidates = () => [
   process.cwd(),
+  path.resolve(__dirname, '../..'),
   path.resolve(process.cwd(), '..'),
   path.resolve(__dirname, '../../..')
 ];

@@ -1,0 +1,75 @@
+{
+  "title": "Student Tests Dataset 1 Ground Truth",
+  "questions": [
+    {
+      "questionNumber": "Q1",
+      "expectedAnswer": "x = 4",
+      "points": 10,
+      "concept": "Linear Equations",
+      "rubric": "Solve 3x + 7 = 19 by isolating x. Accept equivalent final answer x = 4."
+    },
+    {
+      "questionNumber": "Q2",
+      "expectedAnswer": "Area = 40 cm^2",
+      "points": 10,
+      "concept": "Area Calculation",
+      "rubric": "Use rectangle area = length x width = 8 x 5 = 40 cm^2."
+    },
+    {
+      "questionNumber": "Q3",
+      "expectedAnswer": "theta = 30 degrees",
+      "points": 10,
+      "concept": "Trigonometry",
+      "rubric": "Recognize that sin(theta) = 0.5 gives theta = 30 degrees for 0 <= theta <= 90 degrees."
+    },
+    {
+      "questionNumber": "Q4",
+      "expectedAnswer": "(x + 2)(x + 3)",
+      "points": 10,
+      "concept": "Quadratic Factorization",
+      "rubric": "Factor x^2 + 5x + 6 into two binomials whose constants multiply to 6 and add to 5."
+    },
+    {
+      "questionNumber": "Q5",
+      "expectedAnswer": "Hypotenuse = 10 cm",
+      "points": 10,
+      "concept": "Pythagorean Theorem",
+      "rubric": "Use c^2 = 6^2 + 8^2 = 100, so c = 10 cm."
+    },
+    {
+      "questionNumber": "Q6",
+      "expectedAnswer": "f'(x) = 12x^2 - 4x",
+      "points": 10,
+      "concept": "Calculus Differentiation",
+      "rubric": "Differentiate 4x^3 - 2x^2 + 5 term by term to get 12x^2 - 4x."
+    },
+    {
+      "questionNumber": "Q7",
+      "expectedAnswer": "P(blue) = 3/8",
+      "points": 10,
+      "concept": "Probability",
+      "rubric": "There are 3 blue balls out of 8 total balls, so probability is 3/8."
+    },
+    {
+      "questionNumber": "Q8",
+      "expectedAnswer": "x = 4, y = 3",
+      "points": 10,
+      "concept": "System of Linear Equations",
+      "rubric": "Solve 2x + y = 11 and x - y = 1 to obtain x = 4 and y = 3."
+    },
+    {
+      "questionNumber": "Q9",
+      "expectedAnswer": "x^3 + x^2 + C",
+      "points": 10,
+      "concept": "Calculus Integration",
+      "rubric": "Integrate 3x^2 + 2x term by term and include the constant of integration."
+    },
+    {
+      "questionNumber": "Q10",
+      "expectedAnswer": "b = 16",
+      "points": 10,
+      "concept": "Sine Rule",
+      "rubric": "Use b / sin(B) = a / sin(A), so b = 10 x 0.8 / 0.5 = 16."
+    }
+  ]
+}
