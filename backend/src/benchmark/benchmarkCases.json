@@ -10,7 +10,7 @@
       "answerKeyFile": "src/benchmark/assets/student_tests_dataset/ground_truth_answer_key.json",
       "studentName": "Student_1",
       "expectedStatus": "Success",
-      "expectedScore": 20,
+      "expectedScore": 40,
       "expectedConcepts": [
         "Trigonometry",
         "Quadratic Factorization",
@@ -29,7 +29,7 @@
       "answerKeyFile": "src/benchmark/assets/student_tests_dataset/ground_truth_answer_key.json",
       "studentName": "Student_2",
       "expectedStatus": "Success",
-      "expectedScore": 20,
+      "expectedScore": 30,
       "expectedConcepts": [
         "Area Calculation",
         "Trigonometry",
