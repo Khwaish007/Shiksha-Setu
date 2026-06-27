@@ -72,9 +72,9 @@ export const analyticsAPI = {
     return data;
   },
 
-  runAccuracyReport: async ({ maxCases = 12, mode = 'live' } = {}) => {
+  runAccuracyReport: async ({ maxCases = 5, mode = 'live' } = {}) => {
     const { data } = await axios.post(`${API_BASE}/accuracy-report/run`, { maxCases, mode }, {
-      timeout: 240000
+      timeout: 300000
     });
     return data;
   },

@@ -2,17 +2,15 @@ import fs from 'fs/promises';
 import { existsSync, statSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Anthropic from '@anthropic-ai/sdk';
 import {
-  buildGradingSystemPrompt,
-  formatBufferToClaudePart,
   normalizeAnswerKeyPayload,
-  parseAndNormalizeGradingResponse
 } from './gradingSafety.js';
+import { executeWorksheetGrading } from './gradingPipeline.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DEFAULT_MANIFEST_PATH = path.resolve(__dirname, '../benchmark/benchmarkCases.json');
+export const BENCHMARK_MAX_CASES = 5;
 
 const MIME_BY_EXTENSION = {
   '.jpg': 'image/jpeg',
@@ -91,28 +89,6 @@ const loadAnswerKeyForCase = async (benchmarkCase, answerKeyCache) => {
   return normalized;
 };
 
-const generateWithClaude = async (client, systemPrompt, imagePart) => {
-  const result = await client.messages.create({
-    model: 'claude-opus-4-1-20250805',
-    max_tokens: 2048,
-    system: systemPrompt,
-    messages: [
-      {
-        role: 'user',
-        content: [
-          imagePart,
-          {
-            type: 'text',
-            text: 'Grade this benchmark worksheet and return only the required JSON.'
-          }
-        ]
-      }
-    ]
-  });
-
-  return result.content?.[0]?.text || '';
-};
-
 const simulateBenchmarkResult = (benchmarkCase, index) => {
   const expectedConcepts = benchmarkCase.expectedConcepts || [];
   const scoreOffset = [-4, 2, 0, 5, -1][index % 5];
@@ -136,7 +112,7 @@ const simulateBenchmarkResult = (benchmarkCase, index) => {
   };
 };
 
-const gradeBenchmarkCase = async ({ benchmarkCase, client, answerKeyCache, mode, index }) => {
+const gradeBenchmarkCase = async ({ benchmarkCase, answerKeyCache, mode, index }) => {
   if (mode === 'mock') {
     return simulateBenchmarkResult(benchmarkCase, index);
   }
@@ -151,13 +127,36 @@ const gradeBenchmarkCase = async ({ benchmarkCase, client, answerKeyCache, mode,
 
   const buffer = await fs.readFile(imagePath);
   const answerKey = await loadAnswerKeyForCase(benchmarkCase, answerKeyCache);
-  const responseText = await generateWithClaude(
-    client,
-    buildGradingSystemPrompt(answerKey),
-    formatBufferToClaudePart(buffer, mimeType)
+  const gradeResult = await executeWorksheetGrading(
+    {
+      buffer,
+      mimetype: mimeType,
+      originalname: path.basename(imagePath)
+    },
+    answerKey
   );
 
-  return parseAndNormalizeGradingResponse(responseText);
+  return gradeResult.payload;
+};
+
+const processBenchmarkCases = async (cases, processor) => {
+  const batchSize = Number(process.env.CLAUDE_BATCH_SIZE) || (process.env.VERCEL ? 2 : 5);
+  const batchDelayMs = Number(process.env.CLAUDE_BATCH_DELAY_MS) || 1000;
+  const results = [];
+
+  for (let startIndex = 0; startIndex < cases.length; startIndex += batchSize) {
+    const batch = cases.slice(startIndex, startIndex + batchSize);
+    const batchResults = await Promise.all(
+      batch.map((benchmarkCase, batchIndex) => processor(benchmarkCase, startIndex + batchIndex))
+    );
+    results.push(...batchResults);
+
+    if (startIndex + batchSize < cases.length && batchDelayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, batchDelayMs));
+    }
+  }
+
+  return results;
 };
 
 const compareCase = (benchmarkCase, actual) => {
@@ -237,7 +236,7 @@ const buildAggregateReport = ({ manifest, comparedCases, mode, notes }) => {
   };
 };
 
-export const runAccuracyBenchmark = async ({ maxCases = 12, mode = 'live' } = {}) => {
+export const runAccuracyBenchmark = async ({ maxCases = BENCHMARK_MAX_CASES, mode = 'live' } = {}) => {
   const manifest = await loadBenchmarkManifest();
   const benchmarkCases = mode === 'live'
     ? [...manifest.cases].sort((a, b) => {
@@ -248,38 +247,38 @@ export const runAccuracyBenchmark = async ({ maxCases = 12, mode = 'live' } = {}
         return aSize - bSize;
       })
     : manifest.cases;
-  const selectedCases = benchmarkCases.slice(0, Math.max(1, Number(maxCases) || 12));
+  const caseLimit = Math.min(
+    BENCHMARK_MAX_CASES,
+    Math.max(1, Number(maxCases) || BENCHMARK_MAX_CASES)
+  );
+  const selectedCases = benchmarkCases.slice(0, caseLimit);
   const answerKeyCache = new Map();
-  const client = mode === 'live'
-    ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-    : null;
 
   if (mode === 'live' && !process.env.ANTHROPIC_API_KEY) {
     throw new Error('ANTHROPIC_API_KEY is required to run the live accuracy benchmark.');
   }
 
-  const comparedCases = [];
-
-  for (let index = 0; index < selectedCases.length; index += 1) {
-    const benchmarkCase = selectedCases[index];
-    try {
-      const actual = await gradeBenchmarkCase({
-        benchmarkCase,
-        client,
-        answerKeyCache,
-        mode,
-        index
-      });
-      comparedCases.push(compareCase(benchmarkCase, actual));
-    } catch (error) {
-      comparedCases.push(compareCase(benchmarkCase, {
-        status: 'Failed',
-        totalScore: 0,
-        mistakes: [],
-        errorSummary: error.message
-      }));
+  const comparedCases = await processBenchmarkCases(
+    selectedCases,
+    async (benchmarkCase, index) => {
+      try {
+        const actual = await gradeBenchmarkCase({
+          benchmarkCase,
+          answerKeyCache,
+          mode,
+          index
+        });
+        return compareCase(benchmarkCase, actual);
+      } catch (error) {
+        return compareCase(benchmarkCase, {
+          status: 'Failed',
+          totalScore: 0,
+          mistakes: [],
+          errorSummary: error.message
+        });
+      }
     }
-  }
+  );
 
   return buildAggregateReport({
     manifest,
@@ -287,8 +286,6 @@ export const runAccuracyBenchmark = async ({ maxCases = 12, mode = 'live' } = {}
     mode,
     notes: mode === 'mock'
       ? 'Mock mode is for UI checks only. Use live mode before presenting accuracy claims.'
-      : selectedCases.length < manifest.cases.length
-      ? `Live Vercel-safe benchmark sample run through the same Claude grading prompt used by uploads (${selectedCases.length}/${manifest.cases.length} labeled cases). Run the backend CLI for the full benchmark.`
       : 'Live benchmark run through the same Claude grading prompt used by uploads.'
   });
 };

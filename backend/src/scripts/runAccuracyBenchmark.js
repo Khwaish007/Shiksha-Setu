@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import connectDatabase from '../config/db.js';
 import AccuracyReport from '../models/AccuracyReport.js';
-import { runAccuracyBenchmark } from '../utils/accuracyBenchmark.js';
+import { BENCHMARK_MAX_CASES, runAccuracyBenchmark } from '../utils/accuracyBenchmark.js';
 
 dotenv.config();
 
@@ -12,7 +12,7 @@ const getArgValue = (name, fallback) => {
 };
 
 const main = async () => {
-  const maxCases = Number(getArgValue('maxCases', 12));
+  const maxCases = Number(getArgValue('maxCases', BENCHMARK_MAX_CASES));
   const mode = getArgValue('mode', 'live') === 'mock' ? 'mock' : 'live';
 
   await connectDatabase();

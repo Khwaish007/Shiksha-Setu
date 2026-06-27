@@ -38,8 +38,7 @@ function AccuracyReport({ benchmark, report, onReportUpdated }) {
     setError('');
 
     try {
-      const maxCases = mode === 'live' ? 1 : 12;
-      const nextReport = await analyticsAPI.runAccuracyReport({ maxCases, mode });
+      const nextReport = await analyticsAPI.runAccuracyReport({ mode });
       await onReportUpdated?.(nextReport);
     } catch (runError) {
       console.error('Accuracy benchmark failed:', runError);
@@ -66,7 +65,7 @@ function AccuracyReport({ benchmark, report, onReportUpdated }) {
             onClick={() => runBenchmark('live')}
             disabled={isRunning}
           >
-            {isRunning ? t('runningBenchmark') : t('runSingleLiveCase')}
+            {isRunning ? t('runningBenchmark') : t('runLiveBenchmark')}
           </button>
           <button
             type="button"

@@ -1,5 +1,9 @@
 import AccuracyReport from '../models/AccuracyReport.js';
-import { getBenchmarkSummary, runAccuracyBenchmark } from '../utils/accuracyBenchmark.js';
+import {
+  BENCHMARK_MAX_CASES,
+  getBenchmarkSummary,
+  runAccuracyBenchmark
+} from '../utils/accuracyBenchmark.js';
 
 export const getLatestAccuracyReport = async (req, res) => {
   try {
@@ -21,10 +25,11 @@ export const getLatestAccuracyReport = async (req, res) => {
 export const runAccuracyReport = async (req, res) => {
   try {
     const mode = req.body?.mode === 'mock' || req.query?.mode === 'mock' ? 'mock' : 'live';
-    const requestedMaxCases = Number(req.body?.maxCases || req.query?.maxCases || 12);
-    const maxCases = mode === 'live'
-      ? 1
-      : Math.min(Math.max(1, requestedMaxCases || 12), 12);
+    const requestedMaxCases = Number(req.body?.maxCases || req.query?.maxCases || BENCHMARK_MAX_CASES);
+    const maxCases = Math.min(
+      BENCHMARK_MAX_CASES,
+      Math.max(1, requestedMaxCases || BENCHMARK_MAX_CASES)
+    );
     const reportPayload = await runAccuracyBenchmark({ maxCases, mode });
     const savedReport = await AccuracyReport.create(reportPayload);
 
