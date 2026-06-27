@@ -29,7 +29,7 @@
       "answerKeyFile": "src/benchmark/assets/student_tests_dataset/ground_truth_answer_key.json",
       "studentName": "Student_2",
       "expectedStatus": "Success",
-      "expectedScore": 10,
+      "expectedScore": 20,
       "expectedConcepts": [
         "Area Calculation",
         "Trigonometry",
@@ -80,7 +80,7 @@
       "answerKeyFile": "src/benchmark/assets/student_tests_dataset/ground_truth_answer_key.json",
       "studentName": "Student_16",
       "expectedStatus": "Success",
-      "expectedScore": 90,
+      "expectedScore": 100,
       "expectedConcepts": [
         "Calculus Integration"
       ]
