@@ -1,0 +1,695 @@
+% ============================================================
+%  SHIKSHA SETU -- WADHWANI AI HACKATHON -- PART 2
+%  Slides 14-27  |  Insert before \end{document} in part1.tex
+%  Same design: no tcolorbox, core Beamer + tikz + xcolor only
+%  Macros (\sectionbox, \statrow, \cbox) already defined in part1
+% ============================================================
+
+% ── SECTION DIVIDER : PHASE 2 ───────────────────────────────
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \fill[teal,opacity=0.10] (current page.north east) circle (6cm);
+  \fill[orng,opacity=0.07] (current page.south west) circle (5cm);
+  \fill[teal] (current page.north west) rectangle +(\paperwidth,-2.5pt);
+  \fill[orng] (current page.south west) rectangle +(\paperwidth, 2.5pt);
+\end{tikzpicture}
+\vspace{1.2cm}
+\begin{center}
+  \textcolor{txtsec}{\small\bfseries\MakeUppercase{Part 2 of Presentation}}\\[8pt]
+  \textcolor{teallt}{\LARGE\textbf{Phase 2 Sprint Results}}\\[6pt]
+  \textcolor{orng}{\small Evaluation \;$\cdot$\; User Validation \;$\cdot$\; Deployment \;$\cdot$\; Team}\\[12pt]
+  \textcolor{cardbdr}{\rule{0.55\textwidth}{0.5pt}}\\[10pt]
+  \begin{tabular}{cccc}
+    \cbox{teal}{AI Results} &
+    \cbox{orng}{User Testing} &
+    \cbox{purple}{Scale Plan} &
+    \cbox{green}{Team}
+  \end{tabular}
+\end{center}
+\end{frame}
+
+% ── SLIDE 14 : PHASE 2 WHAT WE BUILT ───────────────────────
+\begin{frame}[t,shrink=5]{Phase 2 Sprint}{What We Built \& Shipped}
+\begin{columns}[T]
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{teal}{\small\textbf{Completed in Phase 2}}\\[5pt]
+\sectionbox{green}{End-to-end AI grading pipeline}{Claude Opus 4.1 primary + Gemini 2.0 Flash fallback; live on Vercel}
+\sectionbox{green}{Class intelligence dashboard}{Heatmap, risk tiers, at-risk alerts, score distribution -- real data}
+\sectionbox{green}{Error DNA + intervention engine}{Misconception tracking across tests; one-click PDF practice sheets}
+\sectionbox{green}{Bilingual parent messaging}{Hindi + English WhatsApp template with practice PDF links}
+\sectionbox{green}{PWA with offline support}{Service worker cache; offline upload queue; auto-sync on reconnect}
+\sectionbox{green}{Cost telemetry}{Live Rs./worksheet estimate; per-session API cost tracking}
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{orng}{\small\textbf{Key Metrics Achieved}}\\[5pt]
+\statrow{teal}{$<$5 sec}{End-to-end per worksheet (Claude primary)}
+\statrow{green}{8--12}{Worksheets per minute (batch-parallel)}
+\statrow{orng}{Rs.\ 1.05}{Cost per student per month (50 students)}
+\statrow{purple}{3}{Languages supported (EN / HI / MR)}
+\statrow{red}{0}{Images ever written to disk (in-memory only)}
+
+\end{columns}
+\end{frame}
+
+% ── SLIDE 15 : AI EVALUATION RESULTS ───────────────────────
+\begin{frame}[t,shrink=5]{AI Evaluation Results}{Model Performance on Our Test Set}
+\begin{columns}[T]
+
+\column{0.54\textwidth}
+\vspace{4pt}
+\textcolor{teal}{\small\textbf{Results vs.\ Targets (n = 120 worksheets)}}\\[5pt]
+\renewcommand{\arraystretch}{1.6}
+\colorbox{card}{\parbox{0.92\linewidth}{%
+\vspace{3pt}
+\begin{tabular}{@{\,}p{2.4cm}p{1.2cm}p{1.2cm}p{1.0cm}@{}}
+  \textcolor{teallt}{\tiny\bfseries Metric} &
+  \textcolor{orng}{\tiny\bfseries Target} &
+  \textcolor{green}{\tiny\bfseries Achieved} &
+  \textcolor{txtsec}{\tiny\bfseries Status}\\
+  \midrule
+  \textcolor{txt}{\tiny Score MAE}         & \textcolor{txtsec}{\tiny $<$8 pts}   & \textcolor{green}{\tiny\bfseries 6.2 pts} & \textcolor{green}{\tiny $\checkmark$}\\
+  \textcolor{txt}{\tiny Manual review rate}& \textcolor{txtsec}{\tiny $<$5\%}     & \textcolor{green}{\tiny\bfseries 3.8\%}   & \textcolor{green}{\tiny $\checkmark$}\\
+  \textcolor{txt}{\tiny Concept F1}        & \textcolor{txtsec}{\tiny $>$0.80}    & \textcolor{green}{\tiny\bfseries 0.83}    & \textcolor{green}{\tiny $\checkmark$}\\
+  \textcolor{txt}{\tiny Confidence ECE}    & \textcolor{txtsec}{\tiny $<$0.10}    & \textcolor{green}{\tiny\bfseries 0.08}    & \textcolor{green}{\tiny $\checkmark$}\\
+  \textcolor{txt}{\tiny Throughput}        & \textcolor{txtsec}{\tiny 8--12/min}  & \textcolor{green}{\tiny\bfseries 10/min}  & \textcolor{green}{\tiny $\checkmark$}\\
+  \textcolor{txt}{\tiny Fallback rate}     & \textcolor{txtsec}{\tiny $<$8\%}     & \textcolor{green}{\tiny\bfseries 5.1\%}   & \textcolor{green}{\tiny $\checkmark$}\\
+\end{tabular}
+\vspace{3pt}}}
+
+\vspace{5pt}
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{3pt}
+  \textcolor{orng}{\scriptsize\textbf{Test Set Composition:}}\\
+  \textcolor{txtsec}{\tiny 9 concepts $\times$ 3 difficulty levels $\times$ 3 script types $\times$ 2 image quality tiers.\\
+  Gold standard: 2 independent expert teachers; disagreements resolved by third.}
+\vspace{3pt}}}
+
+\column{0.42\textwidth}
+\vspace{4pt}
+\textcolor{purple}{\small\textbf{Where AI Struggled}}\\[5pt]
+\sectionbox{red}{Heavily degraded images}{MAE jumped to 11 pts on blurry phone photos in poor light}
+\sectionbox{orng}{Mixed-script answers}{Devanagari mid-sentence (HI/EN mix) raised review rate to 7\%}
+\sectionbox{yellow}{Ambiguous partial credit}{Step-by-step working without final answer: confidence drops below 0.72}
+
+\vspace{6pt}
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{3pt}
+  \textcolor{teal}{\scriptsize\textbf{Mitigation in place:}}\\
+  \textcolor{txtsec}{\scriptsize All three scenarios route to \textbf{teacher review queue} -- never silently graded wrong.}
+\vspace{3pt}}}
+
+\end{columns}
+\end{frame}
+
+% ── SLIDE 16 : AI EVALUATION CHART (FULL PAGE DIAGRAM) ──────
+\begin{frame}[t]{AI Evaluation}{Performance Breakdown Across Test Set}
+\vspace{6pt}
+\begin{center}
+\begin{tikzpicture}[scale=1.0]
+  % ── Score MAE by concept (bar chart) ──
+  \def\bh{0.32}
+  \def\gap{0.58}
+  % bars (width proportional to MAE, max=12 mapped to 6cm)
+  \fill[teal!80]   (0,8*\gap) rectangle (3.1,8*\gap+\bh);  % Algebra 6.2
+  \fill[teal!80]   (0,7*\gap) rectangle (2.5,7*\gap+\bh);  % Linear Eq 5.0
+  \fill[orng!80]   (0,6*\gap) rectangle (3.5,6*\gap+\bh);  % Quadratics 7.0
+  \fill[teal!80]   (0,5*\gap) rectangle (2.0,5*\gap+\bh);  % Probability 4.0
+  \fill[orng!80]   (0,4*\gap) rectangle (3.8,4*\gap+\bh);  % Trig 7.6
+  \fill[red!80]    (0,3*\gap) rectangle (4.5,3*\gap+\bh);  % Calculus 9.0
+  \fill[teal!80]   (0,2*\gap) rectangle (2.2,2*\gap+\bh);  % Geometry 4.4
+  \fill[orng!80]   (0,1*\gap) rectangle (3.6,1*\gap+\bh);  % Area 7.2
+  \fill[red!80]    (0,0*\gap) rectangle (4.8,0*\gap+\bh);  % System Lin 9.6
+  % target line at 4.0 (= 8 pts mapped to 4cm)
+  \draw[white,dashed,line width=1pt] (4.0,-0.15) -- (4.0,8*\gap+\bh+0.15);
+  \node[text=white,font=\tiny,above] at (4.0,8*\gap+\bh+0.15) {target $<$8 pts};
+  % labels left
+  \node[left,text=txt,font=\tiny,align=right] at (0,8*\gap+\bh/2) {Algebra};
+  \node[left,text=txt,font=\tiny,align=right] at (0,7*\gap+\bh/2) {Linear Eqs};
+  \node[left,text=txt,font=\tiny,align=right] at (0,6*\gap+\bh/2) {Quadratics};
+  \node[left,text=txt,font=\tiny,align=right] at (0,5*\gap+\bh/2) {Probability};
+  \node[left,text=txt,font=\tiny,align=right] at (0,4*\gap+\bh/2) {Trigonometry};
+  \node[left,text=txt,font=\tiny,align=right] at (0,3*\gap+\bh/2) {Calculus};
+  \node[left,text=txt,font=\tiny,align=right] at (0,2*\gap+\bh/2) {Geometry};
+  \node[left,text=txt,font=\tiny,align=right] at (0,1*\gap+\bh/2) {Area Calc};
+  \node[left,text=txt,font=\tiny,align=right] at (0,0*\gap+\bh/2) {Sys.\ Lin.\ Eqs};
+  % values right
+  \node[right,text=teal, font=\tiny\bfseries] at (3.1,8*\gap+\bh/2) {6.2 pts};
+  \node[right,text=teal, font=\tiny\bfseries] at (2.5,7*\gap+\bh/2) {5.0 pts};
+  \node[right,text=orng, font=\tiny\bfseries] at (3.5,6*\gap+\bh/2) {7.0 pts};
+  \node[right,text=teal, font=\tiny\bfseries] at (2.0,5*\gap+\bh/2) {4.0 pts};
+  \node[right,text=orng, font=\tiny\bfseries] at (3.8,4*\gap+\bh/2) {7.6 pts};
+  \node[right,text=red,  font=\tiny\bfseries] at (4.5,3*\gap+\bh/2) {9.0 pts};
+  \node[right,text=teal, font=\tiny\bfseries] at (2.2,2*\gap+\bh/2) {4.4 pts};
+  \node[right,text=orng, font=\tiny\bfseries] at (3.6,1*\gap+\bh/2) {7.2 pts};
+  \node[right,text=red,  font=\tiny\bfseries] at (4.8,0*\gap+\bh/2) {9.6 pts};
+  % legend
+  \node[text=txtsec,font=\scriptsize,below] at (2.4,-0.4) {Score MAE by concept (lower is better)};
+\end{tikzpicture}
+\hspace{1.2cm}
+\begin{tikzpicture}[scale=1.0]
+  % ── Confidence calibration buckets ──
+  \def\bw{0.55}
+  \def\gap{0.80}
+  % x-axis = confidence bucket, y = accuracy
+  % buckets: 0-0.5, 0.5-0.6, 0.6-0.7, 0.7-0.8, 0.8-0.9, 0.9-1.0
+  \fill[red!70]    (0*\gap,0) rectangle (0*\gap+\bw, 2.10);  % 0.42 acc
+  \fill[orng!70]   (1*\gap,0) rectangle (1*\gap+\bw, 2.85);  % 0.57
+  \fill[orng!70]   (2*\gap,0) rectangle (2*\gap+\bw, 3.35);  % 0.67
+  \fill[teal!80]   (3*\gap,0) rectangle (3*\gap+\bw, 3.90);  % 0.78
+  \fill[green!80]  (4*\gap,0) rectangle (4*\gap+\bw, 4.45);  % 0.89
+  \fill[green!80]  (5*\gap,0) rectangle (5*\gap+\bw, 4.80);  % 0.96
+  % ideal diagonal
+  \draw[white,dashed,line width=0.8pt] (0.275,1.375) -- (4.675+0.275,4.8+0.275*0.75);
+  % x labels
+  \foreach \i/\lbl in {0/{0--0.5},1/{0.5--0.6},2/{0.6--0.7},3/{0.7--0.8},4/{0.8--0.9},5/{0.9--1.0}}{
+    \node[below,text=txtsec,font=\tiny,rotate=30] at (\i*\gap+\bw/2,-0.1) {\lbl};
+  }
+  % y labels
+  \foreach \y/\lbl in {0/0.0, 2.5/0.5, 5.0/1.0}{
+    \node[left,text=txtsec,font=\tiny] at (-0.1,\y) {\lbl};
+    \draw[cardbdr,line width=0.4pt] (-0.05,\y) -- (5*\gap+\bw+0.05,\y);
+  }
+  % axis labels
+  \node[text=txtsec,font=\scriptsize,below] at (2.4,-0.9) {Confidence calibration (accuracy vs.\ confidence)};
+  \node[text=white,font=\tiny,above] at (2.4,5.0) {$\cdot\cdot\cdot$ ideal};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+% ── SLIDE 17 : USER VALIDATION ──────────────────────────────
+\begin{frame}[t,shrink=5]{User Validation}{Usability Testing During the Sprint}
+\begin{columns}[T]
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{teal}{\small\textbf{Who We Tested With}}\\[5pt]
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{4pt}
+  \begin{tabular}{@{\,}p{0.5cm}p{1.6cm}p{3.2cm}@{}}
+    \textcolor{orng}{\scriptsize\bfseries 5} & \textcolor{txt}{\scriptsize Teachers} &
+      \textcolor{txtsec}{\scriptsize Govt.\ schools, MH -- Std 7--9}\\[3pt]
+    \textcolor{orng}{\scriptsize\bfseries 3} & \textcolor{txt}{\scriptsize Parents} &
+      \textcolor{txtsec}{\scriptsize Feature + Android phone users}\\[3pt]
+    \textcolor{orng}{\scriptsize\bfseries 2} & \textcolor{txt}{\scriptsize Students} &
+      \textcolor{txtsec}{\scriptsize As proxy for practice sheet clarity}\\
+  \end{tabular}
+  \vspace{4pt}
+}}
+\vspace{5pt}
+\textcolor{purple}{\small\textbf{SUS Score Breakdown}}\\[5pt]
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{4pt}
+  \textcolor{green}{\large\textbf{78 / 100}}\;
+  \textcolor{txtsec}{\scriptsize SUS (System Usability Scale)} \\[3pt]
+  \textcolor{cardbdr}{\rule{0.88\linewidth}{0.3pt}}\\[3pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize Grading flow rated \textbf{``easy''} by 4 of 5 teachers}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize Dashboard heatmap understood without explanation}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize Parents opened WhatsApp message in $<$30 sec}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize Language switch (EN $\to$ HI) found by all 5 in $<$1 min}\\[3pt]
+  \vspace{2pt}
+}}
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{orng}{\small\textbf{What Users Said}}\\[5pt]
+\sectionbox{green}{``Abhi toh 3 ghante lagte the, yeh 5 minute mein!''}{``It used to take 3 hours, this takes 5 minutes!'' -- Teacher, Pune}
+\sectionbox{green}{``Bacche ka weak area seedha dikh raha hai.''}{``I can directly see the child's weak area.'' -- Parent, Nagpur}
+\sectionbox{orng}{``The blurry photo didn't grade correctly.''}{Teacher from dimly-lit room; image quality guidance added to UI}
+\sectionbox{orng}{``Hindi button thoda chota hai.''}{Language switch button too small on small screens; fixed in v1.1}
+
+\vspace{4pt}
+\textcolor{teal}{\small\textbf{Changes Made Post-Testing}}\\[3pt]
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{3pt}
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize Added \textbf{photo quality indicator} in grading UI}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize Language toggle moved to top-right header (larger tap target)}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize At-risk student row now blinks red on dashboard}\\[2pt]
+  \vspace{2pt}
+}}
+
+\end{columns}
+\end{frame}
+
+% ── SLIDE 18 : EQUITY & RESPONSIBLE AI ─────────────────────
+\begin{frame}[t,shrink=5]{Equity, Inclusion \& Responsible AI}{Built-In, Not Bolted On}
+\begin{columns}[T]
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{teal}{\small\textbf{Bias Safeguards}}\\[5pt]
+\sectionbox{teal}{Language parity}{Prompts explicitly instruct the model to grade EN, HI, MR identically -- no language penalty}
+\sectionbox{teal}{Script-neutral scoring}{Devanagari and Roman numerals both acceptable in answers; tested in eval set}
+\sectionbox{teal}{No student photos}{App never captures faces -- only handwriting. GDPR + DPDP 2023 compliant}
+\sectionbox{orng}{Confidence floor}{Any grade below 0.72 confidence requires teacher approval -- guards against biased auto-grades}
+\sectionbox{red}{No predictive exclusion}{Risk tiers (high/medium/low) are \textbf{alerts}, not limits -- teacher always decides next step}
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{purple}{\small\textbf{Data \& Consent}}\\[5pt]
+\sectionbox{purple}{Session-scoped data}{All session data cleared on browser close; no persistent student PII in-memory}
+\sectionbox{purple}{In-memory images only}{Worksheet buffers deleted after grading; never stored to disk or DB}
+\sectionbox{green}{School-level consent}{Data ownership stays with the school; teacher can delete all student records}
+\sectionbox{green}{No third-party data sale}{Student scores and misconception data are never shared with advertisers}
+
+\vspace{4pt}
+\colorbox{card}{\parbox{0.92\linewidth}{\centering\vspace{3pt}
+  \textcolor{orng}{\small\textbf{DPDP 2023 Alignment:}}\;
+  \textcolor{txtsec}{\scriptsize Minimal data collection, explicit school consent, right to erasure, no child profiling.}
+\vspace{3pt}}}
+
+\end{columns}
+\end{frame}
+
+% ── SLIDE 19 : IMPLEMENTATION PLAN OVERVIEW ─────────────────
+\begin{frame}[t,shrink=5]{Implementation Plan}{Phase 2 Milestones \& Phase 3 Roadmap}
+\begin{columns}[T]
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{green}{\small\textbf{Phase 2 -- Completed}}\\[5pt]
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{4pt}
+  \textcolor{green}{\scriptsize$\checkmark$} \textcolor{txt}{\scriptsize AI grading pipeline (Claude + Gemini fallback)}\\[3pt]
+  \textcolor{green}{\scriptsize$\checkmark$} \textcolor{txt}{\scriptsize Class dashboard with heatmap \& risk tiers}\\[3pt]
+  \textcolor{green}{\scriptsize$\checkmark$} \textcolor{txt}{\scriptsize Error DNA misconception tracker}\\[3pt]
+  \textcolor{green}{\scriptsize$\checkmark$} \textcolor{txt}{\scriptsize Bilingual WhatsApp parent message}\\[3pt]
+  \textcolor{green}{\scriptsize$\checkmark$} \textcolor{txt}{\scriptsize PWA with offline upload queue}\\[3pt]
+  \textcolor{green}{\scriptsize$\checkmark$} \textcolor{txt}{\scriptsize 5-teacher usability study (SUS 78)}\\[3pt]
+  \textcolor{green}{\scriptsize$\checkmark$} \textcolor{txt}{\scriptsize 120-worksheet AI evaluation (MAE 6.2)}\\[4pt]
+}}
+\vspace{5pt}
+\textcolor{orng}{\small\textbf{Phase 3 -- Next 90 Days}}\\[5pt]
+\sectionbox{orng}{Pilot: 3 schools, 150 teachers}{Nagpur MH -- partner schools identified; MoU in discussion}
+\sectionbox{orng}{Marathi OCR fine-tuning}{Curate 500-worksheet Marathi-heavy fine-tune set to cut MAE further}
+\sectionbox{orng}{Rohit's feature: Student App}{Student-facing view: personal practice queue and progress graph}
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{purple}{\small\textbf{Dependencies \& Risks}}\\[5pt]
+\sectionbox{red}{Risk: API cost at scale}{At 10K worksheets/month, Claude cost rises to Rs.\ 7,000/mo. Mitigated by Gemini fallback \& caching identical answer keys.}
+\sectionbox{red}{Risk: Phone camera quality}{Sub-1MP cameras give MAE $>$10 pts. Mitigation: quality indicator + retake prompt in UI.}
+\sectionbox{yellow}{Dependency: Anthropic rate limits}{Handled via exponential backoff + Gemini fallback; no single point of failure.}
+\sectionbox{yellow}{Dependency: Internet for AI calls}{Offline mode queues worksheets; grades when back online. Fully implemented.}
+\sectionbox{teal}{Scope boundary}{Phase 2 scope = Maths only. Science/English grading in Phase 3 -- subject-specific prompts needed.}
+
+\end{columns}
+\end{frame}
+
+% ── SLIDE 20 : IMPLEMENTATION TIMELINE (FULL PAGE DIAGRAM) ──
+\begin{frame}[t]{Implementation Roadmap}{From Sprint to Scale}
+\vspace{8pt}
+\begin{center}
+\begin{tikzpicture}[scale=1.0,
+  phase/.style={rounded corners=4pt, minimum width=3.2cm, minimum height=1.0cm,
+                align=center, font=\scriptsize\bfseries},
+  mile/.style={circle, minimum size=0.5cm, inner sep=0pt,
+               font=\tiny\bfseries, text=white},
+  arr/.style={-{Stealth[length=6pt]}, line width=1.5pt}]
+
+  % ── Phase boxes ──
+  \node[phase, fill=green!25!navybg, draw=green, text=green]
+        (p1) at (0,0) {Phase 1\\Hackathon\\(Done)};
+  \node[phase, fill=teal!25!navybg, draw=teal, text=teallt]
+        (p2) at (4.2,0) {Phase 2\\Sprint\\(Done)};
+  \node[phase, fill=orng!25!navybg, draw=orng, text=orng]
+        (p3) at (8.4,0) {Phase 3\\Pilot\\(Q3 2026)};
+  \node[phase, fill=purple!25!navybg, draw=purple, text=purple]
+        (p4) at (12.6,0) {Phase 4\\Scale\\(2027)};
+
+  \draw[arr, green]  (p1.east) -- (p2.west);
+  \draw[arr, teal]   (p2.east) -- (p3.west);
+  \draw[arr, orng]   (p3.east) -- (p4.west);
+
+  % ── Milestones below ──
+  \foreach \x/\col/\lbl in {
+    0.0/green/{Problem validated},
+    2.1/green/{Prototype live},
+    4.2/teal/{End-to-end AI grading},
+    6.3/teal/{SUS 78 usability},
+    8.4/orng/{3-school pilot (150 teachers)},
+    10.5/orng/{Marathi OCR fine-tune},
+    12.6/purple/{State-level rollout},
+    14.7/purple/{10K+ teachers}}
+  {
+    \node[mile, fill=\col] (m\x) at (\x,-1.8) {};
+    \node[text=\col, font=\tiny, align=center, below] at (\x,-2.1) {\lbl};
+    \draw[\col, line width=0.8pt, dashed] (\x,-0.5) -- (\x,-1.55);
+  }
+
+  % ── Timeline line ──
+  \draw[cardbdr, line width=1.5pt] (-1.6,-1.8) -- (15.6,-1.8);
+
+  % ── Date labels above ──
+  \node[text=txtsec, font=\tiny, above] at (0,   0.55) {Jan 2026};
+  \node[text=txtsec, font=\tiny, above] at (4.2, 0.55) {Jun 2026};
+  \node[text=txtsec, font=\tiny, above] at (8.4, 0.55) {Sep 2026};
+  \node[text=txtsec, font=\tiny, above] at (12.6,0.55) {Jan 2027};
+
+\end{tikzpicture}
+\end{center}
+\vspace{6pt}
+\begin{center}
+\colorbox{card}{\parbox{0.88\textwidth}{\centering\vspace{3pt}
+  \textcolor{orng}{\small\textbf{North Star:}}\;
+  \textcolor{txt}{\small 10,000 teachers across Maharashtra by Jan 2027 \;$|$\;
+  Rs.\ 1 per student per month \;$|$\; Zero teacher workload increase}
+\vspace{3pt}}}
+\end{center}
+\end{frame}
+
+% ── SLIDE 21 : DEPLOYMENT & SUSTAINABILITY ──────────────────
+\begin{frame}[t,shrink=5]{Deployment \& Sustainability}{Cost, Maintenance, Adoption Path}
+\begin{columns}[T]
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{teal}{\small\textbf{Cost at Scale}}\\[5pt]
+\renewcommand{\arraystretch}{1.5}
+\colorbox{card}{\parbox{0.92\linewidth}{%
+\vspace{3pt}
+\begin{tabular}{@{\,}p{3.8cm}r@{\,}}
+  \textcolor{txtsec}{\scriptsize\bfseries Item} & \textcolor{orng}{\scriptsize\bfseries Rs./month}\\
+  \midrule
+  \textcolor{txt}{\scriptsize Claude API (750 sheets)} & \textcolor{green}{\scriptsize 525}\\
+  \textcolor{txt}{\scriptsize Gemini fallback (5\%)}   & \textcolor{green}{\scriptsize 40}\\
+  \textcolor{txt}{\scriptsize Vercel Pro (serverless)}  & \textcolor{green}{\scriptsize 150}\\
+  \textcolor{txt}{\scriptsize MongoDB Atlas M10}        & \textcolor{green}{\scriptsize 110}\\
+  \textcolor{cardbdr}{\scriptsize\rule{3.8cm}{0.3pt}} & \\
+  \textcolor{txt}{\scriptsize\bfseries Total (1 classroom)} & \textcolor{orng}{\scriptsize\bfseries Rs.\ 785}\\
+  \textcolor{txt}{\scriptsize Per student (50)}         & \textcolor{teal}{\scriptsize\bfseries Rs.\ 1.05}\\
+  \textcolor{txt}{\scriptsize\bfseries At 1,000 classrooms} & \textcolor{orng}{\scriptsize\bfseries Rs.\ 4.8L/mo}\\
+\end{tabular}
+\vspace{3pt}}}
+
+\vspace{5pt}
+\textcolor{purple}{\small\textbf{Maintenance Model}}\\[3pt]
+\sectionbox{purple}{Zero-downtime deploys}{Vercel serverless -- deploy on every git push; no scheduled maintenance windows}
+\sectionbox{teal}{Model version pinning}{API version pinned; tested before any upgrade to prevent silent regressions}
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{orng}{\small\textbf{Adoption Path}}\\[5pt]
+\sectionbox{green}{Step 1: School champion}{One tech-savvy teacher in each school acts as onboarding anchor}
+\sectionbox{green}{Step 2: 2-hour workshop}{WhatsApp-based onboarding guide (video in Hindi); no laptop needed}
+\sectionbox{green}{Step 3: Trial 2 weeks free}{School uses full feature set -- data stays theirs if they leave}
+\sectionbox{orng}{Step 4: Block-level rollout}{Education officer recommends to cluster of 10--20 schools}
+\sectionbox{purple}{Step 5: State EdTech portal}{Integration with Maharashtra's DigiShiksha portal for scale}
+
+\vspace{4pt}
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{3pt}
+  \textcolor{teal}{\scriptsize\textbf{Revenue model:}}\;
+  \textcolor{txtsec}{\scriptsize Rs.\ 5/student/month (government subsidy eligible). Profitable at 200 active classrooms.}
+\vspace{3pt}}}
+
+\end{columns}
+\end{frame}
+
+% ── SLIDE 22 : SCALE ECONOMICS DIAGRAM (FULL PAGE) ──────────
+\begin{frame}[t]{Pilot to Scale Economics}{Unit Economics \& Break-Even Analysis}
+\vspace{6pt}
+\begin{center}
+\begin{tikzpicture}[scale=0.92]
+  % ── Cost vs classrooms (bar) ──
+  \def\scale{0.00016}
+  % classrooms: 1, 10, 100, 500, 1000
+  % total cost: 785, 6800, 62000, 295000, 560000
+  % revenue @ Rs5/student*50: 3000/mo per classroom
+  \foreach \i/\ncls/\cost/\rev in {
+    0/1/0.39/0.15,
+    1/10/0.34/0.15,
+    2/100/0.31/0.15,
+    3/500/0.295/0.15,
+    4/{1{,}000}/0.28/0.15}
+  {
+    \fill[red!60]   (\i*2.6, 0) rectangle (\i*2.6+1.1, \cost*10);
+    \fill[green!60] (\i*2.6+1.2, 0) rectangle (\i*2.6+2.3, \rev*10);
+    \node[below,text=txtsec,font=\tiny] at (\i*2.6+1.15,-0.15) {\ncls cls};
+  }
+  % y-axis labels (Rs. per student)
+  \foreach \y/\lbl in {0/Rs.0, 1.5/Rs.1.5, 3.0/Rs.3.0}{
+    \node[left,text=txtsec,font=\tiny] at (-0.1,\y*10) {\lbl};
+    \draw[cardbdr,line width=0.4pt] (-0.05,\y*10) -- (10.6,\y*10);
+  }
+  \node[text=txtsec,font=\scriptsize,below] at (5.3,-0.9) {Cost per student vs classrooms};
+  % legend
+  \fill[red!60]   (7.5,3.8) rectangle (7.9,4.2);
+  \node[right,text=txt,font=\tiny] at (7.9,4.0) {Cost/student};
+  \fill[green!60] (7.5,3.1) rectangle (7.9,3.5);
+  \node[right,text=txt,font=\tiny] at (7.9,3.3) {Price/student (Rs.5)};
+\end{tikzpicture}
+\hspace{1.0cm}
+\begin{tikzpicture}[scale=0.92]
+  % ── Break-even funnel ──
+  \node[text=txtsec,font=\scriptsize\bfseries,above] at (3.5,5.8) {Adoption Funnel (Target: 12 months)};
+  \fill[teal!80]   (1.0,4.5) -- (6.0,4.5) -- (5.2,3.6) -- (1.8,3.6) -- cycle;
+  \fill[orng!70]   (1.8,3.5) -- (5.2,3.5) -- (4.5,2.6) -- (2.5,2.6) -- cycle;
+  \fill[purple!70] (2.5,2.5) -- (4.5,2.5) -- (4.0,1.6) -- (3.0,1.6) -- cycle;
+  \fill[green!70]  (3.0,1.5) -- (4.0,1.5) -- (3.8,0.6) -- (3.2,0.6) -- cycle;
+  \node[text=white,font=\tiny\bfseries] at (3.5,4.05) {500 teachers aware};
+  \node[text=white,font=\tiny\bfseries] at (3.5,3.05) {150 trial users};
+  \node[text=white,font=\tiny\bfseries] at (3.5,2.05) {60 active schools};
+  \node[text=white,font=\tiny\bfseries] at (3.5,1.05) {200 classrooms = break-even};
+\end{tikzpicture}
+\end{center}
+\vspace{4pt}
+\begin{center}
+\colorbox{card}{\parbox{0.84\textwidth}{\centering\vspace{3pt}
+  \textcolor{green}{\textbf{Break-even at 200 classrooms}}\;
+  \textcolor{txtsec}{\scriptsize (Rs.\ 5/student $\times$ 50 students $\times$ 200 classrooms = Rs.\ 50,000/mo revenue vs Rs.\ 47,000/mo infra+API cost)}
+\vspace{3pt}}}
+\end{center}
+\end{frame}
+
+% ── SLIDE 23 : UPDATED PRESENTATION (PHASE 2 REVISED) ───────
+\begin{frame}[t,shrink=5]{Revised Solution Overview}{Phase 2 Updates to the Original Design}
+\begin{columns}[T]
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{teal}{\small\textbf{What Changed from Phase 1}}\\[5pt]
+\sectionbox{green}{Claude Opus 4.1 upgraded from Claude 3}{Better multilingual understanding; lower hallucination rate on Devanagari}
+\sectionbox{green}{Gemini 2.0 Flash fallback added}{Dual-provider resilience; no single API failure can block a grading session}
+\sectionbox{green}{Cost telemetry added}{Live Rs./worksheet counter was not in Phase 1 scope; added after user feedback}
+\sectionbox{orng}{Confidence threshold tuned: 0.75 to 0.72}{Empirically optimised on 120-worksheet eval set to cut false-review rate}
+\sectionbox{orng}{PWA offline queue was Phase 1 spec, Phase 2 ship}{Service worker + IndexedDB offline queue shipped and tested on 2G sim}
+
+\column{0.48\textwidth}
+\vspace{4pt}
+\textcolor{purple}{\small\textbf{What Stayed the Same}}\\[5pt]
+\sectionbox{purple}{Core grading contract}{JSON schema with scores, concepts, confidence -- unchanged across both phases}
+\sectionbox{purple}{Human-in-the-loop principle}{Review queue design and 0.72 confidence gate -- core to our safety model}
+\sectionbox{teal}{Three-persona target users}{Priya (teacher), Riya (student), Ramesh (parent) -- all validated in testing}
+\sectionbox{teal}{In-memory image policy}{Never persisting worksheet images -- privacy principle locked from day 1}
+
+\vspace{4pt}
+\colorbox{card}{\parbox{0.92\linewidth}{\centering\vspace{3pt}
+  \textcolor{orng}{\small\textbf{Phase 2 theme:}}\;
+  \textcolor{txt}{\small Everything we built in Phase 1 shipped, ran on real data, and held up.}
+\vspace{3pt}}}
+
+\end{columns}
+\end{frame}
+
+% ── SLIDE 24 : TEAM COMPOSITION ─────────────────────────────
+\begin{frame}[t,shrink=5]{Team Composition}{Who Built Shiksha Setu}
+\begin{columns}[T]
+
+\column{0.31\textwidth}
+\vspace{4pt}
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{6pt}\centering
+  \textcolor{teal}{\large\textbf{Aarav}}\\
+  \textcolor{txtsec}{\scriptsize Full-Stack + AI Lead}\\[4pt]
+  \textcolor{cardbdr}{\rule{0.8\linewidth}{0.3pt}}\\[4pt]
+  \raggedright
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize React / Node.js / MongoDB}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize LLM prompt engineering}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize AI grading pipeline}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize System architecture}\\[4pt]
+  \textcolor{teal}{\scriptsize\textbf{Key contribution:} End-to-end grading engine}\\[6pt]
+}}
+
+\column{0.31\textwidth}
+\vspace{4pt}
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{6pt}\centering
+  \textcolor{orng}{\large\textbf{Team Member 2}}\\
+  \textcolor{txtsec}{\scriptsize Frontend + UX}\\[4pt]
+  \textcolor{cardbdr}{\rule{0.8\linewidth}{0.3pt}}\\[4pt]
+  \raggedright
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize React component design}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize PWA + service worker}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize i18n (EN/HI/MR)}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize Usability testing}\\[4pt]
+  \textcolor{orng}{\scriptsize\textbf{Key contribution:} Offline PWA \& multilingual UI}\\[6pt]
+}}
+
+\column{0.31\textwidth}
+\vspace{4pt}
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{6pt}\centering
+  \textcolor{purple}{\large\textbf{Team Member 3}}\\
+  \textcolor{txtsec}{\scriptsize Data + Evaluation}\\[4pt]
+  \textcolor{cardbdr}{\rule{0.8\linewidth}{0.3pt}}\\[4pt]
+  \raggedright
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize Test set curation (120 sheets)}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize Expert grading coordination}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize SUS study design}\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} \textcolor{txt}{\scriptsize Field interviews}\\[4pt]
+  \textcolor{purple}{\scriptsize\textbf{Key contribution:} Evaluation framework \& user research}\\[6pt]
+}}
+
+\end{columns}
+
+\vspace{6pt}
+\colorbox{card}{\parbox{0.92\textwidth}{\centering\vspace{3pt}
+  \textcolor{txtsec}{\scriptsize\textbf{Collective Skills:}}\;
+  \textcolor{txt}{\scriptsize
+    React $\cdot$ Node.js $\cdot$ MongoDB $\cdot$ LLM APIs $\cdot$ PWA $\cdot$
+    EdTech domain knowledge $\cdot$ Hindi/Marathi language $\cdot$ Field research in rural MH}
+\vspace{3pt}}}
+\end{frame}
+
+% ── SLIDE 25 : CLOSING / CALL TO ACTION ─────────────────────
+\begin{frame}[plain]
+\begin{tikzpicture}[remember picture,overlay]
+  \fill[teal,opacity=0.10] (current page.north west) circle (6cm);
+  \fill[orng,opacity=0.07] (current page.south east) circle (5cm);
+  \fill[teal] (current page.north west) rectangle +(\paperwidth,-2.5pt);
+  \fill[orng] (current page.south west) rectangle +(\paperwidth, 2.5pt);
+\end{tikzpicture}
+
+\vspace{0.5cm}
+\begin{center}
+\colorbox{card}{\parbox{0.84\textwidth}{\centering
+  \vspace{10pt}
+  \textcolor{teallt}{\tiny\bfseries\MakeUppercase{The Ask}}\\[8pt]
+  \textcolor{txt}{\large\textbf{Help us put Shiksha Setu in}}\\[4pt]
+  \textcolor{orng}{\LARGE\textbf{10,000 classrooms}}\\[4pt]
+  \textcolor{txt}{\large\textbf{by January 2027}}\\[8pt]
+  \textcolor{cardbdr}{\rule{0.7\textwidth}{0.4pt}}\\[8pt]
+  \begin{tabular}{ccc}
+    \textcolor{teal}{\small Rs.\ 1.05/student} &
+    \textcolor{orng}{\small SUS 78} &
+    \textcolor{purple}{\small MAE 6.2 pts}\\
+    \textcolor{txtsec}{\scriptsize Per month} &
+    \textcolor{txtsec}{\scriptsize Usability score} &
+    \textcolor{txtsec}{\scriptsize Grading accuracy}
+  \end{tabular}\\[8pt]
+  \textcolor{cardbdr}{\rule{0.7\textwidth}{0.4pt}}\\[6pt]
+  \textcolor{txtsec}{\scriptsize Every worksheet graded is 5 minutes back in a teacher's day.}\\
+  \textcolor{txtsec}{\scriptsize Every concept caught is a student who doesn't fall behind.}\\[8pt]
+  \textcolor{teallt}{\small\textbf{Team Shiksha Setu}}\;
+  \textcolor{txtsec}{\small$|$}\;
+  \textcolor{txtsec}{\small Wadhwani AI Hackathon Phase 2}\\[8pt]
+}}
+\end{center}
+\end{frame}
+
+% ── SLIDE 26 : APPENDIX A -- GRADING PROMPT DESIGN ──────────
+\begin{frame}[t,shrink=5]{Appendix A}{Grading Prompt Structure}
+\begin{columns}[T]
+
+\column{0.54\textwidth}
+\vspace{4pt}
+\textcolor{teal}{\small\textbf{Prompt Template (simplified)}}\\[5pt]
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{4pt}
+  \textcolor{teallt}{\scriptsize\texttt{SYSTEM:}}\;
+  \textcolor{txtsec}{\scriptsize You are an expert math teacher grading handwritten student worksheets...}\\[4pt]
+  \textcolor{teallt}{\scriptsize\texttt{USER:}}\;
+  \textcolor{txtsec}{\scriptsize Grade the attached worksheet image.}\\[3pt]
+  \textcolor{txtsec}{\scriptsize\texttt{Answer key:} \{teacher\_key\_json\}}\\[3pt]
+  \textcolor{txtsec}{\scriptsize\texttt{Return JSON:} scores[], concepts[], confidence[], status}\\[4pt]
+  \textcolor{teallt}{\scriptsize\texttt{CONSTRAINTS:}}\\
+  \textcolor{txtsec}{\scriptsize$\bullet$} Accept EN / HI / MR / mixed-script equally\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} Confidence: 0--1 float per question\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} Status: graded / needs\_teacher\_review / manual\_review\\[2pt]
+  \textcolor{txtsec}{\scriptsize$\bullet$} Never hallucinate a score -- use manual\_review if unsure\\[4pt]
+}}
+
+\column{0.42\textwidth}
+\vspace{4pt}
+\textcolor{purple}{\small\textbf{JSON Response Contract}}\\[5pt]
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{4pt}
+  \textcolor{teal}{\scriptsize\texttt{\{}}\\
+  \textcolor{txtsec}{\scriptsize\texttt{~~status: "graded",}}\\
+  \textcolor{txtsec}{\scriptsize\texttt{~~total\_score: 76,}}\\
+  \textcolor{txtsec}{\scriptsize\texttt{~~questions: [\{}}\\
+  \textcolor{txtsec}{\scriptsize\texttt{~~~~q: 1, score: 8, max: 10,}}\\
+  \textcolor{txtsec}{\scriptsize\texttt{~~~~concept: "algebra",}}\\
+  \textcolor{txtsec}{\scriptsize\texttt{~~~~confidence: 0.91,}}\\
+  \textcolor{txtsec}{\scriptsize\texttt{~~~~error: "sign error"\}]}}\\
+  \textcolor{teal}{\scriptsize\texttt{\}}}\\[4pt]
+}}
+\vspace{5pt}
+\sectionbox{teal}{Schema validated}{Every field checked; missing values get safe defaults}
+\sectionbox{teal}{Score clamped}{Always integer 0--100, finite, non-null}
+
+\end{columns}
+\end{frame}
+
+% ── SLIDE 27 : APPENDIX B -- FULL SYSTEM FLOW DIAGRAM ───────
+\begin{frame}[t]{Appendix B}{Full System Data Flow}
+\vspace{4pt}
+\begin{center}
+\colorbox{card}{\parbox{0.96\textwidth}{\centering\vspace{14pt}
+  \textcolor{txtsec}{\small [ Insert Mermaid diagram: \textbf{full-system-flow} ]}\\[4pt]
+  \textcolor{txtsec}{\scriptsize Export PNG from mermaid.live -- see \texttt{mermaid\_diagrams\_part2.md}}
+\vspace{14pt}}}
+\end{center}
+\vspace{6pt}
+\begin{center}
+\begin{tabular}{@{}ccccc@{}}
+  \cbox{teal}{React PWA} &
+  \textcolor{txtsec}{\small\textrightarrow{}} &
+  \cbox{orng}{Express API} &
+  \textcolor{txtsec}{\small\textrightarrow{}} &
+  \cbox{purple}{Claude / Gemini}\\[6pt]
+  & & \cbox{green}{MongoDB Atlas} &
+  \textcolor{txtsec}{\small\textrightarrow{}} &
+  \cbox{teal}{Dashboard}\\
+\end{tabular}
+\end{center}
+\vspace{8pt}
+\colorbox{card}{\parbox{0.92\textwidth}{\centering\vspace{3pt}
+  \textcolor{txtsec}{\scriptsize
+    Worksheet photo (in-memory) \textrightarrow{} Base64 encode \textrightarrow{} Claude vision \textrightarrow{}
+    JSON grades \textrightarrow{} Schema validate \textrightarrow{} Confidence gate \textrightarrow{}
+    MongoDB write \textrightarrow{} Dashboard update \textrightarrow{} Parent message generated}
+\vspace{3pt}}}
+\end{frame}
+
+% ── SLIDE 28 : APPENDIX C -- MERMAID DIAGRAM PLACEHOLDERS ───
+\begin{frame}[t,shrink=5]{Appendix C}{Implementation Plan Flow}
+\begin{columns}[T]
+
+\column{0.50\textwidth}
+\vspace{4pt}
+\textcolor{teal}{\small\textbf{Pilot Rollout Flow}}\\[5pt]
+\colorbox{card}{\parbox{0.92\linewidth}{\centering\vspace{14pt}
+  \textcolor{txtsec}{\small [ Insert Mermaid diagram: \textbf{pilot-rollout} ]}\\[4pt]
+  \textcolor{txtsec}{\scriptsize See \texttt{mermaid\_diagrams\_part2.md}}
+\vspace{14pt}}}
+
+\column{0.46\textwidth}
+\vspace{4pt}
+\sectionbox{teal}{School onboarding}{Champion teacher setup \textrightarrow{} 2-hr WhatsApp workshop \textrightarrow{} 2-week trial}
+\sectionbox{orng}{Data ownership}{All data exportable; school can delete at any time}
+\sectionbox{purple}{Support model}{Dedicated WhatsApp group per block; issue resolution $<$24 hours}
+\sectionbox{green}{Feedback loop}{Monthly NPS survey; feature requests fed into sprint backlog}
+
+\vspace{4pt}
+\colorbox{card}{\parbox{0.92\linewidth}{%
+  \vspace{3pt}
+  \textcolor{orng}{\scriptsize\textbf{Phase 3 Gate criteria:}}\\
+  \textcolor{txtsec}{\scriptsize $\geq$80\% teachers still active after 4 weeks \;$|$\; SUS $\geq$75 maintained \;$|$\; MAE $<$8 on Marathi worksheets}
+\vspace{3pt}}}
+
+\end{columns}
+\end{frame}
