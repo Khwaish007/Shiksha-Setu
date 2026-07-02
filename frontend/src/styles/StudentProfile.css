@@ -290,6 +290,34 @@
   opacity: 0.45;
 }
 
+.sp-passport-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-radius: 18px;
+  border: 2px dashed rgba(52, 211, 153, 0.35);
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.08), rgba(16, 185, 129, 0.06));
+  color: #f8fafc;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sp-passport-btn:hover:not(:disabled) {
+  border-color: rgba(52, 211, 153, 0.55);
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.14), rgba(16, 185, 129, 0.1));
+  box-shadow: 0 8px 32px rgba(52, 211, 153, 0.12);
+}
+
+.sp-passport-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .sp-upload-icon {
   font-size: 1.3rem;
 }

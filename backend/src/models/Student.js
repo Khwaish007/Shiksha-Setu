@@ -153,6 +153,16 @@ const studentSchema = new mongoose.Schema({
       type: Date,
     },
   },
+  gradeLevel: {
+    type: String,
+    default: 'Class 8',
+    trim: true,
+  },
+  passportCache: {
+    llmPrimer: { type: String, default: '' },
+    contentHash: { type: String, default: '' },
+    generatedAt: { type: Date },
+  },
   riskTier: { type: String, enum: ['high', 'medium', 'low', 'unassessed'], default: 'unassessed' },
   riskReason: { type: String },
   riskRecommendedAction: { type: String },

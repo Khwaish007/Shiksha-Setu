@@ -36,6 +36,10 @@ import {
   getParentChannelStatus,
   serveIvrTwiml,
 } from '../controllers/parentChannelController.js';
+import {
+  getStudentPassport,
+  previewStudentPassport,
+} from '../controllers/passportController.js';
 
 const router = express.Router();
 
@@ -64,6 +68,12 @@ router.post('/risk-assessment', assessCohortRisk);
 
 // POST /api/students/lesson-plan → micro-lesson for a misconception (Students section)
 router.post('/lesson-plan', generateStudentScopeLessonPlan);
+
+// GET /api/students/:id/passport/preview → JSON for modal display
+router.get('/:id/passport/preview', previewStudentPassport);
+
+// GET /api/students/:id/passport → download my_learning_passport.json
+router.get('/:id/passport', getStudentPassport);
 
 // GET  /api/students/:id    → get single student with full test history
 router.get('/:id', getStudentById);

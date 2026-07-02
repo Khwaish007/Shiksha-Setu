@@ -308,5 +308,29 @@ export const analyticsAPI = {
   getPilotScalePlan: async (sessionId) => {
     const { data } = await axios.get(`${API_BASE}/pilot-scale-plan`, sessionParams(sessionId));
     return data;
-  }
+  },
+
+  previewStudentPassport: async (studentId) => {
+    const { data } = await axios.get(`${STUDENTS_BASE}/${studentId}/passport/preview`, {
+      timeout: 60000,
+    });
+    return data;
+  },
+
+  getStudentPassport: async (studentId) => {
+    const response = await axios.get(`${STUDENTS_BASE}/${studentId}/passport`, {
+      responseType: 'blob',
+      timeout: 60000,
+    });
+    return response.data;
+  },
+
+  exportSessionPassports: async (sessionId) => {
+    const response = await axios.post(
+      `${API_BASE}/sessions/${sessionId}/export-passports`,
+      {},
+      { responseType: 'blob', timeout: 120000 }
+    );
+    return response.data;
+  },
 };

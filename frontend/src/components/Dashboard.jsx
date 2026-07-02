@@ -63,6 +63,27 @@ const Dashboard = ({ session }) => {
   const [reteachSummary, setReteachSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [exportingPassports, setExportingPassports] = useState(false);
+
+  const handleExportClassPassports = async () => {
+    setExportingPassports(true);
+    try {
+      const blob = await analyticsAPI.exportSessionPassports(sessionId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'class_learning_passports.zip';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Class passport export failed:', err);
+      alert(err.response?.data?.error || t('exportClassPassportsFailed'));
+    } finally {
+      setExportingPassports(false);
+    }
+  };
 
   const fetchAllData = useCallback(async () => {
     if (!sessionId) return;
@@ -222,6 +243,19 @@ const Dashboard = ({ session }) => {
                 icon="?"
                 color="blue"
               />
+            </section>
+
+            <section className="dashboard-passport-export">
+              <button
+                type="button"
+                className="dashboard-passport-export-btn"
+                onClick={handleExportClassPassports}
+                disabled={exportingPassports || !analytics.totalStudents}
+                title={t('exportClassPassportsHint')}
+              >
+                {exportingPassports ? t('downloading') : `🛂 ${t('exportClassPassports')}`}
+              </button>
+              <p className="dashboard-passport-export-hint">{t('exportClassPassportsHint')}</p>
             </section>
 
             {/* Performance Distribution */}

@@ -6,6 +6,7 @@ import ErrorDNA from './ErrorDNA';
 import GradingNoticeModal from './GradingNoticeModal.jsx';
 import ParentMessageModal from './ParentMessageModal';
 import InterventionPlanModal from './InterventionPlanModal';
+import LearningPassportModal from './LearningPassportModal';
 import { openBlobPdf } from './AdaptiveWorksheetPanel';
 import WorksheetQRCode from './WorksheetQRCode';
 import AnswerKeyPanel from './AnswerKeyPanel';
@@ -27,6 +28,7 @@ const StudentProfile = () => {
   const [generatingPlan, setGeneratingPlan] = useState(false);
   const [gradingNotice, setGradingNotice] = useState(null);
   const [downloadingConcept, setDownloadingConcept] = useState(null);
+  const [showPassportModal, setShowPassportModal] = useState(false);
 
   const fetchStudent = async () => {
     try {
@@ -252,6 +254,13 @@ const StudentProfile = () => {
             onClose={() => setGradingNotice(null)}
           />
         )}
+        {showPassportModal && (
+          <LearningPassportModal
+            studentId={id}
+            studentName={student.studentName}
+            onClose={() => setShowPassportModal(false)}
+          />
+        )}
       </AnimatePresence>
       {/* Back Navigation */}
       <motion.button
@@ -379,6 +388,18 @@ const StudentProfile = () => {
           >
             <span className="sp-upload-icon">📋</span>
             <span>{generatingPlan ? t('generatingPlan') : t('createInterventionPlan')}</span>
+          </motion.button>
+
+          <motion.button
+            className="sp-passport-btn"
+            onClick={() => setShowPassportModal(true)}
+            disabled={!student.tests?.length}
+            title={student.tests?.length ? t('downloadLearningPassport') : t('uploadAtLeastOneTestFirst')}
+            whileHover={{ scale: student.tests?.length ? 1.02 : 1, y: student.tests?.length ? -2 : 0 }}
+            whileTap={{ scale: student.tests?.length ? 0.98 : 1 }}
+          >
+            <span className="sp-upload-icon">🛂</span>
+            <span>{t('downloadLearningPassport')}</span>
           </motion.button>
         </div>
         </div>

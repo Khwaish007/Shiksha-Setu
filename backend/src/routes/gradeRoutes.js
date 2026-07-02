@@ -34,6 +34,7 @@ import {
   fetchPilotScalePlan,
 } from '../controllers/telemetryController.js';
 import { generateSessionLessonPlan } from '../controllers/lessonPlanController.js';
+import { exportSessionPassports } from '../controllers/passportController.js';
 import {
   clearAnswerKey,
   getAnswerKey,
@@ -67,6 +68,7 @@ router.post('/clear-submissions', clearSubmissions);
 router.post('/sessions', createGradingSession);
 router.get('/sessions', listGradingSessions);
 router.get('/sessions/:sessionId', getGradingSession);
+router.post('/sessions/:sessionId/export-passports', exportSessionPassports);
 router.post('/sessions/:sessionId/resume', resumeGradingSession);
 router.patch('/sessions/:sessionId/resume', resumeGradingSession);
 router.get('/accuracy-report', getLatestAccuracyReport);
