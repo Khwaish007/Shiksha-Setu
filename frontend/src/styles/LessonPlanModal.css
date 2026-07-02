@@ -1,0 +1,222 @@
+.lp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.lp-modal {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+}
+
+.lp-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #334155;
+}
+
+.lp-modal-header h2 {
+  margin: 0.25rem 0 0;
+  color: #f1f5f9;
+  font-size: 1.25rem;
+}
+
+.lp-eyebrow {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #818cf8;
+  font-weight: 600;
+}
+
+.lp-misconception-target {
+  margin: 0.5rem 0 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.lp-close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.lp-modal-body {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.lp-loading {
+  text-align: center;
+  padding: 2rem;
+  color: #94a3b8;
+}
+
+.lp-spinner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(129, 140, 248, 0.2);
+  border-top-color: #818cf8;
+  border-radius: 50%;
+  animation: lp-spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes lp-spin {
+  to { transform: rotate(360deg); }
+}
+
+.lp-error {
+  color: #f87171;
+  text-align: center;
+}
+
+.lp-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.lp-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  background: rgba(100, 116, 139, 0.2);
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.lp-badge.ai {
+  background: rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+}
+
+.lp-section {
+  margin-bottom: 1.5rem;
+}
+
+.lp-section h3 {
+  margin: 0 0 0.75rem;
+  color: #e2e8f0;
+  font-size: 1rem;
+}
+
+.lp-section p {
+  margin: 0 0 0.5rem;
+  color: #cbd5e1;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.lp-example-card {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.lp-example-card h4 {
+  margin: 0 0 0.5rem;
+  color: #818cf8;
+  font-size: 0.85rem;
+}
+
+.lp-problem {
+  font-weight: 500;
+  color: #f1f5f9 !important;
+}
+
+.lp-teacher-talk {
+  font-style: italic;
+  color: #94a3b8 !important;
+  font-size: 0.9rem !important;
+}
+
+.lp-board-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.lp-board-list li {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.lp-step-time {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: #34d399;
+  min-width: 2.5rem;
+}
+
+.lp-exit-ticket {
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.lp-exit-question {
+  font-weight: 500;
+  color: #f1f5f9 !important;
+}
+
+.lp-modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #334155;
+}
+
+.lp-btn-secondary,
+.lp-btn-primary {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.lp-btn-secondary {
+  background: transparent;
+  border: 1px solid #475569;
+  color: #cbd5e1;
+}
+
+.lp-btn-primary {
+  background: #6366f1;
+  border: none;
+  color: white;
+}
+
+.lp-btn-primary:hover {
+  background: #4f46e5;
+}

@@ -282,7 +282,9 @@ const Dashboard = ({ session }) => {
         {activeTab === 'peers' && peerBenchmarking && <PeerBenchmarking benchmarks={peerBenchmarking} />}
         {activeTab === 'stats' && performanceDistribution && <PerformanceStats distribution={performanceDistribution} />}
         {activeTab === 'item-analysis' && itemAnalysis && <ItemAnalysisPanel data={itemAnalysis} />}
-        {activeTab === 'misconceptions' && classMisconceptions && <ClassMisconceptions misconceptions={classMisconceptions} />}
+        {activeTab === 'misconceptions' && classMisconceptions && (
+          <ClassMisconceptions misconceptions={classMisconceptions} sessionId={sessionId} />
+        )}
 
         {activeTab === 'pilot' && (
           <div className="content-section">

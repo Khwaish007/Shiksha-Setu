@@ -33,6 +33,7 @@ import {
   fetchTelemetry,
   fetchPilotScalePlan,
 } from '../controllers/telemetryController.js';
+import { generateSessionLessonPlan } from '../controllers/lessonPlanController.js';
 import {
   clearAnswerKey,
   getAnswerKey,
@@ -116,6 +117,7 @@ router.get('/peer-benchmarking', fetchPeerBenchmarking);
 router.get('/performance-distribution', fetchPerformanceDistribution);
 router.get('/item-analysis', fetchItemAnalysis);
 router.get('/class-misconceptions', fetchClassMisconceptions);
+router.post('/lesson-plan', generateSessionLessonPlan);
 router.get('/practice-test/:concept', getPracticeTest);
 router.post('/intervention-plan', generateSessionInterventionPlan);
 router.post('/intervention-log', logClassReteach);

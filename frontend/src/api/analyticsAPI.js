@@ -229,6 +229,17 @@ export const analyticsAPI = {
     return data;
   },
 
+  generateLessonPlan: async ({ concept, misconception, studentsAffectedCount, occurrences, sessionId }) => {
+    const { data } = await axios.post(`${API_BASE}/lesson-plan`, {
+      concept,
+      misconception,
+      studentsAffectedCount,
+      occurrences,
+      sessionId,
+    }, { timeout: 120000 });
+    return data;
+  },
+
   assessCohortRisk: async () => {
     const { data } = await axios.post(`${STUDENTS_BASE}/risk-assessment`);
     return data;
