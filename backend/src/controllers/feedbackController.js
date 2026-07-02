@@ -1,6 +1,5 @@
 import WorksheetFeedback from '../models/WorksheetFeedback.js';
 import {
-  enhanceFeedbackWithAi,
   formatPublicFeedback,
   buildFeedbackUrl,
 } from '../utils/feedbackUtils.js';
@@ -17,10 +16,6 @@ export const getWorksheetFeedback = async (req, res) => {
     const feedback = await WorksheetFeedback.findOne({ feedbackToken: token });
     if (!feedback) {
       return res.status(404).json({ error: 'Feedback not found. The QR link may have expired or is invalid.' });
-    }
-
-    if (!feedback.aiEnhanced && process.env.ANTHROPIC_API_KEY) {
-      await enhanceFeedbackWithAi(feedback, lang);
     }
 
     res.status(200).json(formatPublicFeedback(feedback, lang));

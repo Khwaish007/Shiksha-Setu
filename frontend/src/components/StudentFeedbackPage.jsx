@@ -12,7 +12,6 @@ const StudentFeedbackPage = () => {
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showPracticeAnswer, setShowPracticeAnswer] = useState(false);
 
   const lang = searchParams.get('lang') || language || 'hi';
 
@@ -67,7 +66,7 @@ const StudentFeedbackPage = () => {
     );
   }
 
-  const { content, wrongQuestions, practiceProblem, score } = feedback;
+  const { content, wrongQuestions, score } = feedback;
 
   return (
     <div className="sfp-page">
@@ -117,43 +116,6 @@ const StudentFeedbackPage = () => {
                   </div>
                 </article>
               ))}
-            </div>
-          </section>
-        )}
-
-        {practiceProblem && (
-          <section className="sfp-section sfp-practice-section">
-            <h2>{content?.practiceTitle}</h2>
-            <div className="sfp-practice-card">
-              <span className="sfp-concept-tag">{practiceProblem.concept}</span>
-              <p className="sfp-practice-question">{practiceProblem.question}</p>
-              {practiceProblem.hint && (
-                <p className="sfp-practice-hint">
-                  <strong>{t('hint')}:</strong> {practiceProblem.hint}
-                </p>
-              )}
-              <button
-                type="button"
-                className="sfp-reveal-btn"
-                onClick={() => setShowPracticeAnswer((v) => !v)}
-              >
-                {showPracticeAnswer ? t('hideAnswer') : t('showAnswer')}
-              </button>
-              {showPracticeAnswer && (
-                <p className="sfp-practice-answer">
-                  <strong>{t('answer')}:</strong> {practiceProblem.answer}
-                </p>
-              )}
-              {practiceProblem.practicePdfPath && (
-                <a
-                  className="sfp-pdf-link"
-                  href={practiceProblem.practicePdfPath}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  📥 {t('downloadPracticePdf')}
-                </a>
-              )}
             </div>
           </section>
         )}
