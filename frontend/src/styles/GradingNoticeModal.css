@@ -173,6 +173,21 @@
   transform: translateY(-1px);
 }
 
+.grading-notice-modal.has-qr {
+  max-width: 420px;
+}
+
+.grading-notice-qr {
+  margin-top: 1rem;
+}
+
+.grading-notice-qr-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.85);
+  line-height: 1.4;
+}
+
 @media (max-width: 560px) {
   .grading-notice-modal {
     padding: 22px;

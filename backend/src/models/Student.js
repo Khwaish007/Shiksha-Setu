@@ -92,7 +92,17 @@ const testRecordSchema = new mongoose.Schema({
   },
   errorSummary: {
     type: String
-  }
+  },
+  feedbackToken: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  sessionId: {
+    type: String,
+    trim: true,
+    default: '',
+  },
 });
 
 const studentSchema = new mongoose.Schema({

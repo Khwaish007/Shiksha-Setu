@@ -6,6 +6,7 @@ import ErrorDNA from './ErrorDNA';
 import GradingNoticeModal from './GradingNoticeModal.jsx';
 import ParentMessageModal from './ParentMessageModal';
 import InterventionPlanModal from './InterventionPlanModal';
+import WorksheetQRCode from './WorksheetQRCode';
 import AnswerKeyPanel from './AnswerKeyPanel';
 import { useI18n } from '../i18n.jsx';
 import '../styles/StudentProfile.css';
@@ -140,6 +141,10 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
       setGradingNotice({
         type: 'success',
         message: t('studentGradeSuccess'),
+        feedbackToken: result.feedbackToken,
+        feedbackUrl: result.feedbackUrl,
+        studentName: student?.studentName || result.studentName,
+        score: result.test?.score,
       });
     } catch (error) {
       const message = error.response?.data?.message || error.response?.data?.error || t('uploadFailed');
@@ -481,6 +486,17 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
                       </div>
 
                       <div className="sp-test-card-right">
+                        {test.feedbackToken && (
+                          <div className="sp-test-qr-wrap">
+                            <WorksheetQRCode
+                              feedbackToken={test.feedbackToken}
+                              studentName={student.studentName}
+                              score={test.score}
+                              compact
+                              showPrint={false}
+                            />
+                          </div>
+                        )}
                         {test.mistakes.length > 0 ? (
                           <button
                             className={`sp-test-expand-btn ${isExpanded ? 'expanded' : ''}`}

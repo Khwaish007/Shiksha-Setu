@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { useI18n } from '../i18n.jsx';
+import WorksheetQRCode from './WorksheetQRCode';
 import '../styles/GradingNoticeModal.css';
 
 const copy = {
@@ -33,7 +34,18 @@ const copy = {
   }
 };
 
-function GradingNoticeModal({ type = 'manual', title, message, detail, count, onClose }) {
+function GradingNoticeModal({
+  type = 'manual',
+  title,
+  message,
+  detail,
+  count,
+  feedbackToken,
+  feedbackUrl,
+  studentName,
+  score,
+  onClose,
+}) {
   const { t } = useI18n();
   const content = copy[type] || copy.manual;
 
@@ -46,7 +58,7 @@ function GradingNoticeModal({ type = 'manual', title, message, detail, count, on
       onClick={onClose}
     >
       <motion.div
-        className={`grading-notice-modal notice-${content.accent}`}
+        className={`grading-notice-modal notice-${content.accent} ${feedbackToken ? 'has-qr' : ''}`}
         initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 18, scale: 0.98 }}
@@ -69,6 +81,17 @@ function GradingNoticeModal({ type = 'manual', title, message, detail, count, on
             </div>
           )}
           {detail && <div className="grading-notice-detail">{detail}</div>}
+          {feedbackToken && (
+            <div className="grading-notice-qr">
+              <p className="grading-notice-qr-label">{t('qrFeedbackReady')}</p>
+              <WorksheetQRCode
+                feedbackToken={feedbackToken}
+                feedbackUrl={feedbackUrl}
+                studentName={studentName}
+                score={score}
+              />
+            </div>
+          )}
         </div>
         <button className="grading-notice-close" onClick={onClose}>
           {t('gotIt')}

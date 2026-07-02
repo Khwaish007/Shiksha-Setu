@@ -6,6 +6,7 @@ import UploadSection from './components/UploadSection';
 import Dashboard from './components/Dashboard';
 import StudentDashboard from './components/StudentDashboard';
 import StudentProfile from './components/StudentProfile';
+import StudentFeedbackPage from './components/StudentFeedbackPage';
 import SessionHistoryModal from './components/SessionHistoryModal';
 import { analyticsAPI } from './api/analyticsAPI';
 import { I18nProvider, useI18n } from './i18n.jsx';
@@ -13,7 +14,10 @@ import { I18nProvider, useI18n } from './i18n.jsx';
 function App() {
   return (
     <I18nProvider>
-      <AppShell />
+      <Routes>
+        <Route path="/feedback/:token" element={<StudentFeedbackPage />} />
+        <Route path="/*" element={<AppShell />} />
+      </Routes>
     </I18nProvider>
   );
 }

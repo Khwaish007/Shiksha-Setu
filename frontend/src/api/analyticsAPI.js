@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_BASE, STUDENTS_BASE } from '../config/api.js';
+import { API_BASE, STUDENTS_BASE, default as API_BASE_URL } from '../config/api.js';
 import { compressImageIfNeeded } from '../utils/uploadBatches.js';
 
 const sessionParams = (sessionId) => (
@@ -196,6 +196,16 @@ export const analyticsAPI = {
 
   updateParentPhone: async (studentId, parentPhone) => {
     const { data } = await axios.patch(`${STUDENTS_BASE}/${studentId}/parent-phone`, { parentPhone });
+    return data;
+  },
+
+  getWorksheetFeedback: async (token, lang = 'hi') => {
+    const { data } = await axios.get(`${API_BASE_URL}/api/feedback/${token}`, { params: { lang } });
+    return data;
+  },
+
+  getWorksheetFeedbackMeta: async (token) => {
+    const { data } = await axios.get(`${API_BASE_URL}/api/feedback/${token}/meta`);
     return data;
   },
 

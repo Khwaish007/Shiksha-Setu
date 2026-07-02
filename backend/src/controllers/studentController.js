@@ -10,6 +10,7 @@ import {
 } from '../utils/gradingSafety.js';
 import { recordGradingRun } from '../utils/costTelemetry.js';
 import { executeWorksheetGrading } from '../utils/gradingPipeline.js';
+import { createWorksheetFeedback } from '../utils/feedbackUtils.js';
 
 const getRequestSessionId = (req) => (
   req.params?.sessionId ||
@@ -228,7 +229,7 @@ export const gradeStudentTest = async (req, res) => {
     const testRecord = {
       date: new Date(),
       score: Number(parsed.totalScore) || 0,
-      totalQuestions: 10,
+      totalQuestions: Math.max(parsed.questionResults?.length || 0, 10),
       mistakes: parsed.mistakes || [],
       questionResults: parsed.questionResults || [],
       confidenceSummary: parsed.confidenceSummary || {
@@ -238,6 +239,7 @@ export const gradeStudentTest = async (req, res) => {
       },
       reviewReason: parsed.reviewReason || '',
       errorSummary: parsed.errorSummary || '',
+      sessionId: sessionId || '',
     };
 
     student.tests.push(testRecord);
@@ -274,6 +276,7 @@ export const gradeStudentTest = async (req, res) => {
     await student.save();
 
     // If this student upload belongs to the active classroom session, include it in session analytics.
+    let savedSubmission = null;
     if (sessionId) {
       const submissionFilter = {
         sessionId,
@@ -293,12 +296,39 @@ export const gradeStudentTest = async (req, res) => {
         sourceStudentId: student._id,
         createdAt: new Date()
       };
-      await Submission.findOneAndUpdate(submissionFilter, submissionUpdate, { returnDocument: 'after', upsert: true });
+      savedSubmission = await Submission.findOneAndUpdate(submissionFilter, submissionUpdate, { returnDocument: 'after', upsert: true });
       await refreshSessionStats(sessionId, 'student');
     }
 
     // Return the saved test record (last in array)
     const savedTest = student.tests[student.tests.length - 1];
+
+    let feedbackToken = '';
+    let feedbackUrl = '';
+    try {
+      const feedbackResult = await createWorksheetFeedback({
+        sessionId,
+        studentId: student._id,
+        studentName: student.studentName,
+        submissionId: savedSubmission?._id,
+        testId: savedTest._id,
+        score: testRecord.score,
+        totalQuestions: testRecord.totalQuestions,
+        mistakes: testRecord.mistakes,
+        questionResults: testRecord.questionResults,
+        answerKey: activeSession?.answerKey,
+      });
+      feedbackToken = feedbackResult.feedbackToken;
+      feedbackUrl = feedbackResult.feedbackUrl;
+      savedTest.feedbackToken = feedbackToken;
+      await student.save();
+      if (savedSubmission) {
+        savedSubmission.feedbackToken = feedbackToken;
+        await savedSubmission.save();
+      }
+    } catch (feedbackError) {
+      console.warn('Worksheet feedback creation skipped:', feedbackError.message);
+    }
 
     await recordStudentGradeTelemetry(1);
 
@@ -308,6 +338,8 @@ export const gradeStudentTest = async (req, res) => {
       studentName: student.studentName,
       averageScore: student.averageScore,
       totalTests: student.totalTests,
+      feedbackToken,
+      feedbackUrl,
     });
   } catch (error) {
     console.error('Grade Student Test Error:', error);

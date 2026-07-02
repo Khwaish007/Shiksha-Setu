@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import connectDatabase from './config/db.js';
 import gradingRouter from './routes/gradeRoutes.js';
 import studentRouter from './routes/studentRoutes.js';
+import feedbackRouter from './routes/feedbackRoutes.js';
 
 dotenv.config();
 
@@ -61,6 +62,7 @@ app.get('/', (req, res) => {
       health: '/api/health',
       grading: '/api/v1/grading',
       students: '/api/students',
+      feedback: '/api/feedback/:token',
     },
   });
 });
@@ -71,6 +73,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/v1/grading', gradingRouter);
 app.use('/api/students', studentRouter);
+app.use('/api/feedback', feedbackRouter);
 
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err.message);

@@ -96,6 +96,13 @@ const submissionSchema = new mongoose.Schema({
   errorSummary: {
     type: String
   },
+  feedbackToken: {
+    type: String,
+    trim: true,
+    default: '',
+    index: true,
+    sparse: true,
+  },
   status: {
     type: String,
     default: "Success"

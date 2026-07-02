@@ -4,6 +4,7 @@ import Student from '../models/Student.js';
 import { refreshSessionStats } from '../utils/sessionStats.js';
 import { recordGradingRun } from '../utils/costTelemetry.js';
 import { executeWorksheetGrading } from '../utils/gradingPipeline.js';
+import { createWorksheetFeedback } from '../utils/feedbackUtils.js';
 import {
   escapeRegExp,
   MANUAL_REVIEW_MESSAGE,
@@ -106,6 +107,47 @@ const buildSubmissionUpdate = (sessionId, payload, overrides = {}) => ({
   createdAt: new Date(),
   ...overrides
 });
+
+const attachWorksheetFeedback = async (submission, session) => {
+  if (!submission || submission.status !== 'Success' || submission.feedbackToken) {
+    return submission;
+  }
+
+  try {
+    const student = submission.sourceStudentId
+      ? await Student.findById(submission.sourceStudentId)
+      : null;
+
+    const { feedbackToken } = await createWorksheetFeedback({
+      sessionId: submission.sessionId,
+      studentId: student?._id,
+      studentName: submission.studentName,
+      submissionId: submission._id,
+      score: submission.totalScore,
+      totalQuestions: Math.max(submission.questionResults?.length || 0, 10),
+      mistakes: submission.mistakes || [],
+      questionResults: submission.questionResults || [],
+      answerKey: session?.answerKey,
+    });
+
+    submission.feedbackToken = feedbackToken;
+    await submission.save();
+
+    if (student) {
+      const matchingTest = [...student.tests]
+        .reverse()
+        .find((test) => !test.feedbackToken && test.score === submission.totalScore);
+      if (matchingTest) {
+        matchingTest.feedbackToken = feedbackToken;
+        await student.save();
+      }
+    }
+  } catch (error) {
+    console.warn('Batch worksheet feedback creation skipped:', error.message);
+  }
+
+  return submission;
+};
 
 const DEFAULT_CONCEPTS = [
   'Linear Equations', 'Area Calculation', 'Trigonometry',
@@ -222,6 +264,8 @@ export const approveReviewSubmission = async (req, res) => {
     submission.reviewedAt = new Date();
     await submission.save();
 
+    const session = await GradingSession.findOne({ sessionId });
+
     if (submission.sourceStudentId) {
       const student = await Student.findById(submission.sourceStudentId);
       if (student) {
@@ -233,18 +277,22 @@ export const approveReviewSubmission = async (req, res) => {
           questionResults: submission.questionResults || [],
           confidenceSummary: submission.confidenceSummary,
           reviewReason: submission.reviewReason,
-          errorSummary: submission.errorSummary || ''
+          errorSummary: submission.errorSummary || '',
+          sessionId: sessionId || '',
         });
         await student.save();
       }
     }
 
-    const session = await refreshSessionStats(sessionId, 'batch');
+    await attachWorksheetFeedback(submission, session);
+
+    const refreshedSession = await refreshSessionStats(sessionId, 'batch');
 
     res.status(200).json({
       message: 'Review approved and added to analytics.',
       submission,
-      session
+      session: refreshedSession,
+      feedbackToken: submission.feedbackToken || '',
     });
   } catch (error) {
     console.error('Approve Review Submission Error:', error);
@@ -345,6 +393,7 @@ export const processWorksheets = async (req, res) => {
 
           if (parsedGradingPayload.status === 'Success') {
             batchSuccessCount += 1;
+            await attachWorksheetFeedback(savedDocument, session);
           }
 
           return savedDocument;

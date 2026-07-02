@@ -1,0 +1,139 @@
+.worksheet-qr {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid #334155;
+  border-radius: 12px;
+}
+
+.worksheet-qr.compact {
+  padding: 0.75rem;
+}
+
+.worksheet-qr-print-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+}
+
+.worksheet-qr-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.worksheet-qr-brand {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #38bdf8;
+}
+
+.worksheet-qr-student {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.worksheet-qr-score {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.worksheet-qr-canvas {
+  border-radius: 8px;
+  background: white;
+  padding: 4px;
+}
+
+.worksheet-qr-caption {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.worksheet-qr-url {
+  margin: 0;
+  font-size: 0.65rem;
+  color: #64748b;
+  word-break: break-all;
+  max-width: 220px;
+}
+
+.worksheet-qr-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.worksheet-qr-btn {
+  padding: 0.5rem 0.9rem;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  background: transparent;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.worksheet-qr-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.worksheet-qr-btn.primary {
+  background: #38bdf8;
+  border-color: #38bdf8;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.worksheet-qr-btn.primary:hover {
+  background: #0ea5e9;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .worksheet-qr-print-area,
+  .worksheet-qr-print-area * {
+    visibility: visible;
+  }
+
+  .worksheet-qr-print-area {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 2px dashed #333;
+    padding: 2rem;
+    background: white;
+    color: black;
+  }
+
+  .worksheet-qr-brand {
+    color: #0369a1;
+  }
+
+  .worksheet-qr-student,
+  .worksheet-qr-score,
+  .worksheet-qr-caption {
+    color: #111;
+  }
+
+  .worksheet-qr-url {
+    color: #444;
+  }
+
+  .worksheet-qr-actions {
+    display: none;
+  }
+}

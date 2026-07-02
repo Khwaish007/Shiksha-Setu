@@ -1,4 +1,6 @@
 
+import WorksheetQRCode from './WorksheetQRCode';
+
 function GradingLog({ evaluationHistoryList }) {
   if (evaluationHistoryList.length === 0) return null;
 
@@ -12,6 +14,7 @@ function GradingLog({ evaluationHistoryList }) {
             <th>Calculated Score</th>
             <th>Extracted Deficiencies</th>
             <th>Execution Status</th>
+            <th>Student QR</th>
           </tr>
         </thead>
         <tbody>
@@ -45,6 +48,19 @@ function GradingLog({ evaluationHistoryList }) {
                 }}>
                   {logItem.status}
                 </span>
+              </td>
+              <td>
+                {logItem.feedbackToken && logItem.status === 'Success' ? (
+                  <WorksheetQRCode
+                    feedbackToken={logItem.feedbackToken}
+                    studentName={logItem.studentName}
+                    score={logItem.totalScore}
+                    compact
+                    showPrint={false}
+                  />
+                ) : (
+                  <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>—</span>
+                )}
               </td>
             </tr>
           ))}
