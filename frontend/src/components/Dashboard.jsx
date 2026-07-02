@@ -12,6 +12,7 @@ import ClassInsights from './ClassInsights';
 import PeerBenchmarking from './PeerBenchmarking';
 import PerformanceStats from './PerformanceStats';
 import ItemAnalysisPanel from './ItemAnalysisPanel';
+import InterventionImpactPanel from './InterventionImpactPanel';
 import ClassMisconceptions from './ClassMisconceptions';
 import ReviewQueue from './ReviewQueue.jsx';
 import AccuracyReport from './AccuracyReport.jsx';
@@ -31,6 +32,7 @@ const dashboardTabs = [
   { key: 'class', labelKey: 'classInsights' },
   { key: 'recommendations', labelKey: 'recommendations' },
   { key: 'at-risk', labelKey: 'atRisk' },
+  { key: 'impact', labelKey: 'interventionImpact' },
   { key: 'strengths', labelKey: 'strengths' },
   { key: 'rankings', labelKey: 'rankings' },
   { key: 'peers', labelKey: 'peerCompare' },
@@ -52,6 +54,7 @@ const Dashboard = ({ session }) => {
   const [peerBenchmarking, setPeerBenchmarking] = useState(null);
   const [performanceDistribution, setPerformanceDistribution] = useState(null);
   const [itemAnalysis, setItemAnalysis] = useState(null);
+  const [interventionImpact, setInterventionImpact] = useState(null);
   const [classMisconceptions, setClassMisconceptions] = useState(null);
   const [reviewQueue, setReviewQueue] = useState([]);
   const [accuracyReportData, setAccuracyReportData] = useState(null);
@@ -77,6 +80,7 @@ const Dashboard = ({ session }) => {
         peers,
         perfDist,
         itemAnalysisData,
+        impactData,
         misconceptions,
         reviews,
         accuracy,
@@ -94,6 +98,7 @@ const Dashboard = ({ session }) => {
         analyticsAPI.getPeerBenchmarking(sessionId),
         analyticsAPI.getPerformanceDistribution(sessionId),
         analyticsAPI.getItemAnalysis(sessionId),
+        analyticsAPI.getInterventionImpact(sessionId),
         analyticsAPI.getClassMisconceptions(sessionId),
         analyticsAPI.getReviewQueue(sessionId),
         analyticsAPI.getAccuracyReport(),
@@ -114,6 +119,7 @@ const Dashboard = ({ session }) => {
       setPeerBenchmarking(peers);
       setPerformanceDistribution(perfDist);
       setItemAnalysis(itemAnalysisData);
+      setInterventionImpact(impactData);
       setClassMisconceptions(misconceptions);
       setReviewQueue(reviews);
       setAccuracyReportData(accuracy);
@@ -263,6 +269,12 @@ const Dashboard = ({ session }) => {
             students={atRiskStudents}
             sessionId={sessionId}
             reteachSummary={reteachSummary}
+            onReteachLogged={fetchAllData}
+          />
+        )}
+        {activeTab === 'impact' && (
+          <InterventionImpactPanel
+            data={interventionImpact || { summary: {}, interventions: [] }}
           />
         )}
         {activeTab === 'strengths' && studentStrengths && <StudentStrengths students={studentStrengths} />}

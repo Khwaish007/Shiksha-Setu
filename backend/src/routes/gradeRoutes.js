@@ -26,6 +26,10 @@ import {
   getReteachTomorrowSummary,
 } from '../controllers/interventionController.js';
 import {
+  logClassReteach,
+  getSessionInterventionImpact,
+} from '../controllers/interventionImpactController.js';
+import {
   fetchTelemetry,
   fetchPilotScalePlan,
 } from '../controllers/telemetryController.js';
@@ -114,6 +118,8 @@ router.get('/item-analysis', fetchItemAnalysis);
 router.get('/class-misconceptions', fetchClassMisconceptions);
 router.get('/practice-test/:concept', getPracticeTest);
 router.post('/intervention-plan', generateSessionInterventionPlan);
+router.post('/intervention-log', logClassReteach);
+router.get('/intervention-impact', getSessionInterventionImpact);
 router.get('/reteach-summary', getReteachTomorrowSummary);
 router.get('/telemetry', fetchTelemetry);
 router.get('/pilot-scale-plan', fetchPilotScalePlan);

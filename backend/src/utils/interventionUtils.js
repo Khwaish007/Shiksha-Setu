@@ -13,6 +13,12 @@ const KNOWN_CONCEPTS = [
 export const conceptToPdfSlug = (concept) =>
   String(concept || 'general_mathematics').toLowerCase().replace(/\s+/g, '_');
 
+export const normalizeConcept = (concept) =>
+  String(concept || '').trim().toLowerCase();
+
+export const conceptsMatch = (a, b) =>
+  normalizeConcept(a) === normalizeConcept(b);
+
 export const buildPracticePdfPath = (concept) =>
   `/practice_tests_pdf/${conceptToPdfSlug(concept)}_practice_test.pdf`;
 

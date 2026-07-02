@@ -5,14 +5,51 @@ import { useI18n } from '../i18n.jsx';
 import ParentChannelActions from './ParentChannelActions';
 import '../styles/InterventionPlanModal.css';
 
-const InterventionPlanModal = ({ plan, onClose, onPhoneSaved }) => {
+const InterventionPlanModal = ({ plan, onClose, onPhoneSaved, sessionId, onReteachLogged }) => {
   const { t } = useI18n();
   const [parentPhone, setParentPhone] = useState(plan?.parentPhone || '');
   const [parentCommunication, setParentCommunication] = useState(
     plan?.parentCommunication || { preferredChannel: 'auto', preferredLanguage: 'hindi', hasSmartphone: true }
   );
+  const [loggingReteach, setLoggingReteach] = useState(false);
+  const [reteachLogged, setReteachLogged] = useState(false);
 
   if (!plan) return null;
+
+  const handleMarkRetaught = async () => {
+    const concepts = (plan.teacherActions || []).map((a) => a.concept).filter(Boolean);
+    if (!concepts.length) return;
+
+    setLoggingReteach(true);
+    try {
+      if (plan.studentId) {
+        await analyticsAPI.logStudentReteach(plan.studentId, {
+          concepts,
+          sessionId,
+          actionDescription: plan.teacherActions.map((a) => a.action).join('; '),
+          source: 'intervention_plan',
+        });
+      } else if (sessionId) {
+        for (const action of plan.teacherActions) {
+          await analyticsAPI.logClassReteach(sessionId, {
+            concept: action.concept,
+            actionDescription: action.action,
+            source: 'intervention_plan',
+            scope: 'class',
+            studentName: plan.studentName,
+          });
+        }
+      }
+      setReteachLogged(true);
+      onReteachLogged?.();
+      alert(t('reteachLoggedSuccess', { concept: concepts.join(', ') }));
+    } catch (err) {
+      console.error('Failed to log reteach:', err);
+      alert(t('reteachLogFailed'));
+    } finally {
+      setLoggingReteach(false);
+    }
+  };
 
   const copyToClipboard = () => {
     if (!plan.parentMessage?.whatsappText) return;
@@ -109,6 +146,17 @@ const InterventionPlanModal = ({ plan, onClose, onPhoneSaved }) => {
         <div className="ip-modal-footer">
           <button className="ip-btn-secondary" onClick={copyToClipboard}>
             {t('copyToClipboard')}
+          </button>
+          <button
+            className="ip-btn-primary ip-reteach-log-btn"
+            onClick={handleMarkRetaught}
+            disabled={loggingReteach || reteachLogged || !plan.teacherActions?.length}
+          >
+            {reteachLogged
+              ? `✓ ${t('reteachLogged')}`
+              : loggingReteach
+                ? t('loggingReteach')
+                : `✓ ${t('markRetaught')}`}
           </button>
         </div>
       </motion.div>

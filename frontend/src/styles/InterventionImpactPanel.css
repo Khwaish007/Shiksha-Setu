@@ -1,0 +1,190 @@
+.impact-panel {
+  padding: 2rem 1.5rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.impact-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.impact-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #34d399, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+.impact-subtitle {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.impact-headline {
+  color: #e2e8f0;
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0 0 1rem;
+}
+
+.impact-stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.impact-stat {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.impact-stat.improved {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+}
+
+.impact-stat.awaiting {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+.impact-stat.worsened {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+}
+
+.impact-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px dashed #334155;
+  border-radius: 12px;
+  color: #94a3b8;
+}
+
+.impact-empty span {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.impact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.impact-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.impact-card.status-improved {
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+.impact-card.status-worsened {
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.impact-card-top {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.impact-icon {
+  font-size: 1.5rem;
+}
+
+.impact-card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  color: #f1f5f9;
+}
+
+.impact-student {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.impact-date {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.impact-delta-label {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.impact-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.impact-metric {
+  flex: 1;
+  min-width: 100px;
+  padding: 0.75rem;
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.impact-metric.highlight {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.impact-metric.awaiting {
+  opacity: 0.7;
+}
+
+.metric-label {
+  display: block;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.25rem;
+}
+
+.impact-metric strong {
+  display: block;
+  font-size: 1.25rem;
+  color: #f1f5f9;
+}
+
+.metric-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+.impact-action {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-style: italic;
+}

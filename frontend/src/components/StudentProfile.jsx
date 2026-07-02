@@ -253,6 +253,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
             plan={interventionPlan}
             onClose={() => setInterventionPlan(null)}
             onPhoneSaved={(phone) => setStudent((s) => ({ ...s, parentPhone: phone }))}
+            onReteachLogged={() => {}}
           />
         )}
         {gradingNotice && (

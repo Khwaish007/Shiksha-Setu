@@ -108,8 +108,37 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   font-size: 0.8rem;
   color: #64748b;
+}
+
+.reteach-log-btn {
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #34d399;
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.reteach-log-btn:hover:not(:disabled) {
+  background: rgba(52, 211, 153, 0.2);
+}
+
+.reteach-log-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.reteach-log-btn.logged {
+  border-color: #64748b;
+  background: rgba(100, 116, 139, 0.2);
+  color: #94a3b8;
 }
 
 .reteach-pdf-link {

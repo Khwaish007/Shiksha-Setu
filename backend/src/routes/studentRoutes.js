@@ -14,6 +14,10 @@ import {
   updateParentPhone,
 } from '../controllers/interventionController.js';
 import {
+  logStudentReteach,
+  getStudentInterventionImpact,
+} from '../controllers/interventionImpactController.js';
+import {
   sendStudentParentNotification,
   updateCommunicationPreferences,
   getStudentNotificationLogs,
@@ -54,6 +58,12 @@ router.post('/:id/parent-message', generateParentMessage);
 
 // POST /api/students/:id/intervention-plan → one-click intervention plan
 router.post('/:id/intervention-plan', generateStudentInterventionPlan);
+
+// POST /api/students/:id/intervention-log → log completed reteach actions
+router.post('/:id/intervention-log', logStudentReteach);
+
+// GET /api/students/:id/intervention-impact → before/after impact deltas
+router.get('/:id/intervention-impact', getStudentInterventionImpact);
 
 // PATCH /api/students/:id/parent-phone → save parent WhatsApp number
 router.patch('/:id/parent-phone', updateParentPhone);

@@ -6,7 +6,7 @@ import { analyticsAPI } from '../api/analyticsAPI';
 import InterventionPlanModal from './InterventionPlanModal';
 import ReteachTomorrowSummary from './ReteachTomorrowSummary';
 
-const AtRiskStudents = ({ students, sessionId, reteachSummary }) => {
+const AtRiskStudents = ({ students, sessionId, reteachSummary, onReteachLogged }) => {
   const { t } = useI18n();
   const [loadingStudent, setLoadingStudent] = useState(null);
   const [activePlan, setActivePlan] = useState(null);
@@ -27,7 +27,13 @@ const AtRiskStudents = ({ students, sessionId, reteachSummary }) => {
 
   return (
     <div className="atrisk-container">
-      {reteachSummary && <ReteachTomorrowSummary summary={reteachSummary} />}
+      {reteachSummary && (
+        <ReteachTomorrowSummary
+          summary={reteachSummary}
+          sessionId={sessionId}
+          onReteachLogged={onReteachLogged}
+        />
+      )}
 
       <div className="atrisk-header">
         <h2>{t('atRiskStudents')}</h2>
@@ -94,6 +100,7 @@ const AtRiskStudents = ({ students, sessionId, reteachSummary }) => {
             plan={activePlan}
             sessionId={sessionId}
             onClose={() => setActivePlan(null)}
+            onReteachLogged={onReteachLogged}
           />
         )}
       </AnimatePresence>

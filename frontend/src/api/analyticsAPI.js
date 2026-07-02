@@ -134,6 +134,29 @@ export const analyticsAPI = {
     return data;
   },
 
+  logClassReteach: async (sessionId, payload) => {
+    const { data } = await axios.post(`${API_BASE}/intervention-log`, {
+      ...payload,
+      sessionId,
+    });
+    return data;
+  },
+
+  logStudentReteach: async (studentId, payload) => {
+    const { data } = await axios.post(`${STUDENTS_BASE}/${studentId}/intervention-log`, payload);
+    return data;
+  },
+
+  getInterventionImpact: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/intervention-impact`, sessionParams(sessionId));
+    return data;
+  },
+
+  getStudentInterventionImpact: async (studentId) => {
+    const { data } = await axios.get(`${STUDENTS_BASE}/${studentId}/intervention-impact`);
+    return data;
+  },
+
   getPracticeTest: async (concept) => {
     const response = await axios.get(`${API_BASE}/practice-test/${concept}`, {
       responseType: 'blob',

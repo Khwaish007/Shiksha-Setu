@@ -1,10 +1,34 @@
+import { useState } from 'react';
 import '../styles/ReteachTomorrowSummary.css';
 import { useI18n } from '../i18n.jsx';
+import { analyticsAPI } from '../api/analyticsAPI';
 
-const ReteachTomorrowSummary = ({ summary }) => {
+const ReteachTomorrowSummary = ({ summary, sessionId, onReteachLogged }) => {
   const { t } = useI18n();
+  const [loggingTopic, setLoggingTopic] = useState(null);
+  const [loggedTopics, setLoggedTopics] = useState({});
 
   if (!summary) return null;
+
+  const handleLogReteach = async (item) => {
+    if (!sessionId) return;
+    setLoggingTopic(item.topic);
+    try {
+      await analyticsAPI.logClassReteach(sessionId, {
+        concept: item.topic,
+        actionDescription: item.action,
+        source: 'reteach_summary',
+      });
+      setLoggedTopics((prev) => ({ ...prev, [item.topic]: true }));
+      onReteachLogged?.();
+      alert(t('reteachLoggedSuccess', { concept: item.topic }));
+    } catch (err) {
+      console.error('Failed to log reteach:', err);
+      alert(t('reteachLogFailed'));
+    } finally {
+      setLoggingTopic(null);
+    }
+  };
 
   return (
     <div className="reteach-summary-container">
@@ -44,6 +68,18 @@ const ReteachTomorrowSummary = ({ summary }) => {
                     📥 {t('practicePdf')}
                   </button>
                 )}
+                <button
+                  type="button"
+                  className={`reteach-log-btn ${loggedTopics[item.topic] ? 'logged' : ''}`}
+                  onClick={() => handleLogReteach(item)}
+                  disabled={loggingTopic === item.topic || loggedTopics[item.topic]}
+                >
+                  {loggedTopics[item.topic]
+                    ? `✓ ${t('reteachLogged')}`
+                    : loggingTopic === item.topic
+                      ? t('loggingReteach')
+                      : `✓ ${t('markRetaught')}`}
+                </button>
               </div>
             </div>
           ))}

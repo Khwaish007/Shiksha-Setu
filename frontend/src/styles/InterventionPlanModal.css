@@ -253,6 +253,15 @@
   background: #20bd5a;
 }
 
+.ip-reteach-log-btn {
+  background: #34d399 !important;
+  color: #0f172a !important;
+}
+
+.ip-reteach-log-btn:hover:not(:disabled) {
+  background: #2dd4a8 !important;
+}
+
 .ip-btn-primary:disabled,
 .ip-btn-secondary:disabled {
   opacity: 0.5;
