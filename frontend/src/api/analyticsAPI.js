@@ -157,11 +157,43 @@ export const analyticsAPI = {
     return data;
   },
 
-  getPracticeTest: async (concept) => {
-    const response = await axios.get(`${API_BASE}/practice-test/${concept}`, {
+  getPracticeTest: async (concept, { studentId, sessionId } = {}) => {
+    const params = {};
+    if (studentId) params.studentId = studentId;
+    if (sessionId) params.sessionId = sessionId;
+    const response = await axios.get(`${API_BASE}/practice-test/${encodeURIComponent(concept)}`, {
+      responseType: 'blob',
+      params,
+    });
+    return response.data;
+  },
+
+  generateStudentAdaptiveWorksheet: async (studentId, { concept, sessionId } = {}) => {
+    const response = await axios.post(
+      `${STUDENTS_BASE}/${studentId}/adaptive-worksheet`,
+      { concept, sessionId },
+      { responseType: 'blob', timeout: 120000 }
+    );
+    return response.data;
+  },
+
+  generateClassAdaptiveWorksheets: async (sessionId) => {
+    const { data } = await axios.post(`${API_BASE}/adaptive-worksheets`, { sessionId }, {
+      timeout: 300000,
+    });
+    return data;
+  },
+
+  downloadAdaptiveWorksheet: async (worksheetId) => {
+    const response = await axios.get(`${API_BASE}/adaptive-worksheets/${worksheetId}/pdf`, {
       responseType: 'blob',
     });
     return response.data;
+  },
+
+  listAdaptiveWorksheets: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/adaptive-worksheets`, sessionParams(sessionId));
+    return data;
   },
 
   // ─── Student Tracking API ──────────────────────────────────────────────

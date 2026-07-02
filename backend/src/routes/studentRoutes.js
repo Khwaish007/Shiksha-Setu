@@ -17,6 +17,7 @@ import {
   logStudentReteach,
   getStudentInterventionImpact,
 } from '../controllers/interventionImpactController.js';
+import { generateStudentAdaptiveWorksheet } from '../controllers/adaptiveWorksheetController.js';
 import {
   sendStudentParentNotification,
   updateCommunicationPreferences,
@@ -76,6 +77,9 @@ router.post('/:id/send-parent-notification', sendStudentParentNotification);
 
 // GET /api/students/:id/notification-logs → delivery audit trail
 router.get('/:id/notification-logs', getStudentNotificationLogs);
+
+// POST /api/students/:id/adaptive-worksheet → generate personalized PDF from Error DNA
+router.post('/:id/adaptive-worksheet', generateStudentAdaptiveWorksheet);
 
 // POST /api/students/:id/grade → upload test image, AI grade, save to student
 router.post('/:id/grade', (req, res, next) => {

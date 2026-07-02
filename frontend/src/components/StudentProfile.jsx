@@ -6,6 +6,7 @@ import ErrorDNA from './ErrorDNA';
 import GradingNoticeModal from './GradingNoticeModal.jsx';
 import ParentMessageModal from './ParentMessageModal';
 import InterventionPlanModal from './InterventionPlanModal';
+import { openBlobPdf } from './AdaptiveWorksheetPanel';
 import WorksheetQRCode from './WorksheetQRCode';
 import AnswerKeyPanel from './AnswerKeyPanel';
 import { useI18n } from '../i18n.jsx';
@@ -25,6 +26,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
   const [interventionPlan, setInterventionPlan] = useState(null);
   const [generatingPlan, setGeneratingPlan] = useState(false);
   const [gradingNotice, setGradingNotice] = useState(null);
+  const [downloadingConcept, setDownloadingConcept] = useState(null);
 
   const fetchStudent = async () => {
     try {
@@ -412,8 +414,22 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
               <h3 className="sp-practice-tests-title">🎯 {t('targetedPracticeTests')}</h3>
               <div className="sp-practice-tests-grid">
                 {struggleCloud.slice(0, 3).map((item, i) => {
-                  const formattedTopic = item.concept.toLowerCase().replace(/\s+/g, '_');
-                  const pdfUrl = `/practice_tests_pdf/${formattedTopic}_practice_test.pdf`;
+                  const handleDownloadAdaptive = async () => {
+                    setDownloadingConcept(item.concept);
+                    try {
+                      const blob = await analyticsAPI.generateStudentAdaptiveWorksheet(id, {
+                        concept: item.concept,
+                        sessionId,
+                      });
+                      openBlobPdf(blob, `${item.concept.replace(/\s+/g, '_')}_adaptive.pdf`);
+                    } catch (err) {
+                      console.error('Adaptive worksheet failed:', err);
+                      alert(t('adaptiveWorksheetDownloadFailed'));
+                    } finally {
+                      setDownloadingConcept(null);
+                    }
+                  };
+
                   return (
                     <div key={item.concept} className="sp-practice-card">
                       <div className="sp-practice-card-left">
@@ -425,12 +441,17 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
                           </div>
                         </div>
                       </div>
-                      <button 
+                      <button
                         className="sp-practice-btn"
-                        onClick={() => window.open(pdfUrl, '_blank')}
+                        onClick={handleDownloadAdaptive}
+                        disabled={downloadingConcept === item.concept}
                       >
-                        <span className="sp-practice-btn-icon">📥</span>
-                        <span>{t('downloadTest')}</span>
+                        <span className="sp-practice-btn-icon">✨</span>
+                        <span>
+                          {downloadingConcept === item.concept
+                            ? t('downloading')
+                            : t('downloadAdaptiveWorksheet')}
+                        </span>
                       </button>
                     </div>
                   );

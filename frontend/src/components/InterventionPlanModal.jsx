@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
 import { useI18n } from '../i18n.jsx';
 import ParentChannelActions from './ParentChannelActions';
+import { openBlobPdf } from './AdaptiveWorksheetPanel';
 import '../styles/InterventionPlanModal.css';
 
 const InterventionPlanModal = ({ plan, onClose, onPhoneSaved, sessionId, onReteachLogged }) => {
@@ -13,6 +14,7 @@ const InterventionPlanModal = ({ plan, onClose, onPhoneSaved, sessionId, onRetea
   );
   const [loggingReteach, setLoggingReteach] = useState(false);
   const [reteachLogged, setReteachLogged] = useState(false);
+  const [downloadingConcept, setDownloadingConcept] = useState(null);
 
   if (!plan) return null;
 
@@ -57,8 +59,30 @@ const InterventionPlanModal = ({ plan, onClose, onPhoneSaved, sessionId, onRetea
     alert(t('copiedToClipboard'));
   };
 
-  const openPdf = (path) => {
-    window.open(path, '_blank');
+  const downloadPractice = async (wc) => {
+    setDownloadingConcept(wc.concept);
+    try {
+      if (plan.studentId) {
+        const blob = await analyticsAPI.generateStudentAdaptiveWorksheet(plan.studentId, {
+          concept: wc.concept,
+          sessionId,
+        });
+        openBlobPdf(blob, `${wc.concept.replace(/\s+/g, '_')}_adaptive.pdf`);
+      } else {
+        const slug = wc.concept.toLowerCase().replace(/\s+/g, '_');
+        const blob = await analyticsAPI.getPracticeTest(slug, { sessionId });
+        openBlobPdf(blob, `${slug}_practice.pdf`);
+      }
+    } catch (err) {
+      console.error('Practice download failed:', err);
+      if (wc.practicePdfPath) {
+        window.open(wc.practicePdfPath, '_blank');
+      } else {
+        alert(t('adaptiveWorksheetDownloadFailed'));
+      }
+    } finally {
+      setDownloadingConcept(null);
+    }
   };
 
   return (
@@ -103,9 +127,14 @@ const InterventionPlanModal = ({ plan, onClose, onPhoneSaved, sessionId, onRetea
                   {wc.hasPracticePdf && (
                     <button
                       className="ip-pdf-btn"
-                      onClick={() => openPdf(wc.practicePdfPath)}
+                      onClick={() => downloadPractice(wc)}
+                      disabled={downloadingConcept === wc.concept}
                     >
-                      📥 {t('downloadPracticePdf')}
+                      {downloadingConcept === wc.concept
+                        ? t('downloading')
+                        : plan.studentId
+                          ? `✨ ${t('downloadAdaptiveWorksheet')}`
+                          : `📥 ${t('downloadPracticePdf')}`}
                     </button>
                   )}
                 </div>

@@ -27,6 +27,16 @@ export const buildPracticePdfUrl = (concept, baseUrl = '') => {
   return baseUrl ? `${baseUrl.replace(/\/$/, '')}${path}` : path;
 };
 
+export const buildAdaptivePracticeUrl = (concept, { studentId, sessionId, baseUrl = '' } = {}) => {
+  const slug = conceptToPdfSlug(concept);
+  const params = new URLSearchParams();
+  if (studentId) params.set('studentId', studentId);
+  if (sessionId) params.set('sessionId', sessionId);
+  const query = params.toString();
+  const apiPath = `/api/v1/grading/practice-test/${encodeURIComponent(slug)}${query ? `?${query}` : ''}`;
+  return baseUrl ? `${baseUrl.replace(/\/$/, '')}${apiPath}` : apiPath;
+};
+
 export const extractWeakConcepts = (mistakes, limit = 3) => {
   const counts = {};
   (mistakes || []).forEach((m) => {

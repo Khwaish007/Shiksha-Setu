@@ -3,6 +3,7 @@ import Student from '../models/Student.js';
 import Submission from '../models/Submission.js';
 import {
   buildPracticePdfUrl,
+  buildAdaptivePracticeUrl,
   buildFallbackParentMessage,
   buildFallbackTeacherAction,
   extractWeakConcepts,
@@ -101,7 +102,7 @@ Return ONLY valid JSON:
   }
 };
 
-const buildInterventionPlan = async (req, { studentName, score, mistakes, studentDoc = null }) => {
+const buildInterventionPlan = async (req, { studentName, score, mistakes, studentDoc = null, sessionId = null }) => {
   const baseUrl = getBaseUrl(req);
   let weakConcepts = extractWeakConcepts(mistakes, 3);
 
@@ -114,10 +115,16 @@ const buildInterventionPlan = async (req, { studentName, score, mistakes, studen
     }));
   }
 
+  const studentId = studentDoc?._id?.toString() || null;
+
   const weakConceptsWithActions = weakConcepts.map((wc) => ({
     ...wc,
     reteachAction: buildFallbackTeacherAction(wc.concept),
-    practicePdfUrl: buildPracticePdfUrl(wc.concept, baseUrl),
+    practicePdfUrl: studentId
+      ? buildAdaptivePracticeUrl(wc.concept, { studentId, sessionId, baseUrl })
+      : buildPracticePdfUrl(wc.concept, baseUrl),
+    isAdaptive: Boolean(studentId),
+    hasPracticePdf: true,
   }));
 
   const pdfUrls = weakConceptsWithActions
@@ -189,6 +196,7 @@ export const generateSessionInterventionPlan = async (req, res) => {
       score: submission.totalScore,
       mistakes: submission.mistakes,
       studentDoc,
+      sessionId,
     });
 
     res.status(200).json(plan);
@@ -219,6 +227,7 @@ export const generateStudentInterventionPlan = async (req, res) => {
       score,
       mistakes,
       studentDoc: student,
+      sessionId: getRequestSessionId(req),
     });
 
     res.status(200).json(plan);

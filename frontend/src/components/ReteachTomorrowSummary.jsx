@@ -68,6 +68,7 @@ const ReteachTomorrowSummary = ({ summary, sessionId, onReteachLogged }) => {
                     📥 {t('practicePdf')}
                   </button>
                 )}
+                <span className="reteach-adaptive-hint">{t('adaptivePracticeHint')}</span>
                 <button
                   type="button"
                   className={`reteach-log-btn ${loggedTopics[item.topic] ? 'logged' : ''}`}

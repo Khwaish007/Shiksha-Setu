@@ -135,10 +135,10 @@
   cursor: default;
 }
 
-.reteach-log-btn.logged {
-  border-color: #64748b;
-  background: rgba(100, 116, 139, 0.2);
-  color: #94a3b8;
+.reteach-adaptive-hint {
+  font-size: 0.7rem;
+  color: #818cf8;
+  font-style: italic;
 }
 
 .reteach-pdf-link {
