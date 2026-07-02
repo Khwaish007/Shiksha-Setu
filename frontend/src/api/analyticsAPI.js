@@ -157,42 +157,43 @@ export const analyticsAPI = {
     return data;
   },
 
-  getPracticeTest: async (concept, { studentId, sessionId } = {}) => {
-    const params = {};
-    if (studentId) params.studentId = studentId;
-    if (sessionId) params.sessionId = sessionId;
+  getPracticeTest: async (concept) => {
     const response = await axios.get(`${API_BASE}/practice-test/${encodeURIComponent(concept)}`, {
       responseType: 'blob',
-      params,
     });
     return response.data;
   },
 
-  generateStudentAdaptiveWorksheet: async (studentId, { concept, sessionId } = {}) => {
+  generateStudentAdaptiveWorksheet: async (studentId, { concept } = {}) => {
     const response = await axios.post(
       `${STUDENTS_BASE}/${studentId}/adaptive-worksheet`,
-      { concept, sessionId },
+      { concept },
       { responseType: 'blob', timeout: 120000 }
     );
     return response.data;
   },
 
-  generateClassAdaptiveWorksheets: async (sessionId) => {
-    const { data } = await axios.post(`${API_BASE}/adaptive-worksheets`, { sessionId }, {
-      timeout: 300000,
+  getStudentAnswerKey: async (studentId) => {
+    const { data } = await axios.get(`${STUDENTS_BASE}/${studentId}/answer-key`);
+    return data;
+  },
+
+  saveStudentAnswerKey: async (studentId, rawText) => {
+    const { data } = await axios.put(`${STUDENTS_BASE}/${studentId}/answer-key`, { rawText });
+    return data;
+  },
+
+  transcribeStudentAnswerKey: async (studentId, file) => {
+    const formData = new FormData();
+    formData.append('modelWorksheet', file);
+    const { data } = await axios.post(`${STUDENTS_BASE}/${studentId}/answer-key/transcribe`, formData, {
+      timeout: 120000,
     });
     return data;
   },
 
-  downloadAdaptiveWorksheet: async (worksheetId) => {
-    const response = await axios.get(`${API_BASE}/adaptive-worksheets/${worksheetId}/pdf`, {
-      responseType: 'blob',
-    });
-    return response.data;
-  },
-
-  listAdaptiveWorksheets: async (sessionId) => {
-    const { data } = await axios.get(`${API_BASE}/adaptive-worksheets`, sessionParams(sessionId));
+  clearStudentAnswerKey: async (studentId) => {
+    const { data } = await axios.delete(`${STUDENTS_BASE}/${studentId}/answer-key`);
     return data;
   },
 
@@ -213,13 +214,12 @@ export const analyticsAPI = {
     return data;
   },
 
-  gradeStudentTest: async (id, file, sessionId) => {
+  gradeStudentTest: async (id, file) => {
     const compressedFile = await compressImageIfNeeded(file);
     const formData = new FormData();
     formData.append('worksheet', compressedFile);
     const { data } = await axios.post(`${STUDENTS_BASE}/${id}/grade`, formData, {
       timeout: 120000,
-      ...sessionParams(sessionId),
     });
     return data;
   },

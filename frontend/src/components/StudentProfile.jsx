@@ -12,7 +12,7 @@ import AnswerKeyPanel from './AnswerKeyPanel';
 import { useI18n } from '../i18n.jsx';
 import '../styles/StudentProfile.css';
 
-const StudentProfile = ({ sessionId, onSessionUpdated }) => {
+const StudentProfile = () => {
   const { t } = useI18n();
   const { id } = useParams();
   const navigate = useNavigate();
@@ -110,28 +110,17 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!sessionId) {
-      setGradingNotice({
-        type: 'error',
-        title: t('sessionLoadingTitle'),
-        message: t('sessionLoadingMessage'),
-      });
-      return;
-    }
-
     setUploading(true);
     try {
-      const result = await analyticsAPI.gradeStudentTest(id, file, sessionId);
+      const result = await analyticsAPI.gradeStudentTest(id, file);
       if (result.status === 'Manual Review Required') {
         setGradingNotice({
           type: 'manual',
           detail: result.message || result.errorSummary || t('batchManualDetail'),
         });
-        onSessionUpdated?.();
         return;
       }
       if (result.status === 'Needs Teacher Review') {
-        onSessionUpdated?.();
         setGradingNotice({
           type: 'review',
           detail: result.message || result.reviewReason || t('studentReviewDetail'),
@@ -139,7 +128,6 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
         return;
       }
       await fetchStudent();
-      onSessionUpdated?.();
       setGradingNotice({
         type: 'success',
         message: t('studentGradeSuccess'),
@@ -337,7 +325,7 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
 
       {/* ═══════ SECTION 2: Answer Key + Upload ═══════ */}
       <section className="sp-grading-section">
-        <AnswerKeyPanel sessionId={sessionId} onNotice={handleAnswerKeyNotice} compact />
+        <AnswerKeyPanel studentId={id} onNotice={handleAnswerKeyNotice} compact />
 
         <div className="sp-action-section">
         <input
@@ -409,36 +397,38 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
 
           <ErrorDNA errorDNA={errorDNA} />
 
-          {struggleCloud.length > 0 && (
+          {errorDNA.length > 0 ? (
             <div className="sp-practice-tests-section" style={{ marginTop: '2rem' }}>
               <h3 className="sp-practice-tests-title">🎯 {t('targetedPracticeTests')}</h3>
+              <p className="sp-section-desc">{t('adaptiveWorksheetStudentHint')}</p>
               <div className="sp-practice-tests-grid">
-                {struggleCloud.slice(0, 3).map((item, i) => {
+                {[...errorDNA]
+                  .sort((a, b) => b.occurrences - a.occurrences)
+                  .slice(0, 3)
+                  .map((item, i) => {
                   const handleDownloadAdaptive = async () => {
                     setDownloadingConcept(item.concept);
                     try {
                       const blob = await analyticsAPI.generateStudentAdaptiveWorksheet(id, {
                         concept: item.concept,
-                        sessionId,
                       });
                       openBlobPdf(blob, `${item.concept.replace(/\s+/g, '_')}_adaptive.pdf`);
                     } catch (err) {
                       console.error('Adaptive worksheet failed:', err);
-                      alert(t('adaptiveWorksheetDownloadFailed'));
+                      const message = err.response?.data?.error || t('adaptiveWorksheetDownloadFailed');
+                      alert(message);
                     } finally {
                       setDownloadingConcept(null);
                     }
                   };
 
                   return (
-                    <div key={item.concept} className="sp-practice-card">
+                    <div key={`${item.concept}-${item.misconception}`} className="sp-practice-card">
                       <div className="sp-practice-card-left">
                         <span className="sp-practice-rank">#{i + 1}</span>
                         <div>
                           <div className="sp-practice-concept">{item.concept}</div>
-                          <div className="sp-practice-desc">
-                            {t('basedOnRecurring', { count: item.count, label: item.count === 1 ? t('mistake') : t('mistakes').toLowerCase() })}
-                          </div>
+                          <div className="sp-practice-desc">{item.misconception}</div>
                         </div>
                       </div>
                       <button
@@ -458,7 +448,11 @@ const StudentProfile = ({ sessionId, onSessionUpdated }) => {
                 })}
               </div>
             </div>
-          )}
+          ) : struggleCloud.length > 0 ? (
+            <p className="sp-section-desc" style={{ marginTop: '1rem' }}>
+              {t('adaptiveWorksheetNeedsDna')}
+            </p>
+          ) : null}
         </section>
       )}
 

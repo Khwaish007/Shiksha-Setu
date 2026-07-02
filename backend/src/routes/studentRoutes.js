@@ -17,7 +17,17 @@ import {
   logStudentReteach,
   getStudentInterventionImpact,
 } from '../controllers/interventionImpactController.js';
-import { generateStudentAdaptiveWorksheet } from '../controllers/adaptiveWorksheetController.js';
+import {
+  generateStudentAdaptiveWorksheet,
+  listStudentAdaptiveWorksheets,
+  downloadStudentAdaptiveWorksheet,
+} from '../controllers/adaptiveWorksheetController.js';
+import {
+  getStudentAnswerKey,
+  saveStudentTypedAnswerKey,
+  transcribeStudentModelWorksheet,
+  clearStudentAnswerKey,
+} from '../controllers/studentAnswerKeyController.js';
 import {
   sendStudentParentNotification,
   updateCommunicationPreferences,
@@ -78,8 +88,30 @@ router.post('/:id/send-parent-notification', sendStudentParentNotification);
 // GET /api/students/:id/notification-logs → delivery audit trail
 router.get('/:id/notification-logs', getStudentNotificationLogs);
 
-// POST /api/students/:id/adaptive-worksheet → generate personalized PDF from Error DNA
+// POST /api/students/:id/adaptive-worksheet → personalized PDF from Error DNA
 router.post('/:id/adaptive-worksheet', generateStudentAdaptiveWorksheet);
+
+// GET /api/students/:id/adaptive-worksheets → list generated worksheets
+router.get('/:id/adaptive-worksheets', listStudentAdaptiveWorksheets);
+
+// GET /api/students/:id/adaptive-worksheets/:worksheetId/pdf
+router.get('/:id/adaptive-worksheets/:worksheetId/pdf', downloadStudentAdaptiveWorksheet);
+
+// Student-scoped answer key (separate from dashboard sessions)
+router.get('/:id/answer-key', getStudentAnswerKey);
+router.put('/:id/answer-key', saveStudentTypedAnswerKey);
+router.post('/:id/answer-key/transcribe', (req, res, next) => {
+  upload.single('modelWorksheet')(req, res, (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'File too large. Maximum size is 4 MB.' });
+      }
+      return next(err);
+    }
+    transcribeStudentModelWorksheet(req, res, next);
+  });
+});
+router.delete('/:id/answer-key', clearStudentAnswerKey);
 
 // POST /api/students/:id/grade → upload test image, AI grade, save to student
 router.post('/:id/grade', (req, res, next) => {

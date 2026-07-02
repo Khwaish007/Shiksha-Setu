@@ -253,12 +253,7 @@ function AppShell() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
           >
-            <StudentProfile
-              sessionId={activeSession?.sessionId}
-              onSessionUpdated={() => {
-                handleGradingComplete();
-              }}
-            />
+            <StudentProfile />
           </motion.div>
         } />
       </Routes>

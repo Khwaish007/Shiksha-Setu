@@ -1,8 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
 import Student from '../models/Student.js';
-import Submission from '../models/Submission.js';
-import GradingSession from '../models/GradingSession.js';
-import { refreshSessionStats } from '../utils/sessionStats.js';
 import {
   escapeRegExp,
   MANUAL_REVIEW_MESSAGE,
@@ -11,13 +8,6 @@ import {
 import { recordGradingRun } from '../utils/costTelemetry.js';
 import { executeWorksheetGrading } from '../utils/gradingPipeline.js';
 import { createWorksheetFeedback } from '../utils/feedbackUtils.js';
-
-const getRequestSessionId = (req) => (
-  req.params?.sessionId ||
-  req.query?.sessionId ||
-  req.body?.sessionId ||
-  null
-);
 
 // ─── Controller Handlers ────────────────────────────────────────────────────
 
@@ -105,9 +95,8 @@ export const getStudentById = async (req, res) => {
 
 /**
  * POST /api/students/:id/grade
- * Accepts single image upload, runs Claude AI grading,
- * pushes test record into student's tests array,
- * AND dual-writes to Submission collection for heatmap consistency
+ * Individual student grading — isolated from dashboard bulk sessions.
+ * Builds test history and Error DNA on the student profile only.
  */
 export const gradeStudentTest = async (req, res) => {
   try {
@@ -120,99 +109,24 @@ export const gradeStudentTest = async (req, res) => {
       return res.status(404).json({ error: 'Student not found.' });
     }
 
-    const sessionId = getRequestSessionId(req);
-    const activeSession = sessionId ? await GradingSession.findOne({ sessionId }) : null;
-
-    if (sessionId && !activeSession) {
-      return res.status(404).json({ error: 'Grading session not found.' });
-    }
-
-    if (activeSession) {
-      activeSession.lastAccessedAt = new Date();
-      await activeSession.save();
-    }
-
-    const recordManualReviewForSession = async (reason) => {
-      if (!sessionId) return;
-      await new Submission({
-        sessionId,
-        studentName: student.studentName.trim(),
-        totalScore: 0,
-        mistakes: [],
-        questionResults: [],
-        confidenceSummary: {
-          averageConfidence: 0,
-          minimumConfidence: 0,
-          lowConfidenceCount: 0
-        },
-        errorSummary: reason || MANUAL_REVIEW_MESSAGE,
-        status: 'Manual Review Required',
-        reviewStatus: 'none',
-        sourceStudentId: student._id,
-        createdAt: new Date()
-      }).save();
-      await refreshSessionStats(sessionId, 'student');
-    };
-
-    const recordNeedsTeacherReviewForSession = async (payload) => {
-      if (!sessionId) return null;
-      const reviewSubmission = await new Submission({
-        sessionId,
-        studentName: student.studentName.trim(),
-        totalScore: Number(payload.totalScore) || 0,
-        mistakes: payload.mistakes || [],
-        questionResults: payload.questionResults || [],
-        confidenceSummary: payload.confidenceSummary || {
-          averageConfidence: 0,
-          minimumConfidence: 0,
-          lowConfidenceCount: 0
-        },
-        reviewReason: payload.reviewReason || 'One or more question judgments need teacher verification.',
-        errorSummary: payload.errorSummary || '',
-        status: NEEDS_TEACHER_REVIEW_STATUS,
-        reviewStatus: 'pending',
-        sourceStudentId: student._id,
-        createdAt: new Date()
-      }).save();
-      await refreshSessionStats(sessionId, 'student');
-      return reviewSubmission;
-    };
-
     const file = req.file;
     if (!file) {
       return res.status(400).json({ error: 'No image file uploaded.' });
     }
 
-    const gradeResult = await executeWorksheetGrading(file, activeSession?.answerKey);
+    const answerKey = student.answerKey?.questions?.length ? student.answerKey : null;
+    const gradeResult = await executeWorksheetGrading(file, answerKey);
     const parsed = gradeResult.payload;
 
-    const recordStudentGradeTelemetry = async (successCount) => {
-      if (!sessionId) return;
-      await recordGradingRun({
-        sessionId,
-        worksheetsCount: 1,
-        successCount,
-        inputTokens: gradeResult.usage.inputTokens,
-        outputTokens: gradeResult.usage.outputTokens,
-        durationMs: gradeResult.durationMs,
-        batchSize: 1,
-        source: 'student',
-      });
-    };
-
     if (parsed.status === 'Manual Review Required') {
-      await recordManualReviewForSession(parsed.errorSummary);
-      await recordStudentGradeTelemetry(0);
       return res.status(200).json({
         status: parsed.status,
         message: parsed.errorSummary || MANUAL_REVIEW_MESSAGE,
-        errorSummary: parsed.errorSummary || MANUAL_REVIEW_MESSAGE
+        errorSummary: parsed.errorSummary || MANUAL_REVIEW_MESSAGE,
       });
     }
 
     if (parsed.status === NEEDS_TEACHER_REVIEW_STATUS) {
-      const reviewSubmission = await recordNeedsTeacherReviewForSession(parsed);
-      await recordStudentGradeTelemetry(0);
       return res.status(200).json({
         status: parsed.status,
         message: parsed.reviewReason || 'This grade needs teacher review before it is added to the student timeline.',
@@ -221,11 +135,9 @@ export const gradeStudentTest = async (req, res) => {
         mistakes: parsed.mistakes,
         questionResults: parsed.questionResults,
         confidenceSummary: parsed.confidenceSummary,
-        reviewSubmissionId: reviewSubmission?._id
       });
     }
 
-    // Build the test record
     const testRecord = {
       date: new Date(),
       score: Number(parsed.totalScore) || 0,
@@ -235,11 +147,11 @@ export const gradeStudentTest = async (req, res) => {
       confidenceSummary: parsed.confidenceSummary || {
         averageConfidence: 0,
         minimumConfidence: 0,
-        lowConfidenceCount: 0
+        lowConfidenceCount: 0,
       },
       reviewReason: parsed.reviewReason || '',
       errorSummary: parsed.errorSummary || '',
-      sessionId: sessionId || '',
+      sessionId: '',
     };
 
     student.tests.push(testRecord);
@@ -275,62 +187,41 @@ export const gradeStudentTest = async (req, res) => {
 
     await student.save();
 
-    // If this student upload belongs to the active classroom session, include it in session analytics.
-    let savedSubmission = null;
-    if (sessionId) {
-      const submissionFilter = {
-        sessionId,
-        studentName: { $regex: new RegExp(`^${escapeRegExp(student.studentName.trim())}$`, 'i') }
-      };
-      const submissionUpdate = {
-        sessionId,
-        studentName: student.studentName.trim(),
-        totalScore: testRecord.score,
-        mistakes: testRecord.mistakes,
-        questionResults: testRecord.questionResults,
-        confidenceSummary: testRecord.confidenceSummary,
-        reviewReason: testRecord.reviewReason,
-        errorSummary: testRecord.errorSummary,
-        status: parsed.status || 'Success',
-        reviewStatus: 'none',
-        sourceStudentId: student._id,
-        createdAt: new Date()
-      };
-      savedSubmission = await Submission.findOneAndUpdate(submissionFilter, submissionUpdate, { returnDocument: 'after', upsert: true });
-      await refreshSessionStats(sessionId, 'student');
-    }
-
-    // Return the saved test record (last in array)
     const savedTest = student.tests[student.tests.length - 1];
 
     let feedbackToken = '';
     let feedbackUrl = '';
     try {
       const feedbackResult = await createWorksheetFeedback({
-        sessionId,
+        sessionId: '',
         studentId: student._id,
         studentName: student.studentName,
-        submissionId: savedSubmission?._id,
+        submissionId: null,
         testId: savedTest._id,
         score: testRecord.score,
         totalQuestions: testRecord.totalQuestions,
         mistakes: testRecord.mistakes,
         questionResults: testRecord.questionResults,
-        answerKey: activeSession?.answerKey,
+        answerKey: student.answerKey,
       });
       feedbackToken = feedbackResult.feedbackToken;
       feedbackUrl = feedbackResult.feedbackUrl;
       savedTest.feedbackToken = feedbackToken;
       await student.save();
-      if (savedSubmission) {
-        savedSubmission.feedbackToken = feedbackToken;
-        await savedSubmission.save();
-      }
     } catch (feedbackError) {
       console.warn('Worksheet feedback creation skipped:', feedbackError.message);
     }
 
-    await recordStudentGradeTelemetry(1);
+    await recordGradingRun({
+      sessionId: null,
+      worksheetsCount: 1,
+      successCount: 1,
+      inputTokens: gradeResult.usage.inputTokens,
+      outputTokens: gradeResult.usage.outputTokens,
+      durationMs: gradeResult.durationMs,
+      batchSize: 1,
+      source: 'student_profile',
+    });
 
     res.status(200).json({
       message: 'Test graded successfully.',

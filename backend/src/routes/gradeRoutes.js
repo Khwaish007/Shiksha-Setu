@@ -20,12 +20,7 @@ import {
   fetchClassMisconceptions
 } from '../controllers/gradeController.js';
 
-import {
-  generateClassAdaptiveWorksheets,
-  downloadAdaptiveWorksheet,
-  listSessionAdaptiveWorksheets,
-  getAdaptiveOrStaticPracticeTest,
-} from '../controllers/adaptiveWorksheetController.js';
+import { getPracticeTest } from '../controllers/practiceTestController.js';
 import {
   generateSessionInterventionPlan,
   getReteachTomorrowSummary,
@@ -121,10 +116,7 @@ router.get('/peer-benchmarking', fetchPeerBenchmarking);
 router.get('/performance-distribution', fetchPerformanceDistribution);
 router.get('/item-analysis', fetchItemAnalysis);
 router.get('/class-misconceptions', fetchClassMisconceptions);
-router.get('/practice-test/:concept', getAdaptiveOrStaticPracticeTest);
-router.post('/adaptive-worksheets', generateClassAdaptiveWorksheets);
-router.get('/adaptive-worksheets', listSessionAdaptiveWorksheets);
-router.get('/adaptive-worksheets/:id/pdf', downloadAdaptiveWorksheet);
+router.get('/practice-test/:concept', getPracticeTest);
 router.post('/intervention-plan', generateSessionInterventionPlan);
 router.post('/intervention-log', logClassReteach);
 router.get('/intervention-impact', getSessionInterventionImpact);

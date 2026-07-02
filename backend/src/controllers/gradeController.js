@@ -136,16 +136,6 @@ const attachWorksheetFeedback = async (submission, session) => {
 
     submission.feedbackToken = feedbackToken;
     await submission.save();
-
-    if (student) {
-      const matchingTest = [...student.tests]
-        .reverse()
-        .find((test) => !test.feedbackToken && test.score === submission.totalScore);
-      if (matchingTest) {
-        matchingTest.feedbackToken = feedbackToken;
-        await student.save();
-      }
-    }
   } catch (error) {
     console.warn('Batch worksheet feedback creation skipped:', error.message);
   }
@@ -269,24 +259,6 @@ export const approveReviewSubmission = async (req, res) => {
     await submission.save();
 
     const session = await GradingSession.findOne({ sessionId });
-
-    if (submission.sourceStudentId) {
-      const student = await Student.findById(submission.sourceStudentId);
-      if (student) {
-        student.tests.push({
-          date: submission.reviewedAt,
-          score: Number(submission.totalScore) || 0,
-          totalQuestions: Math.max(submission.questionResults?.length || 0, 1),
-          mistakes: submission.mistakes || [],
-          questionResults: submission.questionResults || [],
-          confidenceSummary: submission.confidenceSummary,
-          reviewReason: submission.reviewReason,
-          errorSummary: submission.errorSummary || '',
-          sessionId: sessionId || '',
-        });
-        await student.save();
-      }
-    }
 
     await attachWorksheetFeedback(submission, session);
 

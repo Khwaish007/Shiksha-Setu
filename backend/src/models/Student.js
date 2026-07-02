@@ -125,6 +125,34 @@ const studentSchema = new mongoose.Schema({
   },
   tests: [testRecordSchema],
   errorDNA: [errorDNASchema],
+  answerKey: {
+    source: {
+      type: String,
+      enum: ['none', 'typed', 'model_worksheet'],
+      default: 'none',
+    },
+    rawText: {
+      type: String,
+      default: '',
+    },
+    questions: {
+      type: [{
+        questionNumber: { type: String, required: true },
+        expectedAnswer: { type: String, required: true },
+        points: { type: Number, default: 10 },
+        concept: { type: String, default: 'General Mathematics' },
+        rubric: { type: String, default: '' },
+      }],
+      default: [],
+    },
+    totalPoints: {
+      type: Number,
+      default: 0,
+    },
+    updatedAt: {
+      type: Date,
+    },
+  },
   riskTier: { type: String, enum: ['high', 'medium', 'low', 'unassessed'], default: 'unassessed' },
   riskReason: { type: String },
   riskRecommendedAction: { type: String },

@@ -1,28 +1,10 @@
-import { useState, useEffect } from 'react';
-import { analyticsAPI } from '../api/analyticsAPI';
+import { useState } from 'react';
 import '../styles/StudentRankings.css';
 import { useI18n } from '../i18n.jsx';
 
 const StudentRankings = ({ rankings }) => {
   const { t } = useI18n();
   const [filter, setFilter] = useState('all');
-  const [riskMap, setRiskMap] = useState({});
-
-  useEffect(() => {
-    const fetchRiskTiers = async () => {
-      try {
-        const students = await analyticsAPI.getAllStudents();
-        const map = {};
-        students.forEach(s => {
-          map[s.studentName] = s.riskTier;
-        });
-        setRiskMap(map);
-      } catch (err) {
-        console.error("Failed to fetch student risk tiers", err);
-      }
-    };
-    fetchRiskTiers();
-  }, []);
   const getMedalIcon = (rank) => {
     if (rank === 1) return '🥇';
     if (rank === 2) return '🥈';
@@ -76,8 +58,7 @@ const StudentRankings = ({ rankings }) => {
         <div className="table-body">
           {rankings.filter(s => {
             if (filter === 'all') return true;
-            const tier = riskMap[s.studentName];
-            return tier === 'high' || tier === 'medium';
+            return s.totalScore < 60;
           }).map((student, idx) => (
             <div
               key={idx}

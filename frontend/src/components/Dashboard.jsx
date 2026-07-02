@@ -13,7 +13,6 @@ import PeerBenchmarking from './PeerBenchmarking';
 import PerformanceStats from './PerformanceStats';
 import ItemAnalysisPanel from './ItemAnalysisPanel';
 import InterventionImpactPanel from './InterventionImpactPanel';
-import AdaptiveWorksheetPanel from './AdaptiveWorksheetPanel';
 import ClassMisconceptions from './ClassMisconceptions';
 import ReviewQueue from './ReviewQueue.jsx';
 import AccuracyReport from './AccuracyReport.jsx';
@@ -34,7 +33,6 @@ const dashboardTabs = [
   { key: 'recommendations', labelKey: 'recommendations' },
   { key: 'at-risk', labelKey: 'atRisk' },
   { key: 'impact', labelKey: 'interventionImpact' },
-  { key: 'adaptive', labelKey: 'adaptivePractice' },
   { key: 'strengths', labelKey: 'strengths' },
   { key: 'rankings', labelKey: 'rankings' },
   { key: 'peers', labelKey: 'peerCompare' },
@@ -278,9 +276,6 @@ const Dashboard = ({ session }) => {
           <InterventionImpactPanel
             data={interventionImpact || { summary: {}, interventions: [] }}
           />
-        )}
-        {activeTab === 'adaptive' && (
-          <AdaptiveWorksheetPanel sessionId={sessionId} />
         )}
         {activeTab === 'strengths' && studentStrengths && <StudentStrengths students={studentStrengths} />}
         {activeTab === 'class' && classStrengths && <ClassInsights classData={classStrengths} />}

@@ -8,8 +8,10 @@ const renderAnswerKeyText = (answerKey) =>
     .map((question) => `${question.questionNumber}: ${question.expectedAnswer}`)
     .join('\n');
 
-const AnswerKeyPanel = ({ sessionId, onNotice, compact = false }) => {
+const AnswerKeyPanel = ({ sessionId, studentId, onNotice, compact = false }) => {
   const { t } = useI18n();
+  const scopeId = studentId || sessionId;
+  const isStudentScope = Boolean(studentId);
   const [answerKey, setAnswerKey] = useState(null);
   const [answerKeyText, setAnswerKeyText] = useState('');
   const [isSavingKey, setIsSavingKey] = useState(false);
@@ -21,9 +23,11 @@ const AnswerKeyPanel = ({ sessionId, onNotice, compact = false }) => {
 
   useEffect(() => {
     const fetchAnswerKey = async () => {
-      if (!sessionId) return;
+      if (!scopeId) return;
       try {
-        const key = await analyticsAPI.getAnswerKey(sessionId);
+        const key = isStudentScope
+          ? await analyticsAPI.getStudentAnswerKey(scopeId)
+          : await analyticsAPI.getAnswerKey(scopeId);
         setAnswerKey(key);
         setAnswerKeyText(key?.rawText || renderAnswerKeyText(key));
       } catch (error) {
@@ -32,18 +36,18 @@ const AnswerKeyPanel = ({ sessionId, onNotice, compact = false }) => {
     };
 
     fetchAnswerKey();
-  }, [sessionId]);
+  }, [scopeId, isStudentScope]);
 
   const notify = (notice) => {
     if (onNotice) onNotice(notice);
   };
 
   const saveTypedAnswerKey = async () => {
-    if (!sessionId) {
+    if (!scopeId) {
       notify({
         type: 'error',
-        title: t('sessionLoadingTitle'),
-        message: t('sessionLoadingMessage'),
+        title: isStudentScope ? t('studentNotLoaded') : t('sessionLoadingTitle'),
+        message: isStudentScope ? t('studentNotLoadedMessage') : t('sessionLoadingMessage'),
       });
       return;
     }
@@ -59,7 +63,9 @@ const AnswerKeyPanel = ({ sessionId, onNotice, compact = false }) => {
 
     setIsSavingKey(true);
     try {
-      const savedKey = await analyticsAPI.saveAnswerKey(sessionId, answerKeyText);
+      const savedKey = isStudentScope
+        ? await analyticsAPI.saveStudentAnswerKey(scopeId, answerKeyText)
+        : await analyticsAPI.saveAnswerKey(scopeId, answerKeyText);
       setAnswerKey(savedKey);
       setAnswerKeyText(savedKey.rawText || renderAnswerKeyText(savedKey));
       notify({
@@ -81,18 +87,20 @@ const AnswerKeyPanel = ({ sessionId, onNotice, compact = false }) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (!sessionId) {
+    if (!scopeId) {
       notify({
         type: 'error',
-        title: t('sessionLoadingTitle'),
-        message: t('sessionLoadingMessage'),
+        title: isStudentScope ? t('studentNotLoaded') : t('sessionLoadingTitle'),
+        message: isStudentScope ? t('studentNotLoadedMessage') : t('sessionLoadingMessage'),
       });
       return;
     }
 
     setIsTranscribingKey(true);
     try {
-      const result = await analyticsAPI.transcribeAnswerKey(sessionId, file);
+      const result = isStudentScope
+        ? await analyticsAPI.transcribeStudentAnswerKey(scopeId, file)
+        : await analyticsAPI.transcribeAnswerKey(scopeId, file);
       if (result.status === 'Manual Review Required') {
         notify({
           type: 'manual',
@@ -101,11 +109,12 @@ const AnswerKeyPanel = ({ sessionId, onNotice, compact = false }) => {
         return;
       }
 
-      setAnswerKey(result.answerKey);
-      setAnswerKeyText(result.answerKey?.rawText || renderAnswerKeyText(result.answerKey));
+      const nextKey = result.answerKey || result;
+      setAnswerKey(nextKey);
+      setAnswerKeyText(nextKey?.rawText || renderAnswerKeyText(nextKey));
       notify({
         type: 'success',
-        message: t('modelTranscribed', { count: result.answerKey?.questions?.length || 0 }),
+        message: t('modelTranscribed', { count: nextKey?.questions?.length || 0 }),
       });
     } catch (error) {
       notify({
@@ -120,11 +129,13 @@ const AnswerKeyPanel = ({ sessionId, onNotice, compact = false }) => {
   };
 
   const clearAnswerKey = async () => {
-    if (!sessionId) return;
+    if (!scopeId) return;
 
     setIsSavingKey(true);
     try {
-      const cleared = await analyticsAPI.clearAnswerKey(sessionId);
+      const cleared = isStudentScope
+        ? await analyticsAPI.clearStudentAnswerKey(scopeId)
+        : await analyticsAPI.clearAnswerKey(scopeId);
       setAnswerKey(cleared);
       setAnswerKeyText('');
     } catch (error) {
@@ -157,14 +168,14 @@ const AnswerKeyPanel = ({ sessionId, onNotice, compact = false }) => {
           value={answerKeyText}
           onChange={(event) => setAnswerKeyText(event.target.value)}
           placeholder={'Q1: 42\nQ2: x = 7\nQ3: Area = 154 cm^2'}
-          disabled={isSavingKey || isTranscribingKey || !sessionId}
+          disabled={isSavingKey || isTranscribingKey || !scopeId}
         />
         <div className="answer-key-actions">
           <button
             type="button"
             className="answer-key-button primary"
             onClick={saveTypedAnswerKey}
-            disabled={isSavingKey || isTranscribingKey || !sessionId}
+            disabled={isSavingKey || isTranscribingKey || !scopeId}
           >
             {isSavingKey ? t('savingKey') : t('saveTypedKey')}
           </button>
@@ -180,7 +191,7 @@ const AnswerKeyPanel = ({ sessionId, onNotice, compact = false }) => {
             type="button"
             className="answer-key-button secondary"
             onClick={() => modelWorksheetInputRef.current?.click()}
-            disabled={isSavingKey || isTranscribingKey || !sessionId}
+            disabled={isSavingKey || isTranscribingKey || !scopeId}
           >
             {isTranscribingKey ? t('readingModel') : t('uploadModelWorksheet')}
           </button>

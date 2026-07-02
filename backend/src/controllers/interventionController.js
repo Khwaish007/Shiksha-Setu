@@ -121,10 +121,10 @@ const buildInterventionPlan = async (req, { studentName, score, mistakes, studen
     ...wc,
     reteachAction: buildFallbackTeacherAction(wc.concept),
     practicePdfUrl: studentId
-      ? buildAdaptivePracticeUrl(wc.concept, { studentId, sessionId, baseUrl })
+      ? buildAdaptivePracticeUrl(wc.concept, { studentId, baseUrl })
       : buildPracticePdfUrl(wc.concept, baseUrl),
     isAdaptive: Boolean(studentId),
-    hasPracticePdf: true,
+    hasPracticePdf: studentId ? true : wc.hasPracticePdf,
   }));
 
   const pdfUrls = weakConceptsWithActions
@@ -190,12 +190,10 @@ export const generateSessionInterventionPlan = async (req, res) => {
       return res.status(404).json({ error: 'Student not found in this session' });
     }
 
-    const studentDoc = await findStudentByName(submission.studentName);
     const plan = await buildInterventionPlan(req, {
       studentName: submission.studentName,
       score: submission.totalScore,
       mistakes: submission.mistakes,
-      studentDoc,
       sessionId,
     });
 
@@ -227,7 +225,6 @@ export const generateStudentInterventionPlan = async (req, res) => {
       score,
       mistakes,
       studentDoc: student,
-      sessionId: getRequestSessionId(req),
     });
 
     res.status(200).json(plan);

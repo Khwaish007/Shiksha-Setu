@@ -4,7 +4,7 @@ const gradingRunSchema = new mongoose.Schema({
   sessionId: {
     type: String,
     index: true,
-    required: true,
+    default: null,
   },
   worksheetsCount: {
     type: Number,
@@ -36,7 +36,7 @@ const gradingRunSchema = new mongoose.Schema({
   },
   source: {
     type: String,
-    enum: ['batch', 'student', 'answer_key'],
+    enum: ['batch', 'student', 'student_profile', 'answer_key'],
     default: 'batch',
   },
   costInr: {

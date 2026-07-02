@@ -65,12 +65,11 @@ const InterventionPlanModal = ({ plan, onClose, onPhoneSaved, sessionId, onRetea
       if (plan.studentId) {
         const blob = await analyticsAPI.generateStudentAdaptiveWorksheet(plan.studentId, {
           concept: wc.concept,
-          sessionId,
         });
         openBlobPdf(blob, `${wc.concept.replace(/\s+/g, '_')}_adaptive.pdf`);
       } else {
         const slug = wc.concept.toLowerCase().replace(/\s+/g, '_');
-        const blob = await analyticsAPI.getPracticeTest(slug, { sessionId });
+        const blob = await analyticsAPI.getPracticeTest(slug);
         openBlobPdf(blob, `${slug}_practice.pdf`);
       }
     } catch (err) {
