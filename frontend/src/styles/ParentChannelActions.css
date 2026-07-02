@@ -1,0 +1,231 @@
+.pca-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.pca-equity-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 8px;
+}
+
+.pca-equity-banner p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #fcd34d;
+  line-height: 1.4;
+}
+
+.pca-equity-icon {
+  flex-shrink: 0;
+}
+
+.pca-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin-bottom: 0.5rem;
+}
+
+.pca-phone-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pca-phone-input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #f1f5f9;
+  font-size: 0.9rem;
+}
+
+.pca-phone-input:focus {
+  outline: none;
+  border-color: #38bdf8;
+}
+
+.pca-save-btn {
+  padding: 0.6rem 1rem;
+  background: #334155;
+  border: none;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.pca-save-btn:hover:not(:disabled) {
+  background: #475569;
+}
+
+.pca-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.pca-prefs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.pca-pref-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.pca-pref-item select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  background: #0f172a;
+  color: #f1f5f9;
+  font-size: 0.85rem;
+}
+
+.pca-checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.pca-checkbox input {
+  accent-color: #38bdf8;
+}
+
+.pca-channel-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pca-channel-tab {
+  flex: 1;
+  min-width: 100px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pca-channel-tab:hover {
+  border-color: #64748b;
+  color: #e2e8f0;
+}
+
+.pca-channel-tab.active {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+}
+
+.pca-mock-notice {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #fbbf24;
+  font-style: italic;
+}
+
+.pca-channel-preview {
+  padding: 0.75rem 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.pca-preview-text {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.pca-ivr-script {
+  font-style: italic;
+}
+
+.pca-send-result {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.pca-status-sent,
+.pca-status-mock,
+.pca-status-manual {
+  background: rgba(52, 211, 153, 0.1);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.pca-status-failed {
+  background: rgba(248, 113, 113, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.pca-send-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pca-send-btn {
+  padding: 0.65rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  color: white;
+}
+
+.pca-send-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pca-send-whatsapp {
+  background: #25d366;
+}
+
+.pca-send-whatsapp:hover:not(:disabled) {
+  background: #20bd5a;
+}
+
+.pca-send-sms {
+  background: #3b82f6;
+}
+
+.pca-send-sms:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.pca-send-ivr {
+  background: #8b5cf6;
+}
+
+.pca-send-ivr:hover:not(:disabled) {
+  background: #7c3aed;
+}

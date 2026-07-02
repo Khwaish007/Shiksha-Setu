@@ -52,6 +52,8 @@ export const buildFallbackParentMessage = ({ studentName, score, weakConcepts, p
     hindi: `प्रिय अभिभावक,\n\n${studentName} ने हाल की परीक्षा में ${score}% अंक प्राप्त किए। कृपया ${concepts} पर 15 मिनट अभ्यास करवाएँ।${pdfLines ? '\n\nअभ्यास PDF लिंक संलग्न हैं।' : ''}\n\n— शिक्षक`,
     english: `Dear Parent,\n\n${studentName} scored ${score}% on the recent test. Please help them practice ${concepts} for 15 minutes at home.${pdfLines}\n\n— Teacher`,
     whatsappText: `📚 Shiksha Setu Update\n\n${studentName} scored ${score}% on the recent test.\n\n🎯 Focus areas: ${concepts}\n\nPlease help with 15 min daily practice at home.${pdfLines}\n\n— Your child's teacher`,
+    smsText: `Shiksha Setu: ${studentName} scored ${score}%. Practice ${concepts} 15 min/day.${pdfUrls[0] ? ` Worksheet: ${pdfUrls[0]}` : ''}`,
+    ivrText: `नमस्ते। Shiksha Setu से संदेश। ${studentName} ने परीक्षा में ${score} प्रतिशत अंक प्राप्त किए। कृपया ${concepts} पर प्रतिदिन पंद्रह मिनट अभ्यास करवाएँ। धन्यवाद।`,
   };
 };
 

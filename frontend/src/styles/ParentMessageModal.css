@@ -210,6 +210,16 @@
   cursor: not-allowed;
 }
 
-.whatsapp-icon {
-  font-size: 1.2rem;
+.pm-channel-section {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+.pm-channel-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  margin: 0 0 1rem;
+}
+

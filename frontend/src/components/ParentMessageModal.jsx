@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
 import { useI18n } from '../i18n.jsx';
+import ParentChannelActions from './ParentChannelActions';
 import '../styles/ParentMessageModal.css';
 
 const TypewriterText = ({ text }) => {
@@ -27,6 +28,15 @@ const ParentMessageModal = ({ student, onClose }) => {
   const [tone, setTone] = useState('friendly');
   const [loading, setLoading] = useState(false);
   const [messageData, setMessageData] = useState(null);
+  const [parentPhone, setParentPhone] = useState(student?.parentPhone || '');
+  const [parentCommunication, setParentCommunication] = useState(
+    student?.parentCommunication || { preferredChannel: 'auto', preferredLanguage: 'hindi', hasSmartphone: true }
+  );
+
+  useEffect(() => {
+    if (student?.parentPhone) setParentPhone(student.parentPhone);
+    if (student?.parentCommunication) setParentCommunication(student.parentCommunication);
+  }, [student]);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -46,12 +56,6 @@ const ParentMessageModal = ({ student, onClose }) => {
     if (!messageData) return;
     navigator.clipboard.writeText(messageData.whatsappText);
     alert(t('copiedToClipboard'));
-  };
-
-  const openWhatsApp = () => {
-    if (!messageData) return;
-    const encoded = encodeURIComponent(messageData.whatsappText);
-    window.open(`https://wa.me/?text=${encoded}`, '_blank');
   };
 
   return (
@@ -116,14 +120,26 @@ const ParentMessageModal = ({ student, onClose }) => {
               </div>
             )}
           </div>
+
+          {messageData && (
+            <div className="pm-channel-section">
+              <h3 className="pm-channel-title">📡 {t('sendToParent')}</h3>
+              <ParentChannelActions
+                studentId={student._id}
+                messageData={messageData}
+                parentPhone={parentPhone}
+                parentCommunication={parentCommunication}
+                templateType="parent_message"
+                onPhoneSaved={setParentPhone}
+                onPreferencesSaved={setParentCommunication}
+              />
+            </div>
+          )}
         </div>
 
         <div className="pm-modal-footer">
           <button className="pm-btn-secondary" onClick={copyToClipboard} disabled={!messageData || loading}>
             {t('copyToClipboard')}
-          </button>
-          <button className="pm-btn-primary" onClick={openWhatsApp} disabled={!messageData || loading}>
-            <span className="whatsapp-icon">💬</span> {t('openInWhatsApp')}
           </button>
         </div>
       </motion.div>

@@ -119,7 +119,20 @@ const studentSchema = new mongoose.Schema({
   riskReason: { type: String },
   riskRecommendedAction: { type: String },
   riskUpdatedAt: { type: Date },
-  parentPhone: { type: String, trim: true, default: '' }
+  parentPhone: { type: String, trim: true, default: '' },
+  parentCommunication: {
+    preferredChannel: {
+      type: String,
+      enum: ['whatsapp', 'sms', 'ivr', 'auto'],
+      default: 'auto',
+    },
+    preferredLanguage: {
+      type: String,
+      enum: ['hindi', 'english', 'both'],
+      default: 'hindi',
+    },
+    hasSmartphone: { type: Boolean, default: true },
+  },
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

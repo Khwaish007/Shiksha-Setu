@@ -484,7 +484,9 @@ Return ONLY a valid JSON object with this exact structure:
 {
   "hindi": "Hindi text here (or empty string if English only)",
   "english": "English text here (or empty string if Hindi only)",
-  "whatsappText": "A merged, emoji-friendly version ready to be sent on WhatsApp"
+  "whatsappText": "A merged, emoji-friendly version ready to be sent on WhatsApp",
+  "smsText": "Concise SMS under 160 chars in primary language, no emojis",
+  "ivrText": "Spoken script for automated voice call in primary language, no emojis, under 80 words"
 }
 Do not include any markdown or other text.`;
 

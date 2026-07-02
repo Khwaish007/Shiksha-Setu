@@ -2,42 +2,22 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { analyticsAPI } from '../api/analyticsAPI';
 import { useI18n } from '../i18n.jsx';
+import ParentChannelActions from './ParentChannelActions';
 import '../styles/InterventionPlanModal.css';
 
 const InterventionPlanModal = ({ plan, onClose, onPhoneSaved }) => {
   const { t } = useI18n();
   const [parentPhone, setParentPhone] = useState(plan?.parentPhone || '');
-  const [savingPhone, setSavingPhone] = useState(false);
+  const [parentCommunication, setParentCommunication] = useState(
+    plan?.parentCommunication || { preferredChannel: 'auto', preferredLanguage: 'hindi', hasSmartphone: true }
+  );
 
   if (!plan) return null;
-
-  const handleSavePhone = async () => {
-    if (!plan.studentId) return;
-    setSavingPhone(true);
-    try {
-      await analyticsAPI.updateParentPhone(plan.studentId, parentPhone);
-      onPhoneSaved?.(parentPhone);
-    } catch (err) {
-      console.error('Failed to save phone:', err);
-    } finally {
-      setSavingPhone(false);
-    }
-  };
 
   const copyToClipboard = () => {
     if (!plan.parentMessage?.whatsappText) return;
     navigator.clipboard.writeText(plan.parentMessage.whatsappText);
     alert(t('copiedToClipboard'));
-  };
-
-  const openWhatsApp = () => {
-    if (!plan.parentMessage?.whatsappText) return;
-    const encoded = encodeURIComponent(plan.parentMessage.whatsappText);
-    const digits = parentPhone.replace(/\D/g, '');
-    const url = digits
-      ? `https://wa.me/${digits}?text=${encoded}`
-      : `https://wa.me/?text=${encoded}`;
-    window.open(url, '_blank');
   };
 
   const openPdf = (path) => {
@@ -62,7 +42,6 @@ const InterventionPlanModal = ({ plan, onClose, onPhoneSaved }) => {
         </div>
 
         <div className="ip-modal-body">
-          {/* Teacher re-teach actions */}
           <section className="ip-section">
             <h3 className="ip-section-title">📋 {t('teacherReteachActions')}</h3>
             <ul className="ip-action-list">
@@ -75,7 +54,6 @@ const InterventionPlanModal = ({ plan, onClose, onPhoneSaved }) => {
             </ul>
           </section>
 
-          {/* Weak concepts + practice PDFs */}
           <section className="ip-section">
             <h3 className="ip-section-title">🎯 {t('weakConceptsPractice')}</h3>
             <div className="ip-concept-grid">
@@ -98,7 +76,6 @@ const InterventionPlanModal = ({ plan, onClose, onPhoneSaved }) => {
             </div>
           </section>
 
-          {/* Parent message preview */}
           <section className="ip-section">
             <h3 className="ip-section-title">💬 {t('parentMessagePreview')}</h3>
             <div className="ip-message-preview">
@@ -112,37 +89,26 @@ const InterventionPlanModal = ({ plan, onClose, onPhoneSaved }) => {
             </div>
           </section>
 
-          {/* Parent phone for WhatsApp */}
           <section className="ip-section ip-phone-section">
-            <label className="ip-phone-label">{t('parentWhatsAppNumber')}</label>
-            <div className="ip-phone-row">
-              <input
-                type="tel"
-                className="ip-phone-input"
-                placeholder={t('parentPhonePlaceholder')}
-                value={parentPhone}
-                onChange={(e) => setParentPhone(e.target.value)}
-              />
-              {plan.studentId && (
-                <button
-                  className="ip-save-phone-btn"
-                  onClick={handleSavePhone}
-                  disabled={savingPhone}
-                >
-                  {savingPhone ? t('saving') : t('save')}
-                </button>
-              )}
-            </div>
-            <p className="ip-phone-hint">{t('parentPhoneHint')}</p>
+            <h3 className="ip-section-title">📡 {t('sendToParent')}</h3>
+            <ParentChannelActions
+              studentId={plan.studentId}
+              messageData={plan.parentMessage}
+              parentPhone={parentPhone}
+              parentCommunication={parentCommunication}
+              templateType="intervention_plan"
+              onPhoneSaved={(phone) => {
+                setParentPhone(phone);
+                onPhoneSaved?.(phone);
+              }}
+              onPreferencesSaved={setParentCommunication}
+            />
           </section>
         </div>
 
         <div className="ip-modal-footer">
           <button className="ip-btn-secondary" onClick={copyToClipboard}>
             {t('copyToClipboard')}
-          </button>
-          <button className="ip-btn-primary" onClick={openWhatsApp}>
-            <span className="whatsapp-icon">💬</span> {t('sendViaWhatsApp')}
           </button>
         </div>
       </motion.div>

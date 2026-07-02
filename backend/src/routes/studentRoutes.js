@@ -13,6 +13,13 @@ import {
   generateStudentInterventionPlan,
   updateParentPhone,
 } from '../controllers/interventionController.js';
+import {
+  sendStudentParentNotification,
+  updateCommunicationPreferences,
+  getStudentNotificationLogs,
+  getParentChannelStatus,
+  serveIvrTwiml,
+} from '../controllers/parentChannelController.js';
 
 const router = express.Router();
 
@@ -20,6 +27,12 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 4 * 1024 * 1024 },
 });
+
+// GET  /api/students/parent-channels/status → SMS/IVR provider availability
+router.get('/parent-channels/status', getParentChannelStatus);
+
+// GET  /api/students/ivr-twiml → Twilio voice webhook
+router.get('/ivr-twiml', serveIvrTwiml);
 
 // GET  /api/students        → list all students
 router.get('/', getAllStudents);
@@ -44,6 +57,15 @@ router.post('/:id/intervention-plan', generateStudentInterventionPlan);
 
 // PATCH /api/students/:id/parent-phone → save parent WhatsApp number
 router.patch('/:id/parent-phone', updateParentPhone);
+
+// PATCH /api/students/:id/communication-preferences → SMS/IVR channel prefs
+router.patch('/:id/communication-preferences', updateCommunicationPreferences);
+
+// POST /api/students/:id/send-parent-notification → send via WhatsApp/SMS/IVR
+router.post('/:id/send-parent-notification', sendStudentParentNotification);
+
+// GET /api/students/:id/notification-logs → delivery audit trail
+router.get('/:id/notification-logs', getStudentNotificationLogs);
 
 // POST /api/students/:id/grade → upload test image, AI grade, save to student
 router.post('/:id/grade', (req, res, next) => {

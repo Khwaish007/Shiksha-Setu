@@ -199,6 +199,26 @@ export const analyticsAPI = {
     return data;
   },
 
+  updateCommunicationPreferences: async (studentId, preferences) => {
+    const { data } = await axios.patch(`${STUDENTS_BASE}/${studentId}/communication-preferences`, preferences);
+    return data;
+  },
+
+  sendParentNotification: async (studentId, payload) => {
+    const { data } = await axios.post(`${STUDENTS_BASE}/${studentId}/send-parent-notification`, payload);
+    return data;
+  },
+
+  getParentChannelStatus: async () => {
+    const { data } = await axios.get(`${STUDENTS_BASE}/parent-channels/status`);
+    return data;
+  },
+
+  getNotificationLogs: async (studentId, limit = 20) => {
+    const { data } = await axios.get(`${STUDENTS_BASE}/${studentId}/notification-logs`, { params: { limit } });
+    return data;
+  },
+
   getTelemetry: async (sessionId) => {
     const { data } = await axios.get(`${API_BASE}/telemetry`, sessionParams(sessionId));
     return data;

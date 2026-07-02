@@ -79,7 +79,9 @@ Return ONLY valid JSON:
 {
   "hindi": "...",
   "english": "...",
-  "whatsappText": "emoji-friendly merged version with PDF links included"
+  "whatsappText": "emoji-friendly merged version with PDF links included",
+  "smsText": "concise SMS under 160 chars in Hindi, no emojis",
+  "ivrText": "spoken Hindi script for automated voice call, no emojis, under 80 words"
 }`;
 
     const response = await client.messages.create({
@@ -137,6 +139,11 @@ const buildInterventionPlan = async (req, { studentName, score, mistakes, studen
     studentName,
     studentId: studentDoc?._id?.toString() || null,
     parentPhone: studentDoc?.parentPhone || '',
+    parentCommunication: studentDoc?.parentCommunication || {
+      preferredChannel: 'auto',
+      preferredLanguage: 'hindi',
+      hasSmartphone: true,
+    },
     score,
     weakConcepts: weakConceptsWithActions,
     parentMessage,
