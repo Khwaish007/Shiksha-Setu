@@ -6,6 +6,10 @@ import { recordGradingRun } from '../utils/costTelemetry.js';
 import { executeWorksheetGrading } from '../utils/gradingPipeline.js';
 import { createWorksheetFeedback } from '../utils/feedbackUtils.js';
 import {
+  computeItemAnalysis,
+  loadSessionStudentsForItemAnalysis,
+} from '../utils/itemAnalysis.js';
+import {
   escapeRegExp,
   MANUAL_REVIEW_MESSAGE,
   NEEDS_TEACHER_REVIEW_STATUS,
@@ -985,6 +989,34 @@ export const fetchPerformanceDistribution = async (req, res) => {
   } catch (error) {
     console.error("Performance Distribution Error:", error);
     res.status(500).json({ error: "Failed to analyze performance distribution." });
+  }
+};
+
+/**
+ * GET /api/v1/grading/item-analysis?sessionId=
+ * Classical test theory: difficulty (p-value) and discrimination index per question.
+ */
+export const fetchItemAnalysis = async (req, res) => {
+  try {
+    const sessionId = getRequestSessionId(req);
+    if (!sessionId) {
+      return res.status(400).json({ error: 'sessionId is required.' });
+    }
+
+    const students = await loadSessionStudentsForItemAnalysis(Submission, sessionId);
+    const session = await GradingSession.findOne({ sessionId });
+    const answerKeyQuestions = session?.answerKey?.questions || [];
+
+    const analysis = computeItemAnalysis(students, answerKeyQuestions);
+
+    res.status(200).json({
+      sessionId,
+      hasAnswerKey: answerKeyQuestions.length > 0,
+      ...analysis,
+    });
+  } catch (error) {
+    console.error('Item Analysis Error:', error);
+    res.status(500).json({ error: 'Failed to compute item analysis.' });
   }
 };
 

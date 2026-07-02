@@ -129,6 +129,11 @@ export const analyticsAPI = {
     return data;
   },
 
+  getItemAnalysis: async (sessionId) => {
+    const { data } = await axios.get(`${API_BASE}/item-analysis`, sessionParams(sessionId));
+    return data;
+  },
+
   getPracticeTest: async (concept) => {
     const response = await axios.get(`${API_BASE}/practice-test/${concept}`, {
       responseType: 'blob',

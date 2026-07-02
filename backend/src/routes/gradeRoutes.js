@@ -16,6 +16,7 @@ import {
   fetchClassStrengthsAndWeaknesses,
   fetchPeerBenchmarking,
   fetchPerformanceDistribution,
+  fetchItemAnalysis,
   fetchClassMisconceptions
 } from '../controllers/gradeController.js';
 
@@ -109,6 +110,7 @@ router.get('/at-risk-students', fetchAtRiskStudents);
 router.get('/class-strengths', fetchClassStrengthsAndWeaknesses);
 router.get('/peer-benchmarking', fetchPeerBenchmarking);
 router.get('/performance-distribution', fetchPerformanceDistribution);
+router.get('/item-analysis', fetchItemAnalysis);
 router.get('/class-misconceptions', fetchClassMisconceptions);
 router.get('/practice-test/:concept', getPracticeTest);
 router.post('/intervention-plan', generateSessionInterventionPlan);

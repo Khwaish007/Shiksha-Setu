@@ -11,6 +11,7 @@ import StudentStrengths from './StudentStrengths';
 import ClassInsights from './ClassInsights';
 import PeerBenchmarking from './PeerBenchmarking';
 import PerformanceStats from './PerformanceStats';
+import ItemAnalysisPanel from './ItemAnalysisPanel';
 import ClassMisconceptions from './ClassMisconceptions';
 import ReviewQueue from './ReviewQueue.jsx';
 import AccuracyReport from './AccuracyReport.jsx';
@@ -24,6 +25,7 @@ const dashboardTabs = [
   { key: 'review', labelKey: 'reviewQueue' },
   { key: 'accuracy', labelKey: 'accuracyReport' },
   { key: 'stats', labelKey: 'statistics' },
+  { key: 'item-analysis', labelKey: 'itemAnalysis' },
   { key: 'heatmap', labelKey: 'heatmap' },
   { key: 'misconceptions', labelKey: 'misconceptions' },
   { key: 'class', labelKey: 'classInsights' },
@@ -49,6 +51,7 @@ const Dashboard = ({ session }) => {
   const [classStrengths, setClassStrengths] = useState(null);
   const [peerBenchmarking, setPeerBenchmarking] = useState(null);
   const [performanceDistribution, setPerformanceDistribution] = useState(null);
+  const [itemAnalysis, setItemAnalysis] = useState(null);
   const [classMisconceptions, setClassMisconceptions] = useState(null);
   const [reviewQueue, setReviewQueue] = useState([]);
   const [accuracyReportData, setAccuracyReportData] = useState(null);
@@ -73,6 +76,7 @@ const Dashboard = ({ session }) => {
         classStr,
         peers,
         perfDist,
+        itemAnalysisData,
         misconceptions,
         reviews,
         accuracy,
@@ -89,6 +93,7 @@ const Dashboard = ({ session }) => {
         analyticsAPI.getClassStrengths(sessionId),
         analyticsAPI.getPeerBenchmarking(sessionId),
         analyticsAPI.getPerformanceDistribution(sessionId),
+        analyticsAPI.getItemAnalysis(sessionId),
         analyticsAPI.getClassMisconceptions(sessionId),
         analyticsAPI.getReviewQueue(sessionId),
         analyticsAPI.getAccuracyReport(),
@@ -108,6 +113,7 @@ const Dashboard = ({ session }) => {
       setClassStrengths(classStr);
       setPeerBenchmarking(peers);
       setPerformanceDistribution(perfDist);
+      setItemAnalysis(itemAnalysisData);
       setClassMisconceptions(misconceptions);
       setReviewQueue(reviews);
       setAccuracyReportData(accuracy);
@@ -263,6 +269,7 @@ const Dashboard = ({ session }) => {
         {activeTab === 'class' && classStrengths && <ClassInsights classData={classStrengths} />}
         {activeTab === 'peers' && peerBenchmarking && <PeerBenchmarking benchmarks={peerBenchmarking} />}
         {activeTab === 'stats' && performanceDistribution && <PerformanceStats distribution={performanceDistribution} />}
+        {activeTab === 'item-analysis' && itemAnalysis && <ItemAnalysisPanel data={itemAnalysis} />}
         {activeTab === 'misconceptions' && classMisconceptions && <ClassMisconceptions misconceptions={classMisconceptions} />}
 
         {activeTab === 'pilot' && (
