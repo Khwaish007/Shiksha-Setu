@@ -83,7 +83,7 @@ const submissionSchema = new mongoose.Schema({
   },
   reviewStatus: {
     type: String,
-    enum: ['none', 'pending', 'approved'],
+    enum: ['none', 'pending', 'approved', 'dismissed'],
     default: 'none'
   },
   reviewedAt: {

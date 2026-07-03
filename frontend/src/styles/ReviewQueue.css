@@ -228,6 +228,55 @@
   opacity: 0.7;
 }
 
+.review-type-badge {
+  display: inline-flex;
+  margin-top: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.review-type-badge.manual {
+  color: #fed7aa;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.22);
+}
+
+.review-type-badge.teacher {
+  color: #bae6fd;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+}
+
+.review-card-manual {
+  border-color: rgba(249, 115, 22, 0.22);
+}
+
+.review-dismiss-button {
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px 16px;
+  border: 1px solid rgba(249, 115, 22, 0.28);
+  border-radius: 10px;
+  background: rgba(249, 115, 22, 0.12);
+  color: #fed7aa;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.review-dismiss-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.review-dismiss-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .review-queue-empty {
   display: grid;
   justify-items: center;

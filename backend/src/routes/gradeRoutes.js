@@ -3,6 +3,7 @@ import multer from 'multer';
 import { 
   processWorksheets,
   approveReviewSubmission,
+  dismissReviewSubmission,
   clearSubmissions,
   fetchClassroomHeatmap,
   fetchClassAnalytics,
@@ -76,6 +77,7 @@ router.post('/accuracy-report/run', runAccuracyReport);
 router.get('/sessions/:sessionId/answer-key', getAnswerKey);
 router.get('/sessions/:sessionId/review-queue', fetchReviewQueue);
 router.patch('/sessions/:sessionId/review-queue/:submissionId/approve', approveReviewSubmission);
+router.patch('/sessions/:sessionId/review-queue/:submissionId/dismiss', dismissReviewSubmission);
 router.put('/sessions/:sessionId/answer-key', saveTypedAnswerKey);
 router.post('/sessions/:sessionId/answer-key/transcribe', (req, res, next) => {
   uploadConfiguration.single('modelWorksheet')(req, res, (err) => {

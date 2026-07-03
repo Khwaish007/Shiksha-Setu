@@ -67,6 +67,11 @@ export const analyticsAPI = {
     return data;
   },
 
+  dismissReviewSubmission: async (sessionId, submissionId) => {
+    const { data } = await axios.patch(`${API_BASE}/sessions/${sessionId}/review-queue/${submissionId}/dismiss`);
+    return data;
+  },
+
   getAccuracyReport: async () => {
     const { data } = await axios.get(`${API_BASE}/accuracy-report`);
     return data;

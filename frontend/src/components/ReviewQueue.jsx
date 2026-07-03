@@ -3,15 +3,16 @@ import { analyticsAPI } from '../api/analyticsAPI.js';
 import { useI18n } from '../i18n.jsx';
 import '../styles/ReviewQueue.css';
 
+const MANUAL_REVIEW_STATUS = 'Manual Review Required';
 const formatConfidence = (value) => `${Math.round((Number(value) || 0) * 100)}%`;
 
 function ReviewQueue({ sessionId, items = [], onChanged }) {
   const { t } = useI18n();
-  const [approvingId, setApprovingId] = useState(null);
+  const [actingId, setActingId] = useState(null);
   const [error, setError] = useState('');
 
   const approveSubmission = async (submissionId) => {
-    setApprovingId(submissionId);
+    setActingId(submissionId);
     setError('');
 
     try {
@@ -21,7 +22,22 @@ function ReviewQueue({ sessionId, items = [], onChanged }) {
       console.error('Failed to approve review submission:', approvalError);
       setError(approvalError.response?.data?.error || t('reviewApproveFailed'));
     } finally {
-      setApprovingId(null);
+      setActingId(null);
+    }
+  };
+
+  const dismissSubmission = async (submissionId) => {
+    setActingId(submissionId);
+    setError('');
+
+    try {
+      await analyticsAPI.dismissReviewSubmission(sessionId, submissionId);
+      await onChanged?.();
+    } catch (dismissError) {
+      console.error('Failed to dismiss manual review submission:', dismissError);
+      setError(dismissError.response?.data?.error || t('reviewDismissFailed'));
+    } finally {
+      setActingId(null);
     }
   };
 
@@ -52,79 +68,109 @@ function ReviewQueue({ sessionId, items = [], onChanged }) {
       {error && <div className="review-queue-error">{error}</div>}
 
       <div className="review-queue-list">
-        {items.map((item) => (
-          <article className="review-card" key={item._id}>
-            <div className="review-card-top">
-              <div>
-                <span className="review-card-kicker">{t('student')}</span>
-                <h3>{item.studentName || t('unknown')}</h3>
-              </div>
-              <div className="review-score">
-                <span>{t('tentativeScore')}</span>
-                <strong>{Math.round(Number(item.totalScore) || 0)}%</strong>
-              </div>
-            </div>
+        {items.map((item) => {
+          const isManualReview = item.status === MANUAL_REVIEW_STATUS;
+          const isBusy = actingId === item._id;
 
-            <div className="review-metrics">
-              <div>
-                <span>{t('averageConfidence')}</span>
-                <strong>{formatConfidence(item.confidenceSummary?.averageConfidence)}</strong>
-              </div>
-              <div>
-                <span>{t('minimumConfidence')}</span>
-                <strong>{formatConfidence(item.confidenceSummary?.minimumConfidence)}</strong>
-              </div>
-              <div>
-                <span>{t('lowConfidenceQuestions')}</span>
-                <strong>{item.confidenceSummary?.lowConfidenceCount || 0}</strong>
-              </div>
-            </div>
-
-            <div className="review-reason">
-              <span>{t('reviewReason')}</span>
-              <p>{item.reviewReason || item.errorSummary || t('reviewReasonFallback')}</p>
-            </div>
-
-            <div className="review-question-list">
-              {(item.questionResults || []).map((question) => (
-                <div className="review-question" key={`${item._id}-${question.questionNumber}`}>
-                  <div className="review-question-main">
-                    <strong>{question.questionNumber}</strong>
-                    <span>{question.concept || t('unknown')}</span>
-                  </div>
-                  <div className="review-question-confidence">
-                    {formatConfidence(question.confidence)}
-                  </div>
-                  {question.evidence && (
-                    <p>{question.evidence}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {item.mistakes?.length > 0 && (
-              <div className="review-mistakes">
-                <span>{t('flaggedMistakes')}</span>
-                <div>
-                  {item.mistakes.map((mistake) => (
-                    <mark key={`${item._id}-${mistake.questionNumber}-${mistake.conceptMissed}`}>
-                      {mistake.questionNumber}: {mistake.conceptMissed}
-                    </mark>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <button
-              type="button"
-              className="review-approve-button"
-              onClick={() => approveSubmission(item._id)}
-              disabled={approvingId === item._id}
+          return (
+            <article
+              className={`review-card ${isManualReview ? 'review-card-manual' : ''}`}
+              key={item._id}
             >
-              {approvingId === item._id ? t('approving') : t('approveGrade')}
-            </button>
-          </article>
-        ))}
+              <div className="review-card-top">
+                <div>
+                  <span className="review-card-kicker">{t('student')}</span>
+                  <h3>{item.studentName || t('unknown')}</h3>
+                  <span className={`review-type-badge ${isManualReview ? 'manual' : 'teacher'}`}>
+                    {isManualReview ? t('manualReviewBadge') : t('teacherReviewBadge')}
+                  </span>
+                </div>
+                {!isManualReview && (
+                  <div className="review-score">
+                    <span>{t('tentativeScore')}</span>
+                    <strong>{Math.round(Number(item.totalScore) || 0)}%</strong>
+                  </div>
+                )}
+              </div>
+
+              {!isManualReview && (
+                <div className="review-metrics">
+                  <div>
+                    <span>{t('averageConfidence')}</span>
+                    <strong>{formatConfidence(item.confidenceSummary?.averageConfidence)}</strong>
+                  </div>
+                  <div>
+                    <span>{t('minimumConfidence')}</span>
+                    <strong>{formatConfidence(item.confidenceSummary?.minimumConfidence)}</strong>
+                  </div>
+                  <div>
+                    <span>{t('lowConfidenceQuestions')}</span>
+                    <strong>{item.confidenceSummary?.lowConfidenceCount || 0}</strong>
+                  </div>
+                </div>
+              )}
+
+              <div className="review-reason">
+                <span>{isManualReview ? t('manualReviewRate') : t('reviewReason')}</span>
+                <p>{item.errorSummary || item.reviewReason || t('reviewReasonFallback')}</p>
+              </div>
+
+              {!isManualReview && (
+                <>
+                  <div className="review-question-list">
+                    {(item.questionResults || []).map((question) => (
+                      <div className="review-question" key={`${item._id}-${question.questionNumber}`}>
+                        <div className="review-question-main">
+                          <strong>{question.questionNumber}</strong>
+                          <span>{question.concept || t('unknown')}</span>
+                        </div>
+                        <div className="review-question-confidence">
+                          {formatConfidence(question.confidence)}
+                        </div>
+                        {question.evidence && (
+                          <p>{question.evidence}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {item.mistakes?.length > 0 && (
+                    <div className="review-mistakes">
+                      <span>{t('flaggedMistakes')}</span>
+                      <div>
+                        {item.mistakes.map((mistake) => (
+                          <mark key={`${item._id}-${mistake.questionNumber}-${mistake.conceptMissed}`}>
+                            {mistake.questionNumber}: {mistake.conceptMissed}
+                          </mark>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {isManualReview ? (
+                <button
+                  type="button"
+                  className="review-dismiss-button"
+                  onClick={() => dismissSubmission(item._id)}
+                  disabled={isBusy}
+                >
+                  {isBusy ? t('dismissing') : t('dismissManualReview')}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="review-approve-button"
+                  onClick={() => approveSubmission(item._id)}
+                  disabled={isBusy}
+                >
+                  {isBusy ? t('approving') : t('approveGrade')}
+                </button>
+              )}
+            </article>
+          );
+        })}
       </div>
     </section>
   );

@@ -12,6 +12,7 @@ import {
 import {
   escapeRegExp,
   MANUAL_REVIEW_MESSAGE,
+  MANUAL_REVIEW_STATUS,
   NEEDS_TEACHER_REVIEW_STATUS,
 } from '../utils/gradingSafety.js';
 
@@ -93,6 +94,39 @@ const buildAdaptiveConceptBuckets = (items) => {
   return { thresholds, items: decorated };
 };
 
+const persistSubmissionFromPayload = async (sessionId, file, payload) => {
+  const cleanName = (payload.studentName || file?.originalname || 'Unknown').trim();
+  const update = buildSubmissionUpdate(sessionId, payload, {
+    studentName: cleanName
+  });
+
+  if (payload.status === 'Success') {
+    return Submission.findOneAndUpdate(
+      { sessionId, studentName: { $regex: new RegExp(`^${escapeRegExp(cleanName)}$`, 'i') } },
+      update,
+      { returnDocument: 'after', upsert: true }
+    );
+  }
+
+  return new Submission(update).save();
+};
+
+const buildManualReviewSubmission = (sessionId, file, reason = MANUAL_REVIEW_MESSAGE) => ({
+  gradingDecision: 'manual_review',
+  studentName: (file?.originalname || 'Unknown').replace(/\.[^.]+$/, '').trim() || 'Unknown',
+  totalScore: 0,
+  mistakes: [],
+  questionResults: [],
+  confidenceSummary: {
+    averageConfidence: 0,
+    minimumConfidence: 0,
+    lowConfidenceCount: 0
+  },
+  reviewReason: '',
+  errorSummary: reason,
+  status: MANUAL_REVIEW_STATUS
+});
+
 const buildSubmissionUpdate = (sessionId, payload, overrides = {}) => ({
   sessionId,
   studentName: (payload.studentName || 'Unknown').trim(),
@@ -105,7 +139,10 @@ const buildSubmissionUpdate = (sessionId, payload, overrides = {}) => ({
     lowConfidenceCount: 0
   },
   reviewReason: payload.reviewReason || '',
-  reviewStatus: payload.status === NEEDS_TEACHER_REVIEW_STATUS ? 'pending' : 'none',
+  reviewStatus: (
+    payload.status === NEEDS_TEACHER_REVIEW_STATUS
+    || payload.status === MANUAL_REVIEW_STATUS
+  ) ? 'pending' : 'none',
   errorSummary: payload.errorSummary || '',
   status: payload.status,
   createdAt: new Date(),
@@ -222,14 +259,51 @@ export const fetchReviewQueue = async (req, res) => {
 
     const queue = await Submission.find({
       sessionId,
-      status: NEEDS_TEACHER_REVIEW_STATUS,
-      reviewStatus: 'pending'
+      reviewStatus: 'pending',
+      status: { $in: [NEEDS_TEACHER_REVIEW_STATUS, MANUAL_REVIEW_STATUS] }
     }).sort({ createdAt: -1 });
 
     res.status(200).json(queue);
   } catch (error) {
     console.error('Review Queue Error:', error);
     res.status(500).json({ error: 'Failed to fetch teacher review queue.' });
+  }
+};
+
+export const dismissReviewSubmission = async (req, res) => {
+  try {
+    const sessionId = getRequestSessionId(req);
+    const { submissionId } = req.params;
+
+    if (!sessionId || !submissionId) {
+      return res.status(400).json({ error: 'sessionId and submissionId are required.' });
+    }
+
+    const submission = await Submission.findOne({
+      _id: submissionId,
+      sessionId,
+      status: MANUAL_REVIEW_STATUS,
+      reviewStatus: 'pending'
+    });
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Pending manual review submission not found.' });
+    }
+
+    submission.reviewStatus = 'dismissed';
+    submission.reviewedAt = new Date();
+    await submission.save();
+
+    const refreshedSession = await refreshSessionStats(sessionId, 'batch');
+
+    res.status(200).json({
+      message: 'Manual review item dismissed.',
+      submission,
+      session: refreshedSession
+    });
+  } catch (error) {
+    console.error('Dismiss Review Submission Error:', error);
+    res.status(500).json({ error: 'Failed to dismiss manual review submission.' });
   }
 };
 
@@ -354,18 +428,7 @@ export const processWorksheets = async (req, res) => {
           batchInputTokens += gradeResult.usage.inputTokens;
           batchOutputTokens += gradeResult.usage.outputTokens;
 
-          const cleanName = (parsedGradingPayload.studentName || file.originalname || 'Unknown').trim();
-          const update = buildSubmissionUpdate(sessionId, parsedGradingPayload, {
-            studentName: cleanName
-          });
-
-          const savedDocument = parsedGradingPayload.status === 'Success'
-            ? await Submission.findOneAndUpdate(
-                { sessionId, studentName: { $regex: new RegExp(`^${escapeRegExp(cleanName)}$`, 'i') } },
-                update,
-                { returnDocument: 'after', upsert: true }
-              )
-            : await new Submission(update).save();
+          const savedDocument = await persistSubmissionFromPayload(sessionId, file, parsedGradingPayload);
 
           if (parsedGradingPayload.status === 'Success') {
             batchSuccessCount += 1;
@@ -375,28 +438,26 @@ export const processWorksheets = async (req, res) => {
           return savedDocument;
         } catch (innerTaskError) {
           console.error("Individual File Processing Error:", innerTaskError);
-          return {
-            studentName: "Error File",
+          const manualPayload = buildManualReviewSubmission(
             sessionId,
-            totalScore: 0,
-            mistakes: [],
-            errorSummary: MANUAL_REVIEW_MESSAGE,
-            status: "Manual Review Required"
-          };
+            file,
+            innerTaskError.message || MANUAL_REVIEW_MESSAGE
+          );
+          return persistSubmissionFromPayload(sessionId, file, manualPayload);
         }
       },
       batchDelayMs
     );
 
     for (const result of gradedResults) {
+      if (result.status === 'fulfilled') {
+        consolidatedGradingLogs.push(result.value);
+        continue;
+      }
+
+      const fallbackPayload = buildManualReviewSubmission(sessionId, null, MANUAL_REVIEW_MESSAGE);
       consolidatedGradingLogs.push(
-        result.status === 'fulfilled' ? result.value : {
-          studentName: "Error File",
-          sessionId,
-          totalScore: 0,
-          mistakes: [],
-          status: "Manual Review Required"
-        }
+        await persistSubmissionFromPayload(sessionId, null, fallbackPayload)
       );
     }
 
