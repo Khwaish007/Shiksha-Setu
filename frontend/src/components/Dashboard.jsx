@@ -23,8 +23,6 @@ import { useI18n } from '../i18n.jsx';
 
 const dashboardTabs = [
   { key: 'overview', labelKey: 'overview' },
-  { key: 'review', labelKey: 'reviewQueue' },
-  { key: 'accuracy', labelKey: 'accuracyReport' },
   { key: 'stats', labelKey: 'statistics' },
   { key: 'item-analysis', labelKey: 'itemAnalysis' },
   { key: 'heatmap', labelKey: 'heatmap' },
@@ -36,7 +34,9 @@ const dashboardTabs = [
   { key: 'strengths', labelKey: 'strengths' },
   { key: 'rankings', labelKey: 'rankings' },
   { key: 'peers', labelKey: 'peerCompare' },
-  { key: 'pilot', labelKey: 'pilotReadiness' }
+  { key: 'pilot', labelKey: 'pilotReadiness' },
+  { key: 'review', labelKey: 'reviewQueue' },
+  { key: 'accuracy', labelKey: 'accuracyReport' }
 ];
 
 const Dashboard = ({ session }) => {
